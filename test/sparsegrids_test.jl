@@ -1,5 +1,6 @@
 using Test
 using SparseGridsKit
+using LinearAlgebra
 
 @testset "Multi-Index Set Tests" begin
     # Test create_smolyak_miset
@@ -75,7 +76,7 @@ end
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set)
     @test get_n_grid_points(sg) == 9
-    k=1
+    k=2
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set)
     @test get_n_grid_points(sg) == 41
@@ -91,7 +92,6 @@ end
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set)
     grid_points = get_grid_points(sg)
-    @test length(grid_points) == 
     @test grid_points ≈ [   [0.0],
                             [1.0],
                             [-1.0],

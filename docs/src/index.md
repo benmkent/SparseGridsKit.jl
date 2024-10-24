@@ -10,6 +10,5 @@ Modules = [SparseGridsKit]
 ```
 
 ## Index
-
 ```@index
 ```

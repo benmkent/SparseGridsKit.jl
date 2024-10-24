@@ -114,7 +114,8 @@ function add_mi(mi_set::MISet, mi_set_new::MISet)
     mi_new = get_mi(mi_set_new)
     append!(mi, mi_new)
     col_matrix = hcat(mi...)
-    col_matrix_sorted = sortmi(col_matrix)
+    col_matrix_unique = unique(eachcol(col_matrix))
+    col_matrix_sorted = sortmi(hcat(col_matrix_unique...))
     mi_set_new = MISet([Vector(v) for v in eachcol(col_matrix_sorted)])
     return mi_set_new
 end
@@ -135,7 +136,8 @@ function add_mi(mi_set::MISet, mi_new::Vector)
     mi = copy(get_mi(mi_set))
     append!(mi, [mi_new])
     col_matrix = hcat(mi...)
-    col_matrix_sorted = sortmi(col_matrix)
+    col_matrix_unique = unique(eachcol(col_matrix))
+    col_matrix_sorted = sortmi(hcat(col_matrix_unique...))
     mi_set_new = MISet([Vector(v) for v in eachcol(col_matrix_sorted)])
     return mi_set_new
 end

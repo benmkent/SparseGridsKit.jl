@@ -103,7 +103,7 @@ function sparsegridproductintegrals(polyperlevel, maxmi, rule)
         # Compute integrals
         #productintegralslevel = []
         #pii = view(polyperlevel,ii);
-        for ll = 1:ii
+        for ll = 1:maxmi
             #pll = view(polyperlevel,ll);s
             for p1 in eachindex(polyperlevel[ii])
                 #p1x .= pii[1][p1].(x)
@@ -331,6 +331,9 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; vecdims=noth
             feval[k] = feval[k] .+ val[1] * fongrid[maprowtouniquept[i]]
         end
     end
+    if all(isreal, feval)
+        v = real(feval)  # Convert to Float64 by extracting the real part
+    end
     return feval
 end
 
@@ -385,11 +388,6 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=dot, pairwiseno
     maprowtouniquept = sparsegrid.maptermstosparsegrid
     productintegrals = precompute.productintegrals
     feval = zeros(ComplexF64, size(pairwisenorms[1,1]))
-    val = Complex(1.0, 0.0); #.* pairwisenorms[1, 1]]
-    leveli = Vector{Integer}(undef, length(terms[1]))
-    levelj = similar(leveli)
-    indi = similar(leveli)
-    indj = similar(leveli)
 
     valstomultiply = Vector{Float64}(undef,1)
     n = length(terms[1][1])
@@ -401,13 +399,13 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=dot, pairwiseno
             if iszero(pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]])
                 continue
             end
-            @inbounds valstomultiply[1] = prod(productintegrals[rowi[1][k][1], rowj[1][k][1], rowi[1][k][2], rowj[1][k][2]] for k in eachindex(rowi[1]))
+            valstomultiply[1] = prod(productintegrals[rowi[1][k][1], rowj[1][k][1], rowi[1][k][2], rowj[1][k][2]] for k in eachindex(rowi[1]))
             # valstomultiply[1] = 1.0
             # for k in 1:n
             #     @inbounds a,b,c,d=rowi[1][k][1], rowj[1][k][1], rowi[1][k][2], rowj[1][k][2]
             #     @inbounds valstomultiply[1] *= productintegrals[a,b,c,d]
             # end
-            @inbounds feval .= feval .+ cterms[i] * cterms[j] * valstomultiply[1] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]]
+            feval .= feval .+ cterms[i] * cterms[j] * valstomultiply[1] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]]
         end
     end
 

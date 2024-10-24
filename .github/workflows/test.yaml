@@ -1,2 +1,26 @@
-- name: Run Julia package tests
-  uses: julia-actions/julia-runtest@v1.11.1
+name: Test
+
+on:
+  push:
+    branches:
+      - main # update to match your development branch (master, main, dev, trunk, ...)
+    tags: '*'
+  pull_request:
+
+jobs:
+  build:
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - name: Install dependencies
+      - name: Run Julia package tests
+        uses: julia-actions/julia-runtest@v1.11.1

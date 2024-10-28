@@ -8,3 +8,7 @@ makedocs(
     "Reference" => "reference.md"
     ]
 )
+
+deploydocs(
+    repo = "github.com/benmkent/SparseGridsKit.jl.git",
+)

@@ -105,11 +105,11 @@ function sparsegridproductintegrals(polyperlevel, maxmi, rule)
         #pii = view(polyperlevel,ii);
         for ll = 1:maxmi
             #pll = view(polyperlevel,ll);s
-            for p1 in eachindex(polyperlevel[ii])
+            @inbounds for p1 in eachindex(polyperlevel[ii])
                 #p1x .= pii[1][p1].(x)
                 #p1x .= w.* p1x
-                wp1x = w .* pevalx[ii, p1, :]
-                for p2 in eachindex(polyperlevel[ll])
+                wp1x .= w .* pevalx[ii, p1, :]
+                @inbounds for p2 in eachindex(polyperlevel[ll])
                     #productintegralsmatrix[p1, p2] = sum(w .* polyperlevel[ii][p1].(x) .* polyperlevel[ll][p2].(x))
                     @inbounds productintegrals[ii, ll, p1, p2] = dot(wp1x, pevalx[ll, p2, :]) #p1x .* pll[1][p2].(x)
                     #display([ii,ll,p1,p2,sum(w .* polyperlevel[ii][p1].(x) .* polyperlevel[ll][p2].(x))])
@@ -179,18 +179,23 @@ end
 function reducedmargin(MI)
     mgn = margin(MI)
     ndim = size(mgn, 1)
-    rm = nothing
+    rm = Matrix{Int64}(undef,ndim,0)
 
     for mi in eachcol(mgn)
+        in_rm = true
+
         for ei in eachcol(I(ndim))
             miminus = mi .- ei
-            if isnothing(findfirst(miminus == mi for mi in eachcol(MI)))
+            
+            test = any(v -> v == miminus, eachcol(MI)) || any(miminus .== 0)
+
+            if test == false
+                in_rm = false;
                 break
             end
         end
-        if isnothing(rm)
-            rm = mi
-        else
+
+        if in_rm == true
             rm = hcat(rm, mi)
         end
     end

@@ -5,7 +5,9 @@ makedocs(
     pages = [
     "SparseGridsKit" => "index.md",
     "Examples" => ["Multi-Index Sets"=>"multiindexsets.md",
-                    "Sparse Grid Interpolation"=>"sparsegridinterpolation.md"],
+                    "Sparse Grid Interpolation"=>"sparsegridinterpolation.md",
+                    "Sparse Grid Integration"=>"sparsegridintegration.md"
+                    ],
     "Reference" => "reference.md"
     ]
 )

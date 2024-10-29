@@ -2,7 +2,7 @@
 ## One-dimensional interpolation
 Consider a simple example approximating a function $f:[-1,1]\to\R$.
 ```@example interp1
-f(x) = @. 3.0 * x[1]^2 + 2.0 * x[1] + 1.0
+f(x) = [@. 3.0 * x[1]^2 + 2.0 * x[1] + 1.0]
 ```
 We can construct a one point approximation (i.e. constant polynomial).
 The sparse grid is constructed using the `MISet` `mi_set`.
@@ -12,7 +12,7 @@ n, k = 1, 0
 using SparseGridsKit, LinearAlgebra
 mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
-f_on_grid = [[f(x)] for x in get_grid_points(sg)]
+f_on_grid = [f(x) for x in get_grid_points(sg)]
 ```
 The sparse grid `sg` is paired with the point evaluations to interpolate on to target points.
 ```@example interp1
@@ -23,7 +23,7 @@ It is clear a better approximation can be formed.
 ```@example interp1
 mi_set_new = create_smolyak_miset(n, 2)
 sg_new = create_sparsegrid(mi_set_new)
-f_on_grid_new = [[f(x)] for x in get_grid_points(sg_new)]
+f_on_grid_new = [f(x) for x in get_grid_points(sg_new)]
 
 interpolation_result_new = interpolate_on_sparsegrid(sg_new, f_on_grid_new, target_points)
 
@@ -33,6 +33,7 @@ norm([interpolation_result[i] - f(target_points[i]) for i in eachindex(target_po
 These ideas extend to multi-dimensional, vector valued functions.
 Consider a function $f:[-1,1]^4 to R^400$.
 ```@example interp4
+using SparseGridsKit, LinearAlgebra
 n, k = 4, 3
 mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)

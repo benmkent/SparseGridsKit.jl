@@ -9,7 +9,7 @@ The sparse grid is constructed using the `MISet` `mi_set`.
 The function `f` is evaluated on the grid points accessed via `get_grid_points`.
 ```@example interp1
 n, k = 1, 0
-using SparseGridsKit
+using SparseGridsKit, LinearAlgebra
 mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 f_on_grid = [[f(x)] for x in get_grid_points(sg)]

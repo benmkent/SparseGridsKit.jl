@@ -50,19 +50,7 @@ f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
 norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
 ```
 In this case this is poor.
-It can be improved by increasing the size of the approximation space, at greater computational cost.
-The function $f$ is analytic so we expect the polynomial approximation to converge.
-```@example interp4
-using SparseGridsKit, LinearAlgebra
-n, k = 4, 6
-mi_set = create_smolyak_miset(n, k)
-sg = create_sparsegrid(mi_set)
-f_on_grid = [f(x) for x in get_grid_points(sg)]
-f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
-norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
-```
-
-Finally we consider approximating the polynomial approximation.
+We consider approximating the polynomial approximation.
 If we grow the polynomial approximation space by adding multi-indices to the multi-index set we have a different polynomial approximation.
 Consider the enriched approximation space formed by the union with the reduced margin.
 ```@example interp4
@@ -75,4 +63,15 @@ Interpolating the polynomial via this new sparse grid should give the same funct
 f_on_grid_2 = interpolate_on_sparsegrid(sg, f_on_grid, get_grid_points(sg_enriched))
 f2_on_v = interpolate_on_sparsegrid(sg_enriched, f_on_grid_2, v)
 norm([f_on_v[i] - f2_on_v[i] for i in eachindex(v)])
+```
+
+The function $f$ is analytic so we expect the polynomial approximation to converge.
+The approximation can be improved by increasing the size of the approximation space, at greater computational cost.
+```@example interp4
+n, k = 4, 6
+mi_set = create_smolyak_miset(n, k)
+sg = create_sparsegrid(mi_set)
+f_on_grid = [f(x) for x in get_grid_points(sg)]
+f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
+norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
 ```

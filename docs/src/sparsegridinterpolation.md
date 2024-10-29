@@ -38,15 +38,16 @@ n, k = 4, 3
 mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 # Define a complicated function
-f = genz(n, 1.0, 0.5, "quadraticdecay", "gaussianpeak")
-f_on_grid = [[f(x)] for x in get_grid_points(sg)]
+ndims=100
+f(x) = [genz(n, 1.0, w, "quadraticdecay", "gaussianpeak")(x) for (i,w) = enumerate(range(-1,stop=1,length=ndims))]
+f_on_grid = [f(x) for x in get_grid_points(sg)]
 ```
 The sparse grid approximation defines a polynomial that can be evaluated.
 ```@example interp4
 nmc = Integer(1e2);
 V = [2 * rand(n) .- 1 for ii = 1:nmc]
 f_on_v = [interpolate_on_sparsegrid(sg, f_on_grid, [v])[1] for v in V]
-norm([f_on_v[i] - [f(v[i])] for i in eachindex(v)])
+norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
 ```
 In this case this is poor.
 We consider approximating the polynomial approximation.
@@ -60,8 +61,8 @@ display(get_n_grid_points(sg_enriched))
 Interpolating the polynomial via this new sparse grid should give the same function.
 ```@example interp4
 f_on_grid_2 = interpolate_on_sparsegrid(sg, f_on_grid, get_grid_points(sg_enriched))
-f2_on_v = interpolate_on_sparsegrid(sg_enriched, f_on_grid_2, v)
-norm([f_on_v[i] - f2_on_v[i] for i in eachindex(v)])
+f2_on_v = interpolate_on_sparsegrid(sg_enriched, f_on_grid_2, V)
+norm([f_on_v[i] - f2_on_v[i] for i in eachindex(V)])
 ```
 
 The function $f$ is analytic so we expect the polynomial approximation to converge.
@@ -71,6 +72,6 @@ n, k = 4, 6
 mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 f_on_grid = [f(x) for x in get_grid_points(sg)]
-f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
-norm([f_on_v[i] - [f(v[i])] for i in eachindex(v)])
+f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, V)
+norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
 ```

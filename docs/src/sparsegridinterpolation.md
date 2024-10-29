@@ -27,11 +27,11 @@ f_on_grid_new = [f(x) for x in get_grid_points(sg_new)]
 
 interpolation_result_new = interpolate_on_sparsegrid(sg_new, f_on_grid_new, target_points)
 
-norm([interpolation_result[i] - f(target_points[i]) for i in eachindex(target_points)])
+norm([interpolation_result_new[i] - f(target_points[i]) for i in eachindex(target_points)])
 ```
 ## Multi-dimensional interpolation
 These ideas extend to multi-dimensional, vector valued functions.
-Consider a function $f:[-1,1]^4 to R^400$.
+Consider a function $f:[-1,1]^4 \to \mathbb{R}{400}$.
 ```@example interp4
 using SparseGridsKit, LinearAlgebra
 n, k = 4, 3
@@ -49,7 +49,18 @@ v = [2 * (rand(n) .- 1) for ii = 1:nmc]
 f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
 norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
 ```
-This is not exact but offers a polynomial approximation.
+In this case this is poor.
+It can be improved by increasing the size of the approximation space, at greater computational cost.
+The function $f$ is analytic so we expect the polynomial approximation to converge.
+```@example interp4
+using SparseGridsKit, LinearAlgebra
+n, k = 4, 6
+mi_set = create_smolyak_miset(n, k)
+sg = create_sparsegrid(mi_set)
+f_on_grid = [f(x) for x in get_grid_points(sg)]
+f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
+norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
+```
 
 Finally we consider approximating the polynomial approximation.
 If we grow the polynomial approximation space by adding multi-indices to the multi-index set we have a different polynomial approximation.

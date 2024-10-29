@@ -38,16 +38,15 @@ n, k = 4, 3
 mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 # Define a complicated function
-ndims = 400
-f(x) = real.([(2.0 .+ (cos(prod(1.0 .+ x)))^(i)) for i = 1:ndims])
-f_on_grid = [f(x) for x in get_grid_points(sg)]
+f = genz(n, 1.0, 0.5, "quadraticdecay", "gaussianpeak")
+f_on_grid = [[f(x)] for x in get_grid_points(sg)]
 ```
 The sparse grid approximation defines a polynomial that can be evaluated.
 ```@example interp4
 nmc = Integer(1e2);
-v = [2 * (rand(n) .- 1) for ii = 1:nmc]
-f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
-norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
+V = [2 * rand(n) .- 1 for ii = 1:nmc]
+f_on_v = [interpolate_on_sparsegrid(sg, f_on_grid, [v])[1] for v in V]
+norm([f_on_v[i] - [f(v[i])] for i in eachindex(v)])
 ```
 In this case this is poor.
 We consider approximating the polynomial approximation.
@@ -73,5 +72,5 @@ mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 f_on_grid = [f(x) for x in get_grid_points(sg)]
 f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, v)
-norm([f_on_v[i] - f(v[i]) for i in eachindex(v)])
+norm([f_on_v[i] - [f(v[i])] for i in eachindex(v)])
 ```

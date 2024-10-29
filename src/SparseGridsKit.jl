@@ -8,8 +8,11 @@ export add_mi, get_mi, get_n_mi, get_margin, get_reduced_margin, create_smolyak_
 export interpolate_on_sparsegrid, integrate_on_sparsegrid, integrate_L2_on_sparsegrid
 export precompute_lagrange_integrals, precompute_pairwise_norms
 
+export genz
+
 ## Use functionality defined in import file
 include("sparsegrids.jl")
+include("genz.jl")
 
 """
     precompute_lagrange_integrals(max_mi)

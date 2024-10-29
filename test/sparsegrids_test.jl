@@ -166,7 +166,7 @@ end
     sg = create_sparsegrid(mi_set)
     # Define a complicated function
     ndims = 400
-    f(x) = real.([(2.0 .+ (cos(prod(1.0.+x)))^(i)) for i=1:ndims])
+    f(x) = real.([(2.0 .+ (cos(2*i/ndims*prod(1.0.+x)))) for i=1:ndims])
     f_on_grid = [f(x) for x in get_grid_points(sg)]
     mi_enriched = add_mi(mi_set, get_reduced_margin(mi_set))
     sg_enriched = create_sparsegrid(mi_enriched)

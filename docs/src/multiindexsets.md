@@ -1,7 +1,7 @@
 # Multi Index Sets
 
 Multi-index sets the standard Smolyak construction are easily constructed.
-Suppose we consider a function $u$ with domain $\Gamma\in\R^n$.
+Suppose we consider a function $u$ with domain $\Gamma\in\mathbb{R}^n$.
 The multi-index set
 $$ \{\alpha : \Vert \alpha \Vert_1 \leq n + d\} \subset \N^{2} $$
 is constructed using the following syntax.

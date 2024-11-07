@@ -11,11 +11,11 @@ To do this a maximum level number is selected.
 ```
 ## Sparse Grid Integration
 This is then used to integrate a sparse grid polynomial approximation.
-Consider the function $f:[-1,1]\to\R$
+Consider the function $f:[-1,1]\to\mathbb{R}$
 ```@example int1
     f(x) = @. 3.0*x^2 + 2.0*x + 1.0
 ```
-The two-dimension function $[f(x_1) f(x_2)^2]$ mapping $[-1,1]^2 \to \R^2$ can be approximated using a constant function.
+The two-dimension function $[f(x_1) f(x_2)^2]$ mapping $[-1,1]^2 \to \mathbb{R}^2$ can be approximated using a constant function.
 The integral is expected (albeit a poor approximation to the true value).
 ```@example int1
     n,k = 2,0

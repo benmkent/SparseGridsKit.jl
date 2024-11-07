@@ -1,6 +1,6 @@
 # Sparse Grid Interpolation
 ## One-dimensional interpolation
-Consider a simple example approximating a function $f:[-1,1]\to\R$.
+Consider a simple example approximating a function $f:[-1,1]\to\mathbb{R}$.
 ```@example interp1
 f(x) = [@. 3.0 * x[1]^2 + 2.0 * x[1] + 1.0]
 ```

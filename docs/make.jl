@@ -1,15 +1,18 @@
-using Documenter, SparseGridsKit
+using Documenter, DocumenterCitations, SparseGridsKit
 
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"))
 makedocs(
     sitename="SparseGridsKit",
     pages = [
     "SparseGridsKit" => "index.md",
-    "Examples" => ["Multi-Index Sets"=>"multiindexsets.md",
+    "Examples" => ["Multi-Index Sets"=>"misets.md",
                     "Sparse Grids"=>"sparsegrids.md",
                     "Sparse Grid Interpolation"=>"sparsegridinterpolation.md",
-                    "Sparse Grid Integration"=>"sparsegridintegration.md"
+                    "Sparse Grid Integration"=>"sparsegridintegration.md",
+                    "Adaptive Sparse Grids"=>"adaptivesparsegrids.md"
                     ],
+    "Extensions" => ["Interpolation of PDE solutions"=>"functioninterpolation.md",
+    "UM-Bridge" => "umbridge.md"],
     "Reference" => "reference.md",
     "References" => "bib.md"
     ];

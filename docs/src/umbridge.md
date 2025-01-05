@@ -1,0 +1,27 @@
+# UM-Bridge
+It is possible to connect the 'SparseGridsKit.jl' to any model via the ['UM-Bridge'](https://github.com/UM-Bridge/umbridge) Julia client.
+
+A brief example is given below.
+
+```
+using UMBridge
+using SparseGridsKit
+
+url = "model.url:port"
+
+# Set up a model "modelname"
+model = UMBridge.HTTPModel("modelname", url)
+
+# Create sparse grid
+n=1
+k=5
+mi = create_smolyak_miset(n,k)
+sg = create_sparsegrid(mi)
+
+Z = get_grid_points(sg)
+
+# Model evaluation with configuration parameters
+config = Dict("Config1" => 1);
+
+f_on_Z = [UMBridge.evaluate(model, [map(z[1])], config) for z in Z]
+```

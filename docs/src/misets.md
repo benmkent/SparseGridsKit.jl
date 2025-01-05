@@ -33,3 +33,8 @@ reduced_margin_set = get_reduced_margin(combined_mi_set)
 ```
 Notice how the multi-index $[2,3]$ is in the margin but not the reduced margin.
 Its backwards neighbour $[2,2]$ is missing from the multi-index set.
+
+## Functions
+```@autodocs
+Pages   = ["misets.jl"]
+```

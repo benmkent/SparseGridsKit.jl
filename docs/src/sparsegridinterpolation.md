@@ -75,3 +75,7 @@ f_on_grid = [f(x) for x in get_grid_points(sg)]
 f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, V)
 norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
 ```
+## Function Reference
+```@docs
+interpolate_on_sparsegrid
+```

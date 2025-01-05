@@ -57,3 +57,8 @@ nsteps = 100
                 camera = (20 * (1 + cos(i)),10 * (1 + cos(i))))
 end
 ```
+
+## Function Reference
+```@autodocs
+Pages   = ["SparseGridsKit.jl"]
+```

@@ -53,7 +53,7 @@ For the function `x` the weighted $L_{\rho}^2([-1,1])$ norm is $ $\Vert x^2 \Ver
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set)
     f_on_grid = [[x[1]] for x in get_grid_points(sg)]
-    pairwise_norms = precompute_pairwise_norms(f_on_grid, (x,y)->dot(x,y))
+    pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->dot(x,y))
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)
     l2_integral_result[1] ≈ sqrt(1/3)
 ```
@@ -73,8 +73,13 @@ This can be explicitly computed to be $\sqrt(92/15)$.
     n,k = 2,4
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set)
-    f_on_grid = [[f(x[1])] for x in get_grid_points(sg)]
-    pairwise_norms = precompute_pairwise_norms(f_on_grid, (x,y)->x.*y)
+    f_on_grid = [f(x[1]) for x in get_grid_points(sg)]
+    pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->x.*y)
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)
     l2_integral_result ≈ sqrt(92/15)
+```
+## Function Reference
+```@docs
+integrate_on_sparsegrid
+integrat_L2__on_sparsegrid
 ```

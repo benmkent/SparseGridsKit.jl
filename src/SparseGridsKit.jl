@@ -4,7 +4,7 @@ export SparseGrid
 export MISet
 
 export create_sparsegrid, get_grid_points, get_n_grid_points, map_from_to, get_mi_set
-export add_mi, get_mi, get_n_mi, get_margin, get_reduced_margin, create_smolyak_miset
+export add_mi, get_mi, get_n_mi, get_margin, get_reduced_margin, create_tensor_miset, create_smolyak_miset
 export interpolate_on_sparsegrid, integrate_on_sparsegrid, integrate_L2_on_sparsegrid
 export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid

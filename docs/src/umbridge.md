@@ -1,7 +1,7 @@
 # UM-Bridge
-It is possible to connect the 'SparseGridsKit.jl' to any model via the ['UM-Bridge'](https://github.com/UM-Bridge/umbridge) Julia client.
+It is also possible to connect the 'SparseGridsKit.jl' to any model via the ['UM-Bridge'](https://github.com/UM-Bridge/umbridge) Julia client.
 
-A brief example is given below.
+The required setup is sketched below.
 
 ```
 using UMBridge

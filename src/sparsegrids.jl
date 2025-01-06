@@ -1,7 +1,5 @@
 using LinearAlgebra
-using FastGaussQuadrature
 using StaticArrays
-using FastTransforms
 
 import Base.:+
 import Base.:-
@@ -593,6 +591,18 @@ function createsmolyakmiset(n, k)
     I = Matrix{Int64}(undef, n, 0)
     for vector in iteratorI
         if norm(vector, 1) <= n + k
+            I = hcat(I, collect(Int64,vector))
+        end
+    end
+    I = sortmi(I)
+    return I
+end
+
+function createtensormiset(n, k)
+    iteratorI = fastvectorgenerator(k, n)
+    I = Matrix{Int64}(undef, n, 0)
+    for vector in iteratorI
+        if maximum(vector) <= n + k
             I = hcat(I, collect(Int64,vector))
         end
     end

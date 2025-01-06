@@ -1,9 +1,9 @@
-## Functions
-
-## Index
+# Function Index
 ```@index
 ```
-## Functions
+
+## Helper Functions
 ```@autodocs
 Modules = [SparseGridsKit]
+Pages = ["genz.jl"]
 ```

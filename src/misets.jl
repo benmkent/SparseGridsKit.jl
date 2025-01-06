@@ -133,3 +133,22 @@ function create_smolyak_miset(n, k)
     miset_smolyak = MISet(miset_vec)
     return miset_smolyak
 end
+
+"""
+    create_tensor_miset(n, k)
+
+Creates a tensor product multi-index set for a given dimension (`n`) and level (`k`).
+
+# Arguments
+- `n`: The dimensionality of the space.
+- `k`: The level of the tensor product grid.
+
+# Returns
+- An `MISet` representing the tensor product multi-index set.
+"""
+function create_tensor_miset(n, k)
+    miset = createtensormiset(n, k)
+    miset_vec = [Vector(v) for v in eachcol(miset)]
+    miset_smolyak = MISet(miset_vec)
+    return miset_smolyak
+end

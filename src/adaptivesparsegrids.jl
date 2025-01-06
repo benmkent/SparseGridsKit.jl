@@ -1,3 +1,20 @@
+"""
+    adaptive_sparsegrid(f, ndims; maxpts=100, proftol=1e-4, rule=doubling, knots=ccpoints)
+
+Constructs an adaptive sparse grid for approximating the function `f` in `ndims` dimensions.
+
+# Arguments
+- `f`: Function to be approximated taking arguments x with length(x)=ndims.
+- `ndims`: Dimension of domain.
+- `maxpts`: (Optional) Maximum number of points to include in the sparse grid. Default is `100`.
+- `proftol`: (Optional) Tolerance for profits. Default is `1e-4`.
+- `rule`: (Optional) Level function(s) for sparse grid. Default is `doubling`.
+- `knots`: (Optional) Knot function(s) for sparse grid. Default is `ccpoints`.
+
+# Returns
+- `sg`: Final sparse grid used to approximate `f`
+- `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
+"""
 function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints)
     MI = create_smolyak_miset(ndims,0)
     sg = create_sparsegrid(MI; rule=rule, knots=knots)
@@ -72,10 +89,37 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
     return (sg, f_on_z)
 end
 
+"""
+    compute_profit(sg_α, f_diff_α, pcl)
+
+Computes the "profit" of a sparse grid supplemented by a multi-index α
+
+# Arguments
+- `sg_α`: Enhanced sparse grid with α
+- `f_diff_α`: Function differences (surpluses) at the enhanced sparse grid points.
+- `pcl`: Precomputed Lagrange integrals
+
+# Returns
+- Computed profit as Expected change in approximation.
+"""
 function compute_profit(sg_α, f_diff_α, pcl)
     return integrate_on_sparsegrid(sg_α, abs.(f_diff_α), pcl)
 end
 
+"""
+    terminate_loop(sg, p_α, maxpts, proftol)
+
+Test profits and sparse grid to determine loop termination
+
+# Arguments
+- `sg`: Sparse grid.
+- `p_α`: Vector of profits.
+- `maxpts`: Maximum number of grid points allowed.
+- `proftol`: Profit tolerance.
+
+# Returns
+- Flag to indicate loop termination if `maxpts` has been reached, or `proftol` attained.
+"""
 function terminate_loop(sg, p_α, maxpts, proftol)
     retval = false
     if get_n_grid_points(sg) >= maxpts

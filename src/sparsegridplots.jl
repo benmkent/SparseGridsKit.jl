@@ -1,4 +1,5 @@
-export plot_pairwise_mi
+export plot_pairwise_mi, plot_sparse_grid
+
 using Plots, StatsPlots
 """
     plot_pairwise_mi(miset)
@@ -27,6 +28,14 @@ function plot_pairwise_mi(miset)
     p=plot([psub[ii,jj] for jj=ndim:-1:1 for ii=1:ndim]...,layout=(ndim,ndim))
 end
 
+"""
+    plot_sparse_grid(sg)
+Plots the sparse grid points
+# Arguments
+- `sg`: Sparse grid to plot
+- `dims`: (optional) for sparse grids with dimension greater than 3, then selects which 3 dimensions to plot as xyz.
+
+"""
 function plot_sparse_grid(sg; dims=nothing)
     pts = get_grid_points(sg)
     p = plot()

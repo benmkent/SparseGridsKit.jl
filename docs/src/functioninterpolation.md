@@ -71,7 +71,7 @@ mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 f_on_grid = [u(z) for z in get_grid_points(sg)]
 
-nsteps = 100
+nsteps = 20
 points = get_grid_points(sg)
 x = [p[1] for p in points]
 y = [p[2] for p in points]

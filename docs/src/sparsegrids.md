@@ -52,7 +52,7 @@ points = get_grid_points(sg)
 ```
 This can still be easily visualised.
 ```@example sg
-nsteps = 100
+nsteps = 20
 @gif for i in range(0, stop = 2π, length = nsteps)
         plot_sparse_grid(sg)
         plot!(title="Sparse Grid n,k="*string(n)*","*string(k),
@@ -73,7 +73,7 @@ knots = [linearpoints, n->ccpoints(n,0,100), uniformpoints]
 rules = [linear, doubling, doubling]
 mi_set = create_smolyak_miset(n,k)
 sg = create_sparsegrid(mi_set, knots=knots, rule=rules)
-nsteps = 100
+nsteps = 20
 @gif for i in range(0, stop = 2π, length = nsteps)
         plot_sparse_grid(sg)
         plot!(

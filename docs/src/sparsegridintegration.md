@@ -13,10 +13,12 @@ For example, we can then extract the pairwise inner products for the level $2$ a
     level2 = 3
     pcl[level1,level2,:,:]
 ```
-This precomputation is generally not too expensive but uses a moderate amount of memory.
+This precomputation step is generally not too expensive but uses a moderate amount of memory.
 ```@example int1
-using BenchmarkTools
-println(@btime precompute_lagrange_integrals(7))
+@elapsed precompute_lagrange_integrals(7)
+```
+```@example int1
+sizeof(pcl)
 ```
 
 Additional arguments can be provided to  [`precompute_lagrange_integrals`](@ref) if mixed knot types are use.

@@ -1,4 +1,4 @@
-# SparseGridsKit
+# SparseGridsKit.jl
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
 
 The construction is based upon the sparse operators introduced by Smolyak [Smolyak1963](@cite).

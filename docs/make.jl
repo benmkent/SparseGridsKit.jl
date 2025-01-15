@@ -14,7 +14,7 @@ makedocs(
                     ],
     "Extensions" => ["Interpolation of PDE solutions"=>"functioninterpolation.md",
     "UM-Bridge" => "umbridge.md"],
-    "Function Reference"=>"reference.md",
+    "Public API Reference"=>"reference.md",
     "References" => "bib.md"
     ];
     format = Documenter.HTML(

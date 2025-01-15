@@ -2,10 +2,10 @@ using SparseGridsKit, Documenter, DocumenterCitations
 
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"))
 makedocs(
-    sitename="SparseGridsKit",
+    sitename="SparseGridsKit.jl",
     pages = [
-    "SparseGridsKit" => "index.md",
-    "Sparse Grids by Examples" => ["Knots"=>"knots.md",
+    "SparseGridsKit.jl" => "index.md",
+    "SparseGridsKit.jl by Examples" => ["Knots"=>"knots.md",
                     "Multi-Index Sets"=>"misets.md",
                     "Sparse Grids"=>"sparsegrids.md",
                     "Sparse Grid Interpolation"=>"sparsegridinterpolation.md",
@@ -14,7 +14,7 @@ makedocs(
                     ],
     "Extensions" => ["Interpolation of PDE solutions"=>"functioninterpolation.md",
     "UM-Bridge" => "umbridge.md"],
-    "Public API Reference"=>"reference.md",
+    "SparseGridsKit.jl API Reference"=>"reference.md",
     "References" => "bib.md"
     ];
     format = Documenter.HTML(

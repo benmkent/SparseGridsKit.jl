@@ -1,5 +1,11 @@
 name: Workflow for Codecov
-on: [push, pull_request]
+on: 
+  push:
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'docs/**'
+  pull_request:
 jobs:
   run:
     runs-on: ubuntu-latest

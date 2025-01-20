@@ -1,0 +1,23 @@
+name: Workflow for Codecov
+on: [push, pull_request]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - name: Run Tests
+        uses: julia-actions/julia-runtest@v1
+      - name : Check coverage
+        uses: julia-actions/julia-processcoverage@v1
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: benmkent/SparseGridsKit.jl

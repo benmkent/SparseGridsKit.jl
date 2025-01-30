@@ -70,8 +70,8 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         (p_max, i_max) = findmax(identity, p_α)
         α_max = get_mi(RM)[i_max]
 
-        if p_max < proftol
-            @info "All profits below proftol: "*string(proftol)*" (p_max = "*string(p_max)*")"
+        # TERMINATE
+        if terminate_loop(sg, p_α, maxpts, proftol)
             break
         end
 

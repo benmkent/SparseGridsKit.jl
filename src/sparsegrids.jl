@@ -218,8 +218,12 @@ function createsparsegrid(MI; rule=doubling, knots=ccpoints)
     if isa(knots, Function)
         (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots, rule)
     else
-        @assert (length(rule) == length(knots))
-        @assert (length(rule) == dims)
+        try
+            @assert (size(rule,1) == size(knots,1))
+            @assert (size(rule,1) == dims)
+        catch e
+            @error "If specified, rule and knots must be the same length as the number of dimensions"
+        end
         ptsunique = Vector{Any}(undef,dims)
         ptsperlevel = Vector{Any}(undef,dims)
         polyperlevel = Vector{Any}(undef,dims)

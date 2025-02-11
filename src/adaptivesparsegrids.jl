@@ -113,6 +113,8 @@ function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl)
     Z_enhanced = get_grid_points(sg_enhanced)
     f_on_z = f_on_z_enhanced[mapfromto(sg,sg_enhanced)]
     f_sg_on_z_enhanced = interpolate_on_sparsegrid(sg,f_on_z, Z_enhanced)
+
+    RM = get_reduced_margin(get_mi_set(sg))
     p_α = Vector{Float64}(undef, length(get_mi(RM)))
     for (i,α) in enumerate(get_mi(RM))
         sg_α = create_sparsegrid(add_mi(MI,α), rule=rule, knots=knots)

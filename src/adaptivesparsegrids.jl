@@ -213,3 +213,4 @@ function adaptive_refine(sg, α_marked, rule, knots)
     sg_map_refine = mapfromto(sg,sg_enhanced)
     f_on_z = f_on_z_enhanced[sg_map_refine]
 return sg, f_on_z
+end

@@ -1,5 +1,5 @@
 """
-    adaptive_sparsegrid(f, ndims; maxpts=100, proftol=1e-4, rule=doubling, knots=ccpoints)
+    adaptive_sparsegrid(f, ndims; maxpts = 100, proftol = 1e-4, rule=doubling, knots=ccpoints)
 
 Constructs an adaptive sparse grid for approximating the function `f` in `ndims` dimensions.
 
@@ -38,7 +38,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         sg_enhanced = create_sparsegrid(MI_enhanced; rule=rule, knots=knots)
 
         # SOLVE
-        f_on_z_enhanced = adaptive_solve(f, sg,sg_enhanced, f_on_z)
+        f_on_z_enhanced = adaptive_solve(f, sg, sg_enhanced, f_on_z)
 
         # Update precompute_lagrange_integrals if necessary
         if maximum([maximum(α) for α in get_mi(get_mi_set(sg_enhanced))])  > maxmi
@@ -48,7 +48,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
 
         # ESTIMATE
         # Interpolate to new grid
-        p_α = adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl)
+        p_α = adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
 
         # MARK
         α_marked = adaptive_mark(RM, p_α, θ)
@@ -59,9 +59,9 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         end
 
         # REFINE
-        sg, f_on_z = adaptive_refine(sg, α_marked, rule, knots)
+        sg, f_on_z = adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
 
-        @info "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(p_max)
+        @info "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
     end
 
     @info "Finished in "*string(kk)*" iterations"
@@ -105,16 +105,20 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 - `sg_enhanced`: Enhanced sparse grid.
 - `f_on_z_enhanced`: Function evaluations on the enhanced sparse grid.
 - `pcl`: Precomputed Lagrange integrals.
+- `rule`: Level function(s) for sparse grid.
+- `knots`: Knot function(s) for sparse grid.
 
 # Returns
 - Vector of profits for each multi-index α.
 """
-function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl)
+function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
     Z_enhanced = get_grid_points(sg_enhanced)
     f_on_z = f_on_z_enhanced[mapfromto(sg,sg_enhanced)]
     f_sg_on_z_enhanced = interpolate_on_sparsegrid(sg,f_on_z, Z_enhanced)
 
-    RM = get_reduced_margin(get_mi_set(sg))
+    MI = get_mi_set(sg)
+    RM = get_reduced_margin(MI)
+    
     p_α = Vector{Float64}(undef, length(get_mi(RM)))
     for (i,α) in enumerate(get_mi(RM))
         sg_α = create_sparsegrid(add_mi(MI,α), rule=rule, knots=knots)
@@ -210,9 +214,9 @@ Refines the sparse grid based on marked multi-indices
 - `sg`: Refined sparse grid.
 - `f_on_z`: Function evaluations on the refined sparse grid.
 """
-function adaptive_refine(sg, α_marked, rule, knots)
+function adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
     MI = get_mi_set(sg)
-    MI = add_mi(MI, MISet(α_max))
+    MI = add_mi(MI, MISet(α_marked))
     sg = create_sparsegrid(MI; rule=rule, knots=knots)
     sg_map_refine = mapfromto(sg,sg_enhanced)
     f_on_z = f_on_z_enhanced[sg_map_refine]

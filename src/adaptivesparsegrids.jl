@@ -38,7 +38,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         sg_enhanced = create_sparsegrid(MI_enhanced; rule=rule, knots=knots)
 
         # SOLVE
-        f_on_z_enhanced = adaptive_solve(sg,sg_enhanced, f_on_z)
+        f_on_z_enhanced = adaptive_solve(f, sg,sg_enhanced, f_on_z)
 
         # Update precompute_lagrange_integrals if necessary
         if maximum([maximum(α) for α in get_mi(get_mi_set(sg_enhanced))])  > maxmi
@@ -70,11 +70,12 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
 end
 
 """
-    adaptive_solve(sg,sg_enhanced, f_on_z)
+    adaptive_solve(f, sg,sg_enhanced, f_on_z)
 
 Computes function f on the new grid points in sg_enhanced
 
 # Arguments
+- `f`: Function to be approximated.
 - `sg`: Sparse grid.
 - `sg_enhanced`: Enhanced sparse grid.
 - `f_on_z`: Function evaluations on the sparse grid `sg`.
@@ -82,7 +83,7 @@ Computes function f on the new grid points in sg_enhanced
 # Returns
 - Function evaluations on the enhanced sparse grid `sg_enhanced`.
 """
-function adaptive_solve(sg,sg_enhanced, f_on_z)
+function adaptive_solve(f, sg,sg_enhanced, f_on_z)
     Z_enhanced = get_grid_points(sg_enhanced)
     sg_map = mapfromto(sg,sg_enhanced)
     f_on_z_enhanced = Vector{typeof(f_on_z[1])}(undef,get_n_grid_points(sg_enhanced))

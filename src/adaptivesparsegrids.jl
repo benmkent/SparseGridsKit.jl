@@ -111,6 +111,7 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 """
 function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl)
     Z_enhanced = get_grid_points(sg_enhanced)
+    f_on_z = f_on_z_enhanced[mapfromto(sg,sg_enhanced)]
     f_sg_on_z_enhanced = interpolate_on_sparsegrid(sg,f_on_z, Z_enhanced)
     p_α = Vector{Float64}(undef, length(get_mi(RM)))
     for (i,α) in enumerate(get_mi(RM))

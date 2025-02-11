@@ -28,6 +28,10 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
     maxmi = 5
     pcl = precompute_lagrange_integrals(maxmi, knots, rule)
 
+    # Set up data store for evaluation recycling
+    sg_evaluations = sg
+    f_on_z_evaluations = f_on_z
+
     while true
         if get_n_grid_points(sg) > maxpts
             @info "Max grid points reached"
@@ -40,7 +44,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         sg_enhanced = create_sparsegrid(MI_enhanced; rule=rule, knots=knots)
 
         # SOLVE
-        f_on_z_enhanced = adaptive_solve(f, sg, sg_enhanced, f_on_z)
+        f_on_z_enhanced = adaptive_solve(f, sg_evaluations, sg_enhanced, f_on_z_evaluations)
 
         # Update precompute_lagrange_integrals if necessary
         if maximum([maximum(α) for α in get_mi(get_mi_set(sg_enhanced))])  > maxmi
@@ -61,6 +65,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
 
         # REFINE
         sg, f_on_z = adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
+        sg_evaluations, f_on_z_evaluations = sg_enhanced, f_on_z_enhanced
 
         @info "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
     end

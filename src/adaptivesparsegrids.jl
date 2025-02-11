@@ -10,12 +10,13 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `proftol`: (Optional) Tolerance for profits. Default is `1e-4`.
 - `rule`: (Optional) Level function(s) for sparse grid. Default is `doubling`.
 - `knots`: (Optional) Knot function(s) for sparse grid. Default is `ccpoints`.
+- `θ`: (Optional) Threshold for marking. Default is `1e-4`.
 
 # Returns
 - `sg`: Final sparse grid used to approximate `f`
 - `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
 """
-function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints)
+function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4)
     MI = create_smolyak_miset(ndims,0)
     sg = create_sparsegrid(MI; rule=rule, knots=knots)
 

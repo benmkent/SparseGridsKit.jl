@@ -207,9 +207,11 @@ Refines the sparse grid based on marked multi-indices
 - `sg`: Refined sparse grid.
 - `f_on_z`: Function evaluations on the refined sparse grid.
 """
+function adaptive_refine(sg, α_marked, rule, knots)
     MI = get_mi_set(sg)
     MI = add_mi(MI, MISet(α_max))
     sg = create_sparsegrid(MI; rule=rule, knots=knots)
     sg_map_refine = mapfromto(sg,sg_enhanced)
     f_on_z = f_on_z_enhanced[sg_map_refine]
 return sg, f_on_z
+end

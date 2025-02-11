@@ -2,8 +2,6 @@ name: Test
 
 on:
   push:
-    branches:
-      - main # update to match your development branch (master, main, dev, trunk, ...)
     tags: '*'
     paths:
       - 'src/**'

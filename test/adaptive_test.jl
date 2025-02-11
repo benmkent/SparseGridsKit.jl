@@ -39,5 +39,9 @@
         f_approx_on_test = interpolate_on_sparsegrid(sg,f_on_Z,test_points)
         
         @test all(isapprox(f(x), f_approx_on_test[i]; atol=1e-3) for (i,x) in enumerate(test_points))
+
+        # Test termination by max points
+        (sg, f_on_Z) = adaptive_sparsegrid(f, n, maxpts=10)
+        @test isapprox(get_n_grid_points(sg), 1, atol=10)
     end
 end

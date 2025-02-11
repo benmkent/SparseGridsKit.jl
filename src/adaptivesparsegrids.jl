@@ -34,6 +34,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
             break
         end
         kk+=1
+        MI = get_mi_set(sg)
         RM = get_reduced_margin(MI)
         MI_enhanced = add_mi(MI, RM)
         sg_enhanced = create_sparsegrid(MI_enhanced; rule=rule, knots=knots)
@@ -48,7 +49,6 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         end
 
         # ESTIMATE
-        # Interpolate to new grid
         p_α = adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
 
         # MARK
@@ -170,7 +170,7 @@ function adaptive_mark(α, p_α, θ=1e-4)
     
     # Dorfler marking
     k = findfirst(p_cumsum .≥ θ * p_total)
-    α_marked = α[idx_sorted[1:k]]
+    α_marked = MISet(get_mi(α)[idx_sorted[1:k]])
     return α_marked
 end
 
@@ -217,7 +217,7 @@ Refines the sparse grid based on marked multi-indices
 """
 function adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
     MI = get_mi_set(sg)
-    MI = add_mi(MI, MISet(α_marked))
+    MI = add_mi(MI, α_marked)
     sg = create_sparsegrid(MI; rule=rule, knots=knots)
     sg_map_refine = mapfromto(sg,sg_enhanced)
     f_on_z = f_on_z_enhanced[sg_map_refine]

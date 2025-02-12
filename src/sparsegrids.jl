@@ -5,9 +5,9 @@ import Base.:+
 import Base.:-
 
 mutable struct SparseGrid
-    dims
-    MI
-    terms
+    dims # Number of input dimensions
+    MI  # Multi index set
+    terms #
     sparsegridptids
     maptermstosparsegrid
     cterms
@@ -531,37 +531,13 @@ function generatebinaryvectors(n)
 end
 
 function createlagrangepolys(pts)
-    #p = Vector{Polynomial{Float64, :x}}(undef,length(pts))
     p = Vector{Any}(undef, length(pts))
     for ii in eachindex(pts)
-        #p[ii] = fromroots(pts[1:end .!= ii])
-        #p[ii] = p[ii]/p[ii](pts[ii])
-        p[ii] = stablepoly(pts, ii)
+        # p[ii] = stablepoly(pts, ii)
+        p[ii] = poly_Fun(pts, ii)
     end
     return p
 end
-
-# function stablepoly(knots, ind)
-#     n = length(knots)
-#     l(z) = prod(z .- knots)
-#     w_j(knots, j) = 1 / prod(knots[j] .- knots[1:n.!=j])
-
-#     f_knots = zeros(length(knots))
-#     f_knots[ind] = 1
-
-#     w = [w_j(knots, ii) for ii in 1:n]
-
-#     function L(x)
-#         if any(x .== knots)
-#             jj = findfirst(x .== knots)
-#             y = f_knots[jj]
-#         else
-#             y = l(x) .* w[ind] ./ (x .- knots[ind])
-#         end
-#         return y
-#     end
-#     return L
-# end
 
 function stablepoly(knots, ind)
     n = length(knots)

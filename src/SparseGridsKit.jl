@@ -8,6 +8,7 @@ export add_mi, get_mi, get_n_mi, get_margin, get_reduced_margin, create_tensor_m
 export interpolate_on_sparsegrid, integrate_on_sparsegrid, integrate_L2_on_sparsegrid
 export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid
+export convert_to_spectral_approximation
 
 export ccpoints, uniformpoints, linearpoints, lejapoints
 export doubling, linear
@@ -21,6 +22,7 @@ include("sparsegridplots.jl")
 include("misets.jl")
 include("knots.jl")
 include("adaptivesparsegrids.jl")
+include("spectralsparsegrids.jl")
 
 """
     precompute_lagrange_integrals(max_mi)

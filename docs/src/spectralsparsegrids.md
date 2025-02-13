@@ -33,7 +33,7 @@ f_spectral.dims
 ```
 The representation of the tensor of polynomials is compactly stored as a `SparseVector`.
 To index into this we require the storage dimension for each domain dimension.
-``````@example genz
+```@example genz
 f_spectral.expansiondimensions
 ```
 This demonstrates that more polynomial terms are used in the parameter dimensions closer to one.

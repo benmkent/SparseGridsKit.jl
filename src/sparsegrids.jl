@@ -19,6 +19,16 @@ mutable struct SparseGrid
     polyperlevel
 end
 
+mutable struct SparseGridApproximation
+    sg::SparseGrid
+    fongrid::Vector
+end
+
+function (sga::SparseGridApproximation)(x)
+    @assert length(x) == sga.sg.dims
+    return interpolate_on_sparsegrid(sga.sg, sga.fongrid, [x])[1]
+end
+
 function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
     dims = sg1.dims
     @assert dims == sg2.dims

@@ -2,6 +2,8 @@ module SparseGridsKit
 
 export SparseGrid
 export MISet
+export SparseGridApproximation
+export SpectralSparseGridApproximation
 
 export create_sparsegrid, get_grid_points, get_n_grid_points, map_from_to, get_mi_set
 export add_mi, get_mi, get_n_mi, get_margin, get_reduced_margin, create_tensor_miset, create_smolyak_miset

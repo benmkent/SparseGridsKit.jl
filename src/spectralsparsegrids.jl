@@ -12,14 +12,14 @@ A spectral sparse grid approximation.
 - `expansiondimensions::Vector{Int}`: Vector of maximum polynomial degree in each dimension.
 - `polytypes::Vector{Any}`: Vector of polynomial spaces.
 - `coefficients::SparseVector{Any}`: Sparse ector of polynomial coefficients
-- `polydegrees::Vector{Vector}`: Vector of polynomial degrees for each non zero coefficient.
+- `polydegrees::SparseVector{Vector}`: SparseVector of polynomial degrees for each non zero coefficient.
 """
 mutable struct SpectralSparseGridApproximation
     dims::Int
     expansiondimensions::Vector{Int}
     polytypes::Vector{Any}
     coefficients::SparseVector{Any}
-    polydegrees::Vector{Vector}
+    polydegrees
 end
 
 """
@@ -62,9 +62,9 @@ function (s::SpectralSparseGridApproximation)(x)
             c = s.coefficients[idx]
             # Product of polynomials
             if isnothing(evaluation)
-                evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[i][k]);1])(x[k]) for k = 1:s.dims)
+                evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
             else
-                evaluation = evaluation + c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[i][k]);1])(x[k]) for k = 1:s.dims)
+                evaluation = evaluation + c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
             end
         end
     return evaluation
@@ -175,6 +175,8 @@ function get_spectral_poly_representation(expansiondimensions, coefficients)
             # Store the tuple of the multi-dimensional index and coefficient
             poly[i] = multi_dim_index .- 1
         end
+
+        poly = sparse(coefficients.nzind, ones(length(coefficients.nzind)), poly, length(coefficients), 1)
     
         return poly, coefficients
 end

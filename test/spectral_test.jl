@@ -39,24 +39,24 @@ using ApproxFun
                     ssg.coefficients[4]  ==  2.0
                     ssg.coefficients[7]  ==  3.0])
         @test all([ ssg.polydegrees[1] .== [0, 0]
-                    ssg.polydegrees[2] .== [1, 0]
-                    ssg.polydegrees[3] .== [2, 0]
-                    ssg.polydegrees[4] .== [0, 1]
-                    ssg.polydegrees[5] .== [0, 2]])
+                    ssg.polydegrees[2] .== [0, 1]
+                    ssg.polydegrees[3] .== [0, 2]
+                    ssg.polydegrees[4] .== [1, 0]
+                    ssg.polydegrees[7] .== [2, 0]])
 
         
         ssg = ssg1 - ssg2
         # No [0,0] term after subtraction
         @test ssg.expansiondimensions == [3,3]
         @test ssg.polytypes == [space,space]
-        @test all([ ssg.coefficients[2]  ==  2.0
-                    ssg.coefficients[3]  ==  3.0
-                    ssg.coefficients[4]  ==  -2.0
-                    ssg.coefficients[7]  ==  -3.0])
-        @test all([ ssg.polydegrees[1] .== [1, 0]
-                    ssg.polydegrees[2] .== [2, 0]
-                    ssg.polydegrees[3] .== [0, 1]
-                    ssg.polydegrees[4] .== [0, 2]])
+        @test all([ ssg.coefficients[2]  ==  -2.0
+                    ssg.coefficients[3]  ==  -3.0
+                    ssg.coefficients[4]  ==  2.0
+                    ssg.coefficients[7]  ==  3.0])
+        @test all([ ssg.polydegrees[2] .== [0, 1]
+                    ssg.polydegrees[3] .== [0, 2]
+                    ssg.polydegrees[4] .== [1, 0]
+                    ssg.polydegrees[7] .== [2, 0]])
     end
     
     @testset "Representation" begin

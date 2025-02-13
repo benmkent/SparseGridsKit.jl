@@ -65,6 +65,7 @@ all(isapprox(y_spectral_2, zeros(size(0)); atol=1e-8))
 ```
 
 ## Function Reference
-```@docs
-spectralsparsegrids
+```@autodocs
+Modules = [SparseGridsKit]
+Pages   = ["spectralsparsegrids.jl"]
 ```

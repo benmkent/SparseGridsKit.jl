@@ -1,4 +1,6 @@
 using SparseGridsKit: truncated_kron, kron_index, reverse_kron_index
+using SparseArrays: sparse
+using ApproxFun
 
 @testset "Spectral Representation Tests" begin
     @testset "Indexing" begin
@@ -19,8 +21,45 @@ using SparseGridsKit: truncated_kron, kron_index, reverse_kron_index
 
         @test all(v_tensor[i] == prod(reverse_kron_index(i,dims)) for i in eachindex(v_tensor))
     end
+
+    @testset "Addition" begin
+        space = Chebyshev(-1..1)
+        tensor_1, dims_1 = truncated_kron([[1.0,2.0,3.0],[1.0]])
+        tensor_2, dims_2 = truncated_kron([[1.0],[1.0,2.0,3.0]])
+        ssg1 = SpectralSparseGridApproximation(2,dims_1,[space,space],tensor_1)
+        ssg2 = SpectralSparseGridApproximation(2,dims_2,[space,space],tensor_2)
+
+        ssg = ssg1 + ssg2
+
+        @test ssg.expansiondimensions == [3,3]
+        @test ssg.polytypes == [space,space]
+        @test all([ ssg.coefficients[1]  ==  2.0
+                    ssg.coefficients[2]  ==  2.0
+                    ssg.coefficients[3]  ==  3.0
+                    ssg.coefficients[4]  ==  2.0
+                    ssg.coefficients[7]  ==  3.0])
+        @test all([ ssg.polydegrees[1] .== [0, 0]
+                    ssg.polydegrees[2] .== [1, 0]
+                    ssg.polydegrees[3] .== [2, 0]
+                    ssg.polydegrees[4] .== [0, 1]
+                    ssg.polydegrees[5] .== [0, 2]])
+
+        
+        ssg = ssg1 - ssg2
+        # No [0,0] term after subtraction
+        @test ssg.expansiondimensions == [3,3]
+        @test ssg.polytypes == [space,space]
+        @test all([ ssg.coefficients[2]  ==  2.0
+                    ssg.coefficients[3]  ==  3.0
+                    ssg.coefficients[4]  ==  -2.0
+                    ssg.coefficients[7]  ==  -3.0])
+        @test all([ ssg.polydegrees[1] .== [1, 0]
+                    ssg.polydegrees[2] .== [2, 0]
+                    ssg.polydegrees[3] .== [0, 1]
+                    ssg.polydegrees[4] .== [0, 2]])
+    end
     
-    @testset "Genz" begin
+    @testset "Representation" begin
         # Create simple SG
         n = 1
         C = 1.0

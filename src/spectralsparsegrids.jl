@@ -2,6 +2,18 @@ using ApproxFun
 using SparseArrays
 import Base.+
 
+"""
+    SpectralSparseGridApproximation
+
+A spectral sparse grid approximation.
+
+# Fields
+- `dims::Int`: Dimension of the domain.
+- `expansiondimensions::Vector{Int}`: Vector of maximum polynomial degree in each dimension.
+- `polytypes::Vector{Any}`: Vector of polynomial spaces.
+- `coefficients::SparseVector{Any}`: Sparse ector of polynomial coefficients
+- `polydegrees::Vector{Vector}`: Vector of polynomial degrees for each non zero coefficient.
+"""
 mutable struct SpectralSparseGridApproximation
     dims::Int
     expansiondimensions::Vector{Int}
@@ -10,15 +22,40 @@ mutable struct SpectralSparseGridApproximation
     polydegrees::Vector{Vector}
 end
 
+"""
+    SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
+
+Constructs a spectral sparse grid approximation.
+
+# Arguments
+- `dims::Int`: Dimension of the domain.
+- `expansiondimensions::Vector{Int}`: Vector of maximum polynomial degree in each dimension.
+- `polytypes::Vector{Any}`: Vector of polynomial spaces.
+- `coefficients::Vector{Any}`: Kronecker product vector of polynomial coefficients
+
+# Returns
+- `SpectralSparseGridApproximation`: An instance of `SpectralSparseGridApproximation`.
+"""
 function SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
     coefficients = sparse(coefficients)
     polydegrees, coefficients = get_spectral_poly_representation(expansiondims, coefficients)
     return SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients, polydegrees)
 end
 
+"""
+    (s::SpectralSparseGridApproximation)(x)
+
+Evaluate the spectral sparse grid approximation at the given point `x`.
+
+# Arguments
+- `s::SpectralSparseGridApproximation`: Spectral sparse grid approximation object.
+- `x::Vector{T}`: Vector x in domain to be evaluated
+
+# Returns
+- `evaluation`: Evaluation of s(x)
+"""
 function (s::SpectralSparseGridApproximation)(x)
     @assert length(x) == s.dims
-
     # Evaluate
         evaluation = nothing
         for (i,idx) in enumerate(s.coefficients.nzind)
@@ -33,6 +70,18 @@ function (s::SpectralSparseGridApproximation)(x)
     return evaluation
 end
 
+"""
+    +(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridApproximation)
+
+Add two `SpectralSparseGridApproximation` objects.
+
+# Arguments
+- `grid1::SpectralSparseGridApproximation`: Spectral sparse grid approximation.
+- `grid2::SpectralSparseGridApproximation`: Second spectral sparse grid approximation.
+
+# Returns
+- `SpectralSparseGridApproximation` representing sum of `grid1` and `grid2`.
+"""
 function +(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridApproximation)
     # Ensure dimensions and grid sizes match
     if grid1.dims != grid2.dims
@@ -94,6 +143,18 @@ function +(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridAppr
     return SpectralSparseGridApproximation(grid1.dims, max_dims, grid1.polytypes, coeffs1_padded + coeffs2_padded)
 end
 
+"""
+    -(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridApproximation)
+
+Subtracts `SpectralSparseGridApproximation` objects
+
+# Arguments
+- `grid1::SpectralSparseGridApproximation`: Spectral sparse grid approximation.
+- `grid2::SpectralSparseGridApproximation`: Second spectral sparse grid approximation, to be subtracted
+
+# Returns
+- `SpectralSparseGridApproximation` object representing the subtraction.
+"""
 function -(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridApproximation)
     grid2.coefficients = -grid2.coefficients
     return grid1 + grid2 
@@ -118,6 +179,20 @@ function get_spectral_poly_representation(expansiondimensions, coefficients)
         return poly, coefficients
 end
 
+"""
+    poly_Fun(knots, ind; lb=-1.0, ub=1.0)
+
+Lagrange interpolation polynomial `ind` for the set of `knots`
+
+# Arguments
+- `knots::Vector{T}`: A vector of knots
+- `ind::Int`: Knot index for polynomial equal to 1.
+- `lb::Float64`: Domain lower bound. Default is -1.0.
+- `ub::Float64`: Domain upper bound. Default is 1.0.
+
+# Returns
+- `f::Fun`: Lagrange interpolation polynomial as ApproxFun Fun object.
+"""
 function poly_Fun(knots, ind; lb=-1.0, ub=1.0)
     n = length(knots)
     space = Chebyshev(lb..ub)
@@ -136,6 +211,18 @@ function poly_Fun(knots, ind; lb=-1.0, ub=1.0)
     return f
 end
 
+"""
+    createlagrangepolys_approxfun(pts)
+
+Create a vector of Lagrange polynomial approximation functions for a given set of knots.
+
+# Arguments
+- `pts`: Vector of knots.
+
+# Returns
+- `Vector{Any}`: Vector containing the Lagrange polynomial approximation `Fun`s for each point in `pts`.
+
+"""
 function createlagrangepolys_approxfun(pts)
     p = Vector{Any}(undef, length(pts))
     for ii in eachindex(pts)
@@ -144,8 +231,34 @@ function createlagrangepolys_approxfun(pts)
     return p
 end
 
-function convert_to_spectral_approximation(sparsegrid, fongrid)
+"""
+    convert_to_spectral_approximation(sga::SparseGridApproximation)
 
+Convert a `SparseGridApproximation` object to its spectral approximation.
+
+# Arguments
+- `sga::SparseGridApproximation`: Sparse grid approximation.
+
+# Returns
+- Spectral Sparse Grid Approximation representing `sga`.
+"""
+function convert_to_spectral_approximation(sga::SparseGridApproximation)
+    return convert_to_spectral_approximation(sga.sparsegrid, sga.fongrid)
+end
+
+"""
+    convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
+
+Converts a `sparse grid` and corresponding evaluations `fongrid` to a SpectralSparseGridApproximation
+
+# Arguments
+- `sparsegrid::SparseGrid`: Sparse grid
+- `fongrid`: Function evaluations of `sparse grid`.
+
+# Returns
+- `SpectralSparseGridApproximation` represntation of `sparsegrid` with evaluations `fongrid`.
+"""
+function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
     terms = sparsegrid.terms
     cterms = sparsegrid.cterms
     maprowtouniquept = sparsegrid.maptermstosparsegrid
@@ -181,6 +294,19 @@ function convert_to_spectral_approximation(sparsegrid, fongrid)
     return SSG_total
 end
 
+"""
+    truncated_kron(vectors; tol=1e-10)
+
+Compute the Kronecker product of a list of vectors with truncation.
+
+# Arguments
+- `vectors::Vector{Vector}`: Vector of vectors to compute the Kronecker product.
+- `tol::Float64`: Tolerance value for coefficienet truncation to promote sparsity. Elements with absolute values less than `tol` are set to zero. Default is `1e-10`.
+
+# Returns
+- `result`: SparseVector representation of truncated Kronecker product of the input vectors.
+- `tensor_dims::Vector{Int}`: Dimensions of the resulting tensor.
+"""
 function truncated_kron(vectors; tol=1e-10)
     result = sparse(vectors[1])
     for v in vectors[2:end]
@@ -190,12 +316,23 @@ function truncated_kron(vectors; tol=1e-10)
         result = sparse(result .* (abs.(result) .> tol))
     end
 
-    # Reshape into a tensor
     tensor_dims = length.(vectors)
-    # return reshape(result, tensor_dims...)
     return result, tensor_dims
 end
 
+"""
+    kron_index(indices::Vector{Int}, dims::Vector{Int})
+
+Calculate the linear index in a Kronecker product space given the multi-dimensional indices and the dimensions of each space.
+
+# Arguments
+- `indices::Vector{Int}`: Index vector.
+- `dims::Vector{Int}`: Vector of storage dimension for each tensor dimension.
+
+# Returns
+- Linear index corresponding to the index given in `indices`.
+
+"""
 function kron_index(indices::Vector{Int}, dims::Vector{Int})
    # Convert to 0-based indices for easier calculation
     indices_0based = indices .- 1
@@ -206,6 +343,19 @@ function kron_index(indices::Vector{Int}, dims::Vector{Int})
     return index + 1
 end
 
+"""
+    reverse_kron_index(index::Int, dims::Vector{Int})
+
+Given linear index `index` and a vector of dimensions `dims`, computes the multi-dimensional tensor index.
+
+# Arguments
+- `index::Int`: Linear index.
+- `dims::Vector{Int}`: Vector containing the storage dimension of the tensor dimensions.
+
+# Returns
+- `Vector{Int}`: Tensor index
+
+"""
 function reverse_kron_index(index::Int, dims::Vector{Int})
         index_0based = index - 1  # Convert to 0-based indexing
         indices = Vector{Int}(undef, length(dims))

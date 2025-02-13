@@ -1,4 +1,4 @@
-# Public API Index
+# Public API Reference
 ```@index
 ```
 

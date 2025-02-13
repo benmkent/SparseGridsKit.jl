@@ -7,6 +7,7 @@ using Test, Documenter, SparseGridsKit, LinearAlgebra
     include("sparsegrids_test.jl")
     include("mixedpoints_test.jl")
     include("adaptive_test.jl")
+    include("spectral_test.jl")
 end
 
 @testset "doctest" begin

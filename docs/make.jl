@@ -10,11 +10,12 @@ makedocs(
                     "Sparse Grids"=>"sparsegrids.md",
                     "Sparse Grid Interpolation"=>"sparsegridinterpolation.md",
                     "Sparse Grid Integration"=>"sparsegridintegration.md",
-                    "Adaptive Sparse Grids"=>"adaptivesparsegrids.md"
+                    "Adaptive Sparse Grids"=>"adaptivesparsegrids.md",
+                    "Spectral Sparse Grids"=>"spectralsparsegrids.md",
                     ],
     "Extensions" => ["Interpolation of PDE solutions"=>"functioninterpolation.md",
     "UM-Bridge" => "umbridge.md"],
-    "SparseGridsKit.jl API Reference"=>"reference.md",
+    "SparseGridsKit.jl Public API Reference"=>"reference.md",
     "References" => "bib.md"
     ];
     format = Documenter.HTML(

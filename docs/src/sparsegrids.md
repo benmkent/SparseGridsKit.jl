@@ -71,7 +71,7 @@ To demonstrate, consider linear points $$n\mapsto\{1,2,...,n\}$$ in the first di
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3
-knots = [linearpoints, n->ccpoints(n,0,100), uniformpoints]
+knots = [ccpoints, n->ccpoints(n,0,100), uniformpoints]
 rules = [linear, doubling, doubling]
 mi_set = create_smolyak_miset(n,k)
 domain = [[-1,1],[0,100],[0,1]]

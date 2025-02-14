@@ -4,7 +4,7 @@ Sparse grid interpolation in `SparseGridsKit.jl` relies on precomputed integrals
 !!! note
     This may change in the future - at the moment precomputing the pairwise integrals is used to speed up computation of $L^2(\Gamma)$ type norms.
 
-To do this a maximum level number is selected and all pairwise $L_{\rho}^2(\Gamma)$ integrals inner products are computed using [`precompute_lagrange_integrals`](@ref).
+To do this a maximum level number is selected and for each domain dimension, all pairwise $L_{\rho}^2(\Gamma)$ integrals inner products are computed using [`precompute_lagrange_integrals`](@ref).
 For example, we can then extract the pairwise inner products for the level $2$ and level $3$ polynomials.
 ```@example int1
     using SparseGridsKit, LinearAlgebra
@@ -12,7 +12,8 @@ For example, we can then extract the pairwise inner products for the level $2$ a
     pcl = precompute_lagrange_integrals(7,domain)
     level1 = 2
     level2 = 3
-    pcl[level1,level2,:,:]
+    domaindim = 1
+    pcl[domaindim][level1,level2,:,:]
 ```
 This precomputation step is generally not too expensive but uses a moderate amount of memory.
 ```@example int1

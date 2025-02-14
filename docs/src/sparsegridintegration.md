@@ -8,20 +8,20 @@ To do this a maximum level number is selected and all pairwise $L_{\rho}^2(\Gamm
 For example, we can then extract the pairwise inner products for the level $2$ and level $3$ polynomials.
 ```@example int1
     using SparseGridsKit, LinearAlgebra
-    pcl = precompute_lagrange_integrals(7)
+    pcl = precompute_lagrange_integrals(7,domain)
     level1 = 2
     level2 = 3
     pcl[level1,level2,:,:]
 ```
 This precomputation step is generally not too expensive but uses a moderate amount of memory.
 ```@example int1
-@elapsed precompute_lagrange_integrals(7)
+@elapsed precompute_lagrange_integrals(7,domain)
 ```
 ```@example int1
 sizeof(pcl)
 ```
 
-Additional arguments can be provided to  [`precompute_lagrange_integrals`](@ref) if mixed knot types are use.
+Additional arguments must be provided to  [`precompute_lagrange_integrals`](@ref) if specific knot types are use.
 
 ## Sparse Grid Integration
 To integrate a sparse grid polynomial approximation we require the sparse grid, function evaluations and the precomputed integrals.
@@ -45,7 +45,8 @@ The approximate integral using the constant approximation is equal to $[1,1]$.
 ```@example int1
     n,k = 2,0
     mi_set = create_smolyak_miset(n,k)
-    sg = create_sparsegrid(mi_set)
+    domain = [[-1,1],[-1,1]]
+    sg = create_sparsegrid(mi_set, domain)
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid
     integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
@@ -55,7 +56,8 @@ The integral can be evaluated explicitly, and it is seen that using an larger sp
 ```@example int1
     n,k = 2,4
     mi_set = create_smolyak_miset(n,k)
-    sg = create_sparsegrid(mi_set)
+    domain = [[-1,1],[-1,1]]
+    sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid
     integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
@@ -83,7 +85,8 @@ for weight function $\rho=0.5$.
 ```@example int1
     n,k = 1,1
     mi_set = create_smolyak_miset(n,k)
-    sg = create_sparsegrid(mi_set)
+    domain = [[-1,1]]
+    sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [[x[1]] for x in get_grid_points(sg)]
     pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->dot(x,y))
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)
@@ -96,7 +99,8 @@ Similarly, for $x^2$ we get
 ```@example int1
     n,k = 1,3
     mi_set = create_smolyak_miset(n,k)
-    sg = create_sparsegrid(mi_set)
+    domain = [[-1,1]]
+    sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [[x[1]^2] for x in get_grid_points(sg)]
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)
     l2_integral_result[1] ≈ sqrt(1/5)
@@ -106,7 +110,8 @@ This can be explicitly computed to be $\sqrt{92/15}$.
 ```@example int1
     n,k = 2,4
     mi_set = create_smolyak_miset(n,k)
-    sg = create_sparsegrid(mi_set)
+    domain = [[-1,1],[-1,1]]
+    sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [f(x[1]) for x in get_grid_points(sg)]
     pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->x.*y)
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)

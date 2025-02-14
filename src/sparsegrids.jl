@@ -17,6 +17,7 @@ mutable struct SparseGrid
     ptsunique
     sparsegridpts
     polyperlevel
+    domain
 end
 
 mutable struct SparseGridApproximation
@@ -67,7 +68,7 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
 
     (sparsegridptids, sparsegridpts, maptermstosparsegrid) = sparsegridpoints(terms, sg.pintsmap, sg.ptsunique, size(sg.MI, 1))
 
-    sparsegrid = SparseGrid(dims, MI, terms, sparsegridptids, maptermstosparsegrid, cterms, cmi, sg.pintsmap, sg.ptsperlevel, sg.ptsunique, sparsegridpts, sg.polyperlevel)
+    sparsegrid = SparseGrid(dims, MI, terms, sparsegridptids, maptermstosparsegrid, cterms, cmi, sg.pintsmap, sg.ptsperlevel, sg.ptsunique, sparsegridpts, sg.polyperlevel, sg.domain)
 
     return sparsegrid
 end
@@ -85,17 +86,18 @@ function Base.:copy(sg::SparseGrid)
     return sgcopy
 end
 
-function sparsegridprecompute(maxmi, knots=ccpoints, rule=doubling)
+function sparsegridprecompute(maxmi, domain, knots=ccpoints, rule=doubling)
 
     if isa(knots, Function)
-        (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots, rule)
-        productintegrals = sparsegridproductintegrals(polyperlevel, maxmi, knots, rule)
-    else
-        productintegrals = Vector{Any}(undef, length(knots))
-        for ii = eachindex(knots)
-            (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii])
-            productintegrals[ii] = sparsegridproductintegrals(polyperlevel, maxmi, knots[ii], rule[ii])
-        end
+        knots = fill(knots, length(domain))
+    end
+    if isa(rule, Function)
+        rule = fill(rule, length(domain))
+    end
+    productintegrals = Vector{Any}(undef, length(knots))
+    for ii = eachindex(knots)
+        (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
+        productintegrals[ii] = sparsegridproductintegrals(polyperlevel, maxmi, knots[ii], rule[ii])
     end
     return (; productintegrals)
 end
@@ -138,14 +140,6 @@ function sparsegridproductintegrals(polyperlevel, maxmi, knots, rule)
         #push!(productintegrals, productintegralslevel)
     end
     return productintegrals
-end
-
-function createenhancedsparsegrid(sg)
-    sgMI = downwards_closed_set(sg.MI)
-    rm = reducedmargin(sgMI)
-    enhancedMI = downwards_closed_set(hcat(sgMI, rm))
-    enhancedsg = createsparsegrid(enhancedMI)
-    return enhancedsg
 end
 
 function mapfromto(sgfrom, sgto)
@@ -220,34 +214,36 @@ function reducedmargin(MI)
     return sortmi(rm)
 end
 
-function createsparsegrid(MI; rule=doubling, knots=ccpoints)
+function createsparsegrid(MI, domain; rule=doubling, knots=ccpoints)
     MI = sortmi(MI)
     maxmi = maximum(MI)
     dims = size(MI, 1)
 
     if isa(knots, Function)
-        (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots, rule)
-    else
-        try
-            @assert (size(rule,1) == size(knots,1))
-            @assert (size(rule,1) == dims)
-        catch e
-            @error "If specified, rule and knots must be the same length as the number of dimensions"
-        end
-        ptsunique = Vector{Any}(undef,dims)
-        ptsperlevel = Vector{Any}(undef,dims)
-        polyperlevel = Vector{Any}(undef,dims)
-        pintsmap = Vector{Any}(undef,dims)
-        for ii = eachindex(knots)
-            (ptsunique[ii], ptsperlevel[ii], polyperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii])
-        end
+        knots = fill(knots, dims)
+    end
+    if isa(rule, Function)
+        rule = fill(rule, dims)
+    end
+    try
+        @assert (size(rule,1) == size(knots,1))
+        @assert (size(rule,1) == dims)
+    catch e
+        @error "If specified, rule and knots must be the same length as the number of dimensions"
+    end
+    ptsunique = Vector{Any}(undef,dims)
+    ptsperlevel = Vector{Any}(undef,dims)
+    polyperlevel = Vector{Any}(undef,dims)
+    pintsmap = Vector{Any}(undef,dims)
+    for ii = eachindex(knots)
+        (ptsunique[ii], ptsperlevel[ii], polyperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
     end
 
     (grid, cterms, cmi, MI) = sparsegridterms(MI, ptsperlevel)
 
     (sparsegridptids, sparsegridpts, maptermstosparsegrid) = sparsegridpoints(grid, pintsmap, ptsunique, dims)
 
-    sparsegrid = SparseGrid(dims, MI, grid, sparsegridptids, maptermstosparsegrid, cterms, cmi, pintsmap, ptsperlevel, ptsunique, sparsegridpts, polyperlevel)
+    sparsegrid = SparseGrid(dims, MI, grid, sparsegridptids, maptermstosparsegrid, cterms, cmi, pintsmap, ptsperlevel, ptsunique, sparsegridpts, polyperlevel, domain)
     return sparsegrid
 end
 
@@ -330,16 +326,19 @@ function sparsegridterms(MI, ptsperlevel; cmi=nothing)
     return (terms, cterms, cmi, MI)
 end
 
-function sparsegridonedimdata(maxmi, knots, rule)
+function sparsegridonedimdata(maxmi, knots, rule, domain)
     ptsunique = Vector{Float64}(undef, 0)
     ptsperlevel = Vector{Vector{Float64}}(undef, maxmi)
     #poly = Vector{Vector{Polynomial{Float64,:x}}}(undef, maxmi)
     polyperlevel = Vector{Any}(undef, maxmi)
     pintsmap = Dict{}()
 
+    # Based on knots define appropriate ApproxFun space for underlying polynomials
+    space = spaceselector(domain)
+
     for ii = 1:maxmi
         ptsperlevel[ii], w = knots(rule(ii))
-        polyperlevel[ii] = createlagrangepolys(ptsperlevel[ii])
+        polyperlevel[ii] = createlagrangepolys(ptsperlevel[ii], space)
 
         # Build points map
         for (jj, p) in enumerate(ptsperlevel[ii])
@@ -540,11 +539,11 @@ function generatebinaryvectors(n)
     return vectors
 end
 
-function createlagrangepolys(pts)
+function createlagrangepolys(pts, space=Chebyshev(-1.0..1.0))
     p = Vector{Any}(undef, length(pts))
     for ii in eachindex(pts)
         # p[ii] = stablepoly(pts, ii)
-        p[ii] = poly_Fun(pts, ii)
+        p[ii] = poly_Fun(pts, ii, space=space)
     end
     return p
 end
@@ -627,3 +626,21 @@ function downwards_closed_set(input_matrix::Matrix)
 
     return sortmi(output_matrix)
 end
+
+function spaceselector(domain)
+    if length(domain) != 2
+        Base.throw_checksize_error("Domain must be 2 values")
+    end
+    xmin = domain[1]
+    xmax = domain[2]
+    domain = xmin..xmax
+
+    if isinf(domain.left) && isinf(domain.right)
+        space = Hermite(domain)
+    elseif iszero(domain.left) && isinf(domain.right)
+        space = Laguerre()
+    else
+        space = Chebyshev(domain)
+    end
+end
+

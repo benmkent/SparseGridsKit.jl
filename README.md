@@ -22,7 +22,8 @@ n,k =3,3
 knots = [linearpoints, ccpoints, uniformpoints]
 rules = [linear, doubling, doubling]
 mi_set = create_smolyak_miset(n,k)
-sg = create_sparsegrid(mi_set, knots=knots, rule=rules)
+domain = [[-1,1],[-1,1],[-1,1]]
+sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
         plot_sparse_grid(sg)

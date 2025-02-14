@@ -195,9 +195,8 @@ Lagrange interpolation polynomial `ind` for the set of `knots`
 # Returns
 - `f::Fun`: Lagrange interpolation polynomial as ApproxFun Fun object.
 """
-function poly_Fun(knots, ind; lb=-1.0, ub=1.0)
+function poly_Fun(knots, ind; space=Chebyshev(-1.0..1.0))
     n = length(knots)
-    space = Chebyshev(lb..ub)
 
     f_knots = zeros(eltype(knots), length(knots))
     f_knots[ind] = 1
@@ -225,10 +224,10 @@ Create a vector of Lagrange polynomial approximation functions for a given set o
 - `Vector{Any}`: Vector containing the Lagrange polynomial approximation `Fun`s for each point in `pts`.
 
 """
-function createlagrangepolys_approxfun(pts)
+function createlagrangepolys_approxfun(pts, space=Chebyshev(-1.0..1.0))
     p = Vector{Any}(undef, length(pts))
     for ii in eachindex(pts)
-        p[ii] = poly_Fun(pts, ii)
+        p[ii] = poly_Fun(pts, ii, space)
     end
     return p
 end

@@ -27,7 +27,7 @@ include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
 
 """
-    precompute_lagrange_integrals(max_mi)
+    precompute_lagrange_integrals(max_mi, domain)
 
 Precomputes the product integrals for Lagrange basis functions up to a given maximum multi-index (`max_mi`).
 
@@ -37,13 +37,13 @@ Precomputes the product integrals for Lagrange basis functions up to a given max
 # Returns
 - A vector of precomputed product integrals for the Lagrange basis.
 """
-function precompute_lagrange_integrals(max_mi, knots=ccpoints, rule=doubling)
-    precompute = sparsegridprecompute(max_mi, knots, rule)
+function precompute_lagrange_integrals(max_mi, domain, knots=ccpoints, rule=doubling)
+    precompute = sparsegridprecompute(max_mi, domain, knots, rule)
     return precompute.productintegrals
 end
 
 """
-    create_sparsegrid(mi_set)
+    create_sparsegrid(mi_set, domain)
 
 Creates a sparse grid based on the provided multi-index set (`mi_set`).
 
@@ -55,9 +55,9 @@ Creates a sparse grid based on the provided multi-index set (`mi_set`).
 # Returns
 - A sparse grid object constructed using the specified multi-index set.
 """
-function create_sparsegrid(mi_set; rule=doubling, knots=ccpoints)
+function create_sparsegrid(mi_set, domain; rule=doubling, knots=ccpoints)
     miset_matrix = hcat(mi_set.mi...)
-    sg = createsparsegrid(miset_matrix; rule=rule, knots=knots)
+    sg = createsparsegrid(miset_matrix, domain; rule=rule, knots=knots)
     return sg
 end
 

@@ -16,7 +16,8 @@ model = UMBridge.HTTPModel("modelname", url)
 n=1
 k=5
 mi = create_smolyak_miset(n,k)
-sg = create_sparsegrid(mi)
+domain = [[-1,1]]
+sg = create_sparsegrid(mi,domain)
 
 Z = get_grid_points(sg)
 

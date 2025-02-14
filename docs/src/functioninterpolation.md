@@ -11,7 +11,8 @@ First a parametric `Fun` object can be evaluated at sparse grid points.
 using SparseGridsKit, ApproxFun, Plots, LaTeXStrings
 n, k = 1, 1
 mi_set = create_smolyak_miset(n, k)
-sg = create_sparsegrid(mi_set)
+domain = [[-1,1]]
+sg = create_sparsegrid(mi_set,domain)
 f = y-> Fun(Taylor(),[y,2,3])
 f_on_grid = [f(x[1]) for x in get_grid_points(sg)]
 ```
@@ -26,7 +27,7 @@ plot(interpolation_result,
 ```
 Integration is also possible using the sparse grid formulation.
 ```@example approxfun
-pcl = precompute_lagrange_integrals(4)
+pcl = precompute_lagrange_integrals(4, domain)
 expectedvalue = integrate_on_sparsegrid(sg,f_on_grid,pcl)
 #plot(expectedvalue)
 ```
@@ -68,7 +69,8 @@ The animation below illustrates the changing sparse grid approximation and the a
 ```@example approxfun
 n, k = 2,2
 mi_set = create_smolyak_miset(n, k)
-sg = create_sparsegrid(mi_set)
+domain = [[-1,1],[-1,1]]
+sg = create_sparsegrid(mi_set,domain)
 f_on_grid = [u(z) for z in get_grid_points(sg)]
 
 nsteps = 100
@@ -102,7 +104,7 @@ The sparse grid has been constructed using Clenshaw--Curtis points.
 The quadrature rules can be applied assuming an underlying weight function $\rho(y)=0.5^2$.
 If this is interpreted as a probabiliy then integration gives the expected value of the PDE solution.
 ```@example approxfun
-pcl = precompute_lagrange_integrals(k+1)
+pcl = precompute_lagrange_integrals(k+1,domain)
 
 expectedvalue = ProductFun(integrate_on_sparsegrid(sg,f_on_grid, pcl),d)
 plot(expectedvalue)

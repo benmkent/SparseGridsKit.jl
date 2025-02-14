@@ -119,6 +119,8 @@ This can be explicitly computed to be $\sqrt{92/15}$.
     n,k = 2,4
     mi_set = create_smolyak_miset(n,k)
     domain = [[-1,1],[-1,1]]
+    pcl = precompute_lagrange_integrals(7,domain)
+
     sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [f(x[1]) for x in get_grid_points(sg)]
     pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->x.*y)

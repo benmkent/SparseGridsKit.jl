@@ -8,6 +8,7 @@ To do this a maximum level number is selected and all pairwise $L_{\rho}^2(\Gamm
 For example, we can then extract the pairwise inner products for the level $2$ and level $3$ polynomials.
 ```@example int1
     using SparseGridsKit, LinearAlgebra
+    domain = [[-1,1]]
     pcl = precompute_lagrange_integrals(7,domain)
     level1 = 2
     level2 = 3
@@ -45,7 +46,7 @@ The approximate integral using the constant approximation is equal to $[1,1]$.
 ```@example int1
     n,k = 2,0
     mi_set = create_smolyak_miset(n,k)
-    domain = [[-1,1],[-1,1]]
+    domain = fill([-1,1],2)
     sg = create_sparsegrid(mi_set, domain)
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid

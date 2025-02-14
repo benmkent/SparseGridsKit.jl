@@ -48,6 +48,8 @@ The approximate integral using the constant approximation is equal to $[1,1]$.
     n,k = 2,0
     mi_set = create_smolyak_miset(n,k)
     domain = fill([-1,1],2)
+    pcl = precompute_lagrange_integrals(7,domain)
+
     sg = create_sparsegrid(mi_set, domain)
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid
@@ -88,6 +90,8 @@ for weight function $\rho=0.5$.
     n,k = 1,1
     mi_set = create_smolyak_miset(n,k)
     domain = [[-1,1]]
+    pcl = precompute_lagrange_integrals(7,domain)
+
     sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [[x[1]] for x in get_grid_points(sg)]
     pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->dot(x,y))
@@ -102,6 +106,8 @@ Similarly, for $x^2$ we get
     n,k = 1,3
     mi_set = create_smolyak_miset(n,k)
     domain = [[-1,1]]
+    pcl = precompute_lagrange_integrals(7,domain)
+
     sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [[x[1]^2] for x in get_grid_points(sg)]
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)

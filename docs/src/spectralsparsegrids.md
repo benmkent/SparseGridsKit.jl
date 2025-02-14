@@ -18,8 +18,9 @@ W = 0.0
 T = "exponentialdecay"
 N = "gaussianpeak"
 f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
+domain = fill([-1,1],n)
 # Approximate
-(sg, f_on_Z) = adaptive_sparsegrid(f, n)
+(sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
 f_sg = SparseGridApproximation(sg,f_on_Z)
 ```
 The approximation `f_sg` is a representation formed as a linear combination of Lagrange interpolation polynomials.

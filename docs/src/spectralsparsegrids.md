@@ -3,9 +3,9 @@ The sparse grid approximations are polynomial approximations, with a basis of La
 The approximation can be written in any suitable polynomial basis, for example we could use the Chebyshev polynomials.
 
 The change of basis is implemented exploiting the `ApproxFun.jl` package.
-The underlying interpolation polynomials used in `SparseGridsKit.jl` are constructed using `Fun`s in [`poly_Fun`](@ref) and [`createlagrangepolys_approxfun`](@ref).
+The underlying interpolation polynomials used in `SparseGridsKit.jl` are constructed using `Fun`s.
 To change basis we use an `ApproxFun.jl` expansion into coefficients and form a tensor product.
-To promote sparsity this is done using [`truncated_kron`](@ref).
+To promote sparsity this is done using a truncated Kronecker product.
 The polynomial coefficients are assembled with corresponding polynomial degrees and spaces in a callable `SpectralSparseGridApproximation`.
 
 ## Examples

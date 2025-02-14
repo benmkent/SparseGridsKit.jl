@@ -8,11 +8,6 @@ This construction of the approximation is inspired by the [Sparse Grids MATLAB K
 This documentation is example driven, with full documentation for each subset of functions given at the end of the relevant example.
 This is not a thorough mathematical description of sparse grid approximation, but a practical guide to using the software.
 
-The documentation contains:
-```@contents
-Depth = 1
-```
-
 The package is still under development and by no means complete.
 
 An example sparse grid construction is illustrated below. 

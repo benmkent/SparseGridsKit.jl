@@ -8,11 +8,6 @@ This construction of the approximation is inspired by the [Sparse Grids MATLAB K
 This documentation is example driven, with full documentation for each subset of functions given at the end of the relevant example.
 This is not a thorough mathematical description of sparse grid approximation, but a practical guide to using the software.
 
-The documentation contains:
-```@contents
-Depth = 1
-```
-
 The package is still under development and by no means complete.
 
 An example sparse grid construction is illustrated below. 
@@ -20,10 +15,11 @@ An example sparse grid construction is illustrated below.
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3
-knots = [linearpoints, ccpoints, uniformpoints]
-rules = [linear, doubling, doubling]
+knots = [ccpoints, ccpoints, uniformpoints]
+rules = [doubling, doubling, linear]
 mi_set = create_smolyak_miset(n,k)
-sg = create_sparsegrid(mi_set, knots=knots, rule=rules)
+domain = [[-1,1],[-1,1],[-1,1]]
+sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
         plot_sparse_grid(sg)

@@ -16,9 +16,9 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `sg`: Final sparse grid used to approximate `f`
 - `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
 """
-function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4)
+function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4)
     MI = create_smolyak_miset(ndims,0)
-    sg = create_sparsegrid(MI; rule=rule, knots=knots)
+    sg = create_sparsegrid(MI, domain; rule=rule, knots=knots)
 
     Z = get_grid_points(sg)
 
@@ -26,7 +26,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
     kk=0
 
     maxmi = 5
-    pcl = precompute_lagrange_integrals(maxmi, knots, rule)
+    pcl = precompute_lagrange_integrals(maxmi, domain, knots, rule)
 
     # Set up data store for evaluation recycling
     sg_evaluations = sg
@@ -41,7 +41,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         MI = get_mi_set(sg)
         RM = get_reduced_margin(MI)
         MI_enhanced = add_mi(MI, RM)
-        sg_enhanced = create_sparsegrid(MI_enhanced; rule=rule, knots=knots)
+        sg_enhanced = create_sparsegrid(MI_enhanced, domain; rule=rule, knots=knots)
 
         # SOLVE
         f_on_z_enhanced = adaptive_solve(f, sg_evaluations, sg_enhanced, f_on_z_evaluations)
@@ -49,7 +49,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = doubli
         # Update precompute_lagrange_integrals if necessary
         if maximum([maximum(α) for α in get_mi(get_mi_set(sg_enhanced))])  > maxmi
             maxmi += 3
-            pcl = precompute_lagrange_integrals(maxmi, knots, rule)
+            pcl = precompute_lagrange_integrals(maxmi, domain, knots, rule)
         end
 
         # ESTIMATE
@@ -127,7 +127,7 @@ function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
     
     p_α = Vector{Float64}(undef, length(get_mi(RM)))
     for (i,α) in enumerate(get_mi(RM))
-        sg_α = create_sparsegrid(add_mi(MI,α), rule=rule, knots=knots)
+        sg_α = create_sparsegrid(add_mi(MI,α), sg.domain, rule=rule, knots=knots)
         sg_map_α = mapfromto(sg_α,sg_enhanced)
         f_on_z_α = f_on_z_enhanced[sg_map_α]
         
@@ -223,7 +223,7 @@ Refines the sparse grid based on marked multi-indices
 function adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
     MI = get_mi_set(sg)
     MI = add_mi(MI, α_marked)
-    sg = create_sparsegrid(MI; rule=rule, knots=knots)
+    sg = create_sparsegrid(MI, sg.domain; rule=rule, knots=knots)
     sg_map_refine = mapfromto(sg,sg_enhanced)
     f_on_z = f_on_z_enhanced[sg_map_refine]
 return sg, f_on_z

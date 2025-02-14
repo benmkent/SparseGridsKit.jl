@@ -3,9 +3,9 @@ The sparse grid approximations are polynomial approximations, with a basis of La
 The approximation can be written in any suitable polynomial basis, for example we could use the Chebyshev polynomials.
 
 The change of basis is implemented exploiting the `ApproxFun.jl` package.
-The underlying interpolation polynomials used in `SparseGridsKit.jl` are constructed using `Fun`s in [`poly_Fun`](@ref) and [`createlagrangepolys_approxfun`](@ref).
+The underlying interpolation polynomials used in `SparseGridsKit.jl` are constructed using `Fun`s.
 To change basis we use an `ApproxFun.jl` expansion into coefficients and form a tensor product.
-To promote sparsity this is done using [`truncated_kron`](@ref).
+To promote sparsity this is done using a truncated Kronecker product.
 The polynomial coefficients are assembled with corresponding polynomial degrees and spaces in a callable `SpectralSparseGridApproximation`.
 
 ## Examples
@@ -18,8 +18,9 @@ W = 0.0
 T = "exponentialdecay"
 N = "gaussianpeak"
 f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
+domain = fill([-1,1],n)
 # Approximate
-(sg, f_on_Z) = adaptive_sparsegrid(f, n)
+(sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
 f_sg = SparseGridApproximation(sg,f_on_Z)
 ```
 The approximation `f_sg` is a representation formed as a linear combination of Lagrange interpolation polynomials.
@@ -61,7 +62,7 @@ all(isapprox(y_spectral_2, 2*y_spectral; atol=1e-8))
 f_spectral_0 = f_spectral - f_spectral
 y_spectral_0 = f_spectral.(x_test)
 
-all(isapprox(y_spectral_2, zeros(size(0)); atol=1e-8))
+all(isapprox(y_spectral_0, zeros(size(y_spectral_0)); atol=1e-8))
 ```
 
 ## Function Reference

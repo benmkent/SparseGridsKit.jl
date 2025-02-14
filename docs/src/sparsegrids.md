@@ -9,7 +9,8 @@ using SparseGridsKit
 
 n, k = 2, 1
 mi_set = create_smolyak_miset(n, k)
-sg = create_sparsegrid(mi_set)
+domain = [[-1,1],[-1,1]]
+sg = create_sparsegrid(mi_set,domain)
 propertynames(sg)
 ```
 The grid points can be extracted using the [`get_grid_points`](@ref) function.
@@ -30,7 +31,7 @@ The grid can be altered by adding additional multi-indices.
 ```@example sg
 mi_set_new = MISet([[1,3]]) 
 combined_mi_set = add_mi(mi_set, mi_set_new)
-sg_combined = create_sparsegrid(combined_mi_set)
+sg_combined = create_sparsegrid(combined_mi_set,domain)
 
 points = get_grid_points(sg_combined)
 
@@ -47,7 +48,8 @@ For example consider increasing the dimension $n$ and using more multi-indices i
 ```@example sg
 n, k = 3, 3
 mi_set = create_smolyak_miset(n, k)
-sg = create_sparsegrid(mi_set)
+domain = [[-1,1],[-1,1],[-1,1]]
+sg = create_sparsegrid(mi_set,domain)
 points = get_grid_points(sg)
 ```
 This can still be easily visualised.
@@ -69,10 +71,11 @@ To demonstrate, consider linear points $$n\mapsto\{1,2,...,n\}$$ in the first di
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3
-knots = [linearpoints, n->ccpoints(n,0,100), uniformpoints]
-rules = [linear, doubling, doubling]
+knots = [ccpoints, n->ccpoints(n,0,100), uniformpoints]
+rules = [doubling, doubling, linear]
 mi_set = create_smolyak_miset(n,k)
-sg = create_sparsegrid(mi_set, knots=knots, rule=rules)
+domain = [[-1,1],[0,100],[-1,1]]
+sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
         plot_sparse_grid(sg)

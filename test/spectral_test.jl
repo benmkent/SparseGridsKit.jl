@@ -67,8 +67,9 @@ using ApproxFun
         T = "exponentialdecay"
         N = "gaussianpeak"
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
+        domain = fill([-1,1],n)
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
         
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
@@ -81,9 +82,10 @@ using ApproxFun
         @test all(isapprox(y_test[i], y_spectral[i]; atol=1e-8) for i in 1:length(x_test))
 
         n = 2
+        domain = fill([-1,1],n)
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral
@@ -96,8 +98,9 @@ using ApproxFun
 
         n = 3
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
+        domain = fill([-1,1],n)
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral
@@ -110,8 +113,10 @@ using ApproxFun
 
         n = 4
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
+        domain = fill([-1,1],n)
+
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral
@@ -124,8 +129,10 @@ using ApproxFun
 
         n = 8
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
+        domain = fill([-1,1],n)
+
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral

@@ -103,7 +103,7 @@ function sparsegridprecompute(maxmi, domain, knots=ccpoints, rule=doubling)
 end
 
 function sparsegridproductintegrals(polyperlevel, maxmi, knots, rule)
-    @info "Computing product integrals"
+    @debug "Computing product integrals"
     # Allocate arrays
     productintegrals = zeros(Float64, maxmi, maxmi, length(polyperlevel[end]), length(polyperlevel[end]))
 

@@ -101,7 +101,7 @@ function adaptive_solve!(f, datastore, sg)
 end
 
 """
-    adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, type=:deltaint)
+    adaptive_estimate(sg, datastore, pcl, type=:deltaint)
 
 Estimates the profit of adding multi-indices {α} in reduced margin to the sparse grid.
 

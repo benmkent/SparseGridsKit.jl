@@ -145,7 +145,7 @@ end
 function mapfromto(sgfrom, sgto)
     (fromptids, ~, ~) = sparsegridpoints(sgfrom.terms, sgto.pintsmap, sgto.ptsunique, sgto.dims)
 
-    maptermstosparsegrid = Vector{Integer}(undef, size(fromptids, 1))
+    maptermstosparsegrid = Vector(undef, size(fromptids, 1))
     for ii in 1:size(fromptids, 1)
         maptermstosparsegrid[ii] = findfirst(fromptids[ii, :] == uniquerow for uniquerow in eachrow(sgto.sparsegridptids))
     end
@@ -240,6 +240,10 @@ function createsparsegrid(MI, domain; rule=doubling, knots=ccpoints)
     end
 
     (grid, cterms, cmi, MI) = sparsegridterms(MI, ptsperlevel)
+
+    filter_vector = cterms .!= 0
+    grid = grid[filter_vector]
+    cterms = cterms[filter_vector]
 
     (sparsegridptids, sparsegridpts, maptermstosparsegrid) = sparsegridpoints(grid, pintsmap, ptsunique, dims)
 

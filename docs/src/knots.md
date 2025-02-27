@@ -73,7 +73,7 @@ scatter!(x, 3 * ones(length(x)), label="Gauss-Chebyshev t")
 x, w = gausslegendre(5)
 scatter!(x, 4 * ones(length(x)), label="Gauss-Legendre")
 ```
-## Knots
+## Function Reference
 ```@autodocs
 Modules = [SparseGridsKit]
 Pages   = ["knots.jl"]

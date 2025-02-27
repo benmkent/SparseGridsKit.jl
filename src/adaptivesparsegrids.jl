@@ -30,8 +30,7 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
     pcl = precompute_lagrange_integrals(maxmi, domain, knots, rule)
 
     # Set up data store for evaluation recycling
-    sg_evaluations = sg
-    f_on_z_evaluations = f_on_z
+    datastore = EvaluationDictionary(sg, f_on_z)
 
     while true
         if get_n_grid_points(sg) > maxpts
@@ -45,7 +44,7 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
         sg_enhanced = create_sparsegrid(MI_enhanced, domain; rule=rule, knots=knots)
 
         # SOLVE
-        f_on_z_enhanced = adaptive_solve(f, sg_evaluations, sg_enhanced, f_on_z_evaluations)
+        adaptive_solve!(f, datastore, sg_enhanced)
 
         # Update precompute_lagrange_integrals if necessary
         if maximum([maximum(α) for α in get_mi(get_mi_set(sg_enhanced))])  > maxmi
@@ -54,7 +53,7 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
         end
 
         # ESTIMATE
-        p_α = adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots, type=type)
+        p_α = adaptive_estimate(sg, datastore, pcl, rule, knots, type=type)
 
         # MARK
         α_marked = adaptive_mark(RM, p_α, θ)
@@ -65,8 +64,7 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
         end
 
         # REFINE
-        sg, f_on_z = adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
-        sg_evaluations, f_on_z_evaluations = sg_enhanced, f_on_z_enhanced
+        sg, f_on_z = adaptive_refine(sg, datastore, α_marked, rule, knots)
 
         @info "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
     end
@@ -77,29 +75,29 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
 end
 
 """
-    adaptive_solve(f, sg,sg_enhanced, f_on_z)
+    adaptive_solve!(f, datastore, sg)
 
-Computes function f on the new grid points in sg_enhanced
+Adds function evaluations on sg to datastore
 
 # Arguments
-- `f`: Function to be approximated.
-- `sg`: Sparse grid.
-- `sg_enhanced`: Enhanced sparse grid.
-- `f_on_z`: Function evaluations on the sparse grid `sg`.
+- `f`: Function
+- `datastore`: EvaluationDictionary
+- `sg`: Sparse grid
 
 # Returns
-- Function evaluations on the enhanced sparse grid `sg_enhanced`.
+- `datastore`: Updated EvaluationDictionary
 """
-function adaptive_solve(f, sg,sg_enhanced, f_on_z)
-    Z_enhanced = get_grid_points(sg_enhanced)
-    sg_map = mapfromto(sg,sg_enhanced)
-    f_on_z_enhanced = Vector{typeof(f_on_z[1])}(undef,get_n_grid_points(sg_enhanced))
-    # Fill old evaluations
-    f_on_z_enhanced[sg_map] = f_on_z
+function adaptive_solve!(f, datastore, sg)
+    # Retrieve evaluations
+    f_on_z = retrieve_evaluations(datastore, sg)
+
     # Fill new evaluations
-    new_points = setdiff(1:get_n_grid_points(sg_enhanced), sg_map)
-    f_on_z_enhanced[new_points] = [f(z) for z in Z_enhanced[new_points]]
-    return f_on_z_enhanced
+    for (ii,z) in enumerate(get_grid_points(sg))
+        if isnothing(f_on_z[ii])
+            f_on_z[ii] = f(z)
+            add_evaluation!(datastore, z, f_on_z[ii])
+        end
+    end
 end
 
 """
@@ -109,8 +107,7 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 
 # Arguments
 - `sg`: Sparse grid.
-- `sg_enhanced`: Enhanced sparse grid.
-- `f_on_z_enhanced`: Function evaluations on the enhanced sparse grid.
+- `datastore`: EvaluationDictionary.
 - `pcl`: Precomputed Lagrange integrals.
 - `rule`: Level function(s) for sparse grid.
 - `knots`: Knot function(s) for sparse grid.
@@ -119,10 +116,8 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 # Returns
 - Vector of profits for each multi-index α.
 """
-function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots; type=:deltaint)
-    Z_enhanced = get_grid_points(sg_enhanced)
-    f_on_z = f_on_z_enhanced[mapfromto(sg,sg_enhanced)]
-    f_sg_on_z_enhanced = interpolate_on_sparsegrid(sg,f_on_z, Z_enhanced)
+function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint)
+    f_on_z = retrieve_evaluations(datastore, sg)
 
     MI = get_mi_set(sg)
     RM = get_reduced_margin(MI)
@@ -130,25 +125,26 @@ function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots; t
     p_α = Vector{Float64}(undef, length(get_mi(RM)))
     for (i,α) in enumerate(get_mi(RM))
         sg_α = create_sparsegrid(add_mi(MI,α), sg.domain, rule=rule, knots=knots)
-        sg_map_α = mapfromto(sg_α,sg_enhanced)
-        f_on_z_α = f_on_z_enhanced[sg_map_α]
+        f_on_z_α = retrieve_evaluations(datastore, sg_α)
         
-        f_diff_α = f_on_z_α - f_sg_on_z_enhanced[sg_map_α]
-        cost = get_n_grid_points(sg_α) - get_n_grid_points(sg)
+        # cost = get_n_grid_points(sg_α) - get_n_grid_points(sg)
+        cost = length(setdiff(get_grid_points(sg_α), get_grid_points(sg)))
 
-        p_α[i] = compute_profit(sg_α, f_diff_α, cost, pcl, type=type)
+        p_α[i] = compute_profit(sg_α, sg, f_on_z_α, f_on_z, cost, pcl, type=type)
     end
     return p_α
 end
 
 """
-    compute_profit(sg_α, f_diff_α, cost, pcl; type=:deltaint)
+    compute_profit(sg_α, f_α, f, cost, pcl; type=:deltaint)
 
 Computes the "profit" of a sparse grid supplemented by a multi-index α
 
 # Arguments
 - `sg_α`: Enhanced sparse grid with α
-- `f_diff_α`: Function differences (surpluses) at the enhanced sparse grid points.
+- `sg`: Sparse grid
+- `f_α`: Function evaluations at grid points in α
+- `f`: Function evaluations on the sparse grid.
 - `cost`: Cost of adding α to the sparse grid.
 - `pcl`: Precomputed Lagrange integrals
 - `type`: Type of profit computation. Default is `:deltaint`. Options are `:deltaint`, `:deltaintcost`, `:Linf`, `:Linfcost`.
@@ -156,18 +152,20 @@ Computes the "profit" of a sparse grid supplemented by a multi-index α
 # Returns
 - Computed profit as Expected change in approximation.
 """
-function compute_profit(sg_α, f_diff_α, cost, pcl; type=:deltaint)
+function compute_profit(sg_α, sg, f_α, f, cost, pcl; type=:deltaint)
     if type == :deltaint
-        profit =  integrate_on_sparsegrid(sg_α, f_diff_α, pcl)
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))
     elseif type == :deltaintcost
-        profit = integrate_on_sparsegrid(sg_α, f_diff_α, pcl)/cost
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))/cost
     elseif type == :Linf
-        profit = maximum(abs.(f_diff_α))
+        f_interp = interpolate_on_sparsegrid(sg, f, get_grid_points(sg_α))
+        profit = maximum(abs.(f_α - f_interp))
     elseif type == :Linfcost
-        profit = maximum(abs.(f_diff_α))/cost
+        f_interp = interpolate_on_sparsegrid(sg, f, get_grid_points(sg_α))
+        profit = maximum(abs.(f_α - f_interp))/cost
     else
         @warn "Invalid profit type " * string(type) * ". Using :deltaint"
-        profit =  integrate_on_sparsegrid(sg_α, f_diff_α, pcl)
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))
     end
     return profit
 end
@@ -237,11 +235,114 @@ Refines the sparse grid based on marked multi-indices
 - `sg`: Refined sparse grid.
 - `f_on_z`: Function evaluations on the refined sparse grid.
 """
-function adaptive_refine(sg, sg_enhanced, f_on_z_enhanced, α_marked, rule, knots)
+function adaptive_refine(sg, datastore, α_marked, rule, knots)
     MI = get_mi_set(sg)
     MI = add_mi(MI, α_marked)
     sg = create_sparsegrid(MI, sg.domain; rule=rule, knots=knots)
-    sg_map_refine = mapfromto(sg,sg_enhanced)
-    f_on_z = f_on_z_enhanced[sg_map_refine]
-return sg, f_on_z
+    f_on_z = retrieve_evaluations(datastore, sg)
+    return sg, f_on_z
+end
+
+"""
+    evaluations_database
+"""
+mutable struct EvaluationDictionary
+    dictionary
+end
+
+
+"""
+    EvaluationDictionary()
+    
+Creates an empty EvaluationDictionary
+
+# Returns
+- `evaluations`: EvaluationDictionary
+"""
+function EvaluationDictionary()
+    return EvaluationDictionary(Dict())
+end
+
+"""
+    EvaluationDictionary(sg,f_on_z)
+
+Creates an EvaluationDictionary from a sparse grid and function evaluations
+
+# Arguments
+- `sg`: Sparse grid
+- `f_on_z`: Function evaluations on the sparse grid
+
+# Returns
+- `evaluations`: EvaluationDictionary
+"""
+function EvaluationDictionary(sg,f_on_z)
+    evaluations = EvaluationDictionary()
+    add_evaluations!(evaluations, sg, f_on_z)
+    return evaluations
+end
+
+"""
+    add_evaluations!(evaluations, sg::SparseGrid, f_on_z)
+
+Adds the evaluations f_on_z into the evaluations_database
+
+# Arguments
+- `evaluations`: EvaluationDictionary
+- `sg`: Sparse grid
+- `f_on_z`: Function evaluations on the sparse grid
+
+# Returns
+- `evaluations`: Updated EvaluationDictionary
+"""
+function add_evaluations!(evaluations, sg::SparseGrid, f_on_z)
+    for (i, z) in enumerate(get_grid_points(sg))
+        if !haskey(evaluations.dictionary, z)
+            evaluations.dictionary[z] = f_on_z[i]
+        end
+    end
+    return evaluations
+end
+
+"""
+    add_evaluation!(evaluations, z, f_at_z)
+
+Adds the evaluation f_at_z into the evaluations_database
+
+# Arguments
+- `evaluations`: EvaluationDictionary
+- `z`: Point
+- `f_at_z`: Function evaluation at z
+
+# Returns
+- `evaluations`: Updated EvaluationDictionary
+"""
+function add_evaluation!(evaluations, z, f_at_z)
+    if !haskey(evaluations.dictionary, z)
+        evaluations.dictionary[z] = f_at_z
+    end
+    return evaluations
+end
+
+"""
+    retrieve_evaluations(evaluations, sg)
+
+Retrieves the evaluations from the evaluations_database
+
+# Arguments
+- `evaluations`: EvaluationDictionary
+- `sg`: Sparse grid
+
+# Returns
+- `f_on_z`: Function evaluations on the sparse grid
+"""
+function retrieve_evaluations(evaluations, sg)
+    f_on_z = Vector(undef, get_n_grid_points(sg))
+    for (i, z) in enumerate(get_grid_points(sg))
+        if haskey(evaluations.dictionary, z)
+            f_on_z[i] = evaluations.dictionary[z]
+        else
+            f_on_z[i] = nothing
+        end
+    end
+    return f_on_z
 end

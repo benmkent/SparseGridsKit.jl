@@ -25,7 +25,7 @@
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set,domain)
     grid_points = get_grid_points(sg)
-    @test grid_points ≈ [   [0.0],
+    @test sort(grid_points) ≈ sort([   [0.0],
                             [1.0],
                             [-1.0],
                             [0.7071067811865475],
@@ -33,11 +33,11 @@
                             [0.9238795325112867],
                             [0.3826834323650898],
                             [-0.3826834323650898],
-                            [-0.9238795325112867]]
+                            [-0.9238795325112867]])
 
     # Test map_from_to
     sg_from = create_sparsegrid(create_smolyak_miset(1, 8),domain)
     sg_to = create_sparsegrid(create_smolyak_miset(1, 9),domain)
     map_vector = map_from_to(sg_from, sg_to)
-    @test map_vector == 1:get_n_grid_points(sg_from)
+    @test get_grid_points(sg_from) ≈ get_grid_points(sg_to)[map_vector]
 end

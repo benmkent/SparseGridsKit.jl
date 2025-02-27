@@ -195,3 +195,60 @@ function gausshermitepoints(n)
     w = w/sqrt(π)
     return x, w
 end
+
+"""
+    lejapoints(n)
+
+Generate Leja quadrature points and weights on domain `[-1, 1]`.
+
+# Arguments
+- `n`: Number of points.
+
+# Returns
+- `x`: Knots
+- `w`: Weights
+"""
+function lejapoints(n; type=nothing)
+    # Use Chebyshev candidates
+    M = 1e3+1 # Number of candidates
+    X = cos.((0:(M-1)) .* π / (M-1))
+    
+    leja = Vector{Float64}(undef,n)
+    w = Vector{Float64}(undef,n)
+    leja[1] = X[argmax(abs.(X))]
+
+    for kk in 2:n
+        if kk > 3 && isodd(kk) && type == :symmetric
+            next_x = -leja[kk-1]
+        else
+            next_x = X[argmax(prod(abs.(X .- leja[1:(kk-1)]'), dims=2))]
+        end
+        leja[kk] = next_x
+    end
+
+    # Compute weights
+    p = Vector{Fun}(undef,1)
+    for ii in eachindex(leja)
+        p[1] = poly_Fun(leja, ii)
+        w[ii] = sum(p[1])*0.5
+    end
+    
+    return leja, w
+end
+
+"""
+    lejapoints(n, a, b)
+
+Generate Leja quadrature points and weights on domain [a,b].
+
+# Arguments
+- `n`: Number of points.
+- `a`, `b`: Interval bounds.
+
+# Returns
+- `x`: Knots
+- `w`: Weights
+"""
+function lejapoints(n, a, b; type=nothing)
+    return transformdomain(lejapoints(n; type=type), a, b)
+end

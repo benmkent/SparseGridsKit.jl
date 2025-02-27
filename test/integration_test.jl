@@ -36,11 +36,11 @@
     sg = create_sparsegrid(mi_set,domain)
     f_on_grid = [[x[1]] for x in get_grid_points(sg)]
     pairwise_norms = precompute_pairwise_norms(f_on_grid, product=(x,y)->dot(x,y))
-    @test pairwise_norms ≈ [0.0 0.0 0.0; 0.0 1.0 -1.0; 0.0 -1.0 1.0]
+    @test pairwise_norms ≈ [1.0 0.0 -1.0; 0.0 0.0 0.0; -1.0 0.0 1.0]
 
     f_on_grid = [x[1] for x in get_grid_points(sg)]
     pairwise_norms = precompute_pairwise_norms(f_on_grid)
-    @test pairwise_norms ≈ [0.0 0.0 0.0; 0.0 1.0 -1.0; 0.0 -1.0 1.0]
+    @test pairwise_norms ≈ [1.0 0.0 -1.0; 0.0 0.0 0.0; -1.0 0.0 1.0]
 
     l2_integral_result = integrate_L2_on_sparsegrid(sg, f_on_grid, pcl)
     @test l2_integral_result ≈ sqrt(1/3)

@@ -2,17 +2,49 @@
 
 using MAT, Downloads, FastGaussQuadrature
 
-function read_sgmk_mat(url)
-    # Temporary file to store the download
-    matfile = tempname() * ".mat"
+    function read_sgmk_mat(url)
+        # Temporary file to store the download
+        matfile = tempname() * ".mat"
 
-    # Download the file
-    Downloads.download(url, matfile)
+        # Download the file
+        Downloads.download(url, matfile)
 
-    # Read the MAT file
-    data = matread(matfile)
-return data
-end
+        # Read the MAT file
+        data = matread(matfile)
+    return data
+    end
+
+    function compare_sg_to_sgmk(S,S_sgmk, Sr_sgmk)
+        @test get_n_grid_points(S) == Sr_sgmk["size"]
+        Z1 = sort(get_grid_points(S))
+        Z2 = [z for z in eachcol(Sr_sgmk["knots"])]
+        @test isapprox(Z1, Z2; atol=1e-8)
+    end
+
+    function compare_sg_to_sgmk(S,S_sgmk)
+        Z_sgmk = [];
+        for knots_matrix in S_sgmk["knots"]
+            append!(Z_sgmk, eachcol(knots_matrix))
+        end
+        Z_sgmk = unique_with_tol(Z_sgmk)
+        sort!(Z_sgmk)
+
+        @test get_n_grid_points(S) == length(Z_sgmk)
+        if get_n_grid_points(S) == length(Z_sgmk)
+            Z = sort(get_grid_points(S))
+            @test Z ≈ Z_sgmk
+        end
+    end
+
+    function unique_with_tol(Z, tol=1e-12)
+        unique_Z = []
+        for z in Z
+            if all(x -> !isapprox(x, z, atol=tol), unique_Z)
+                push!(unique_Z, z)
+            end
+        end
+        return unique_Z
+    end
 
     @testset "Level to Knots" begin
     ii = [1, 2, 3, 4];
@@ -230,7 +262,7 @@ end
         ];
         I = MISet(I)
         knots1(n)           = gausslegendrepoints(n,0,1);
-        knots2(n)           = ccpoints(n,-1,1);
+        knots2(n)           = lejapoints(n,-1,1);
         lev2knots(l)     = linear(l);
         domain = [[0,1],[-1,1]]
         S_given_multiidx = create_sparsegrid(I,domain,knots=[knots1,knots2],rule=[lev2knots,lev2knots]);
@@ -238,15 +270,14 @@ end
 
         N=2; w=3;
         knots(n) = ccpoints(n,-1,1);
-        lev2knots = doubling
         domain = fill([-1,1],N);
         I_smolyak = create_smolyak_miset(N,w);
-        S_smolyak = create_sparsegrid(I_smolyak,domain,knots=knots,rule=lev2knots);
+        S_smolyak = create_sparsegrid(I_smolyak,domain,knots=knots,rule=doubling);
 
         # adding one multi-index to S_smolyak
         new_idx = [5, 1];
         I_add = add_mi(I_smolyak,new_idx);
-        S_add = create_sparsegrid(I_add,domain,knots=knots,rule=lev2knots);
+        S_add = create_sparsegrid(I_add,domain,knots=knots,rule=doubling);
         
         
         # quick preset
@@ -256,19 +287,6 @@ end
         S_quick = create_sparsegrid(I_quick,domain)
         
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_grid_gen_and_red.mat")
-
-        function compare_sg_to_sgmk(S,S_sgmk, Sr_sgmk)
-            @test get_n_grid_points(S) == Sr_sgmk["size"]
-            Z1 = reduce(hcat, get_grid_points(S))
-            Z2 = Sr_sgmk["knots"]
-            sorted_Z1 = Z1[:,sortperm(eachcol(Z1))]
-            sorted_Z2 = Z2[:,sortperm(eachcol(Z2))]
-            @test all(isapprox(norm(z),0, atol=1e-6) for z in eachcol(sorted_Z1 - sorted_Z2))
-        end
-
-        function compare_sg_to_sgmk(S,S_sgmk)
-        end
-
 
         compare_sg_to_sgmk(S_given_multiidx, S["S_given_multiidx"])
         compare_sg_to_sgmk(S_smolyak, S["S_smolyak"], S["Sr_smolyak"])
@@ -329,7 +347,7 @@ end
 
         x = range(-1, stop=1, length=10)
         non_grid_points = [[x1,x2] for x1 in x, x2 in x]
-        f_on_grid = f.(sort!(get_grid_points(S)));
+        f_on_grid = f.(get_grid_points(S));
         f_values = interpolate_on_sparsegrid(S,f_on_grid,non_grid_points);
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_interpolate.mat")
@@ -413,21 +431,21 @@ end
 
     @testset "Adaptive Sparse Grid Approximation" begin
 
-        f(x) = 1.0 ./(x[1].^2 .+x[2].^2 .+ 0.3);
+        f(x) = 1.0 ./ (x[1].^2 .+x[2].^2 .+ 0.3);
 
         N = 2; a = -1; b = 1;
         knots(n)     = ccpoints(n,a,b);
-        lev2knots(l) = linear(l);
+        lev2knots(l) = doubling(l);
         controls = Dict(
             :maxpts => 200,
             :proftol => 1e-10,
         )
         domain = fill([a,b],N)
 
-        S_Linf = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:Linf);
-        S_Linfcost = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol] ,rule=lev2knots,knots=knots, type=:Linfvost);
-        S_deltaint = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaint);
-        S_deltaintcost = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaintcost);
+        (S_Linf, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:Linf);
+        (S_Linfcost, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol] ,rule=lev2knots,knots=knots, type=:Linfcost);
+        (S_deltaint, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaint);
+        (S_deltaintcost, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaintcost);
 
         # N = 3; 
         # f = @(x) prod(x);
@@ -446,15 +464,25 @@ end
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_adaptive.mat")
 
-        function compare_sg_to_sgmk(S,S_sgmk, Sr_sgmk)
-            @test get_n_grid_points(S) == Sr_sgmk["n"]
-            @test sortmi(reduce(hcat, get_grid_points(S))) ≈ sortmi(Sr_sgmk["knots"])
-        end
+        # compare_sg_to_sgmk(S_Linf, S["S_Linf"]["S"], S["S_Linf"]["Sr"])
+        # compare_sg_to_sgmk(S_Linfcost, S["S_Linf_newpts"]["S"], S["S_Linf_newpts"]["Sr"])
+        # compare_sg_to_sgmk(S_deltaint, S["S_deltaint"]["S"], S["S_deltaint"]["Sr"])
+        # compare_sg_to_sgmk(S_deltaintcost, S["S_deltaint_newpts"]["S"], S["S_deltaint_newpts"]["Sr"])
 
-        compare_sg_to_sgmk(S_Linf, S["S_Linf"], S["Sr_Linf"])
-        compare_sg_to_sgmk(S_Linfcost, S["S_Linfcost"], S["Sr_Linfcost"])
-        compare_sg_to_sgmk(S_deltaint, S["S_deltaint"], S["Sr_deltaint"])
-        compare_sg_to_sgmk(S_deltaintcost, S["S_deltaintcost"], S["Sr_deltaintcost"])
+        # We cannot directly compared to SGMK as the algorithms are different - the reduced margin contitutes part of the approximation in the whilst in SparseGridsKit it does not.
+        # We verify the adaptive approximation is accurate wrt the true function
+        test_points = [[x1,x2] for x1 in range(a, stop=b, length=10^2) for x2 in range(a, stop=b, length=10^2)]
+        f_test = f.(test_points)
+        f_Linf = interpolate_on_sparsegrid(S_Linf, f_on_z, test_points)
+        f_Linfcost = interpolate_on_sparsegrid(S_Linfcost, f_on_z, test_points)
+        f_deltaint = interpolate_on_sparsegrid(S_deltaint, f_on_z, test_points)
+        f_deltaintcost = interpolate_on_sparsegrid(S_deltaintcost, f_on_z, test_points)
+
+        tol = 1e-2;
+        @test all(isapprox(f_test[i], f_Linfcost[i]; atol=tol) for i in 1:length(f_test))
+        @test all(isapprox(f_test[i], f_Linf[i]; atol=tol) for i in 1:length(f_test))
+        @test all(isapprox(f_test[i], f_deltaint[i]; atol=tol) for i in 1:length(f_test))
+        @test all(isapprox(f_test[i], f_deltaintcost[i]; atol=tol) for i in 1:length(f_test))
     end
 
 end

@@ -12,7 +12,7 @@ export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid
 export convert_to_spectral_approximation
 
-export ccpoints, uniformpoints, linearpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints
+export ccpoints, uniformpoints, linearpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
 export doubling, linear, tripling, twostep
 
 export genz

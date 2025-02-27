@@ -1,4 +1,4 @@
-using Test, Documenter, SparseGridsKit, LinearAlgebra
+using Test, SparseGridsKit, Documenter, LinearAlgebra
 
 @testset "SparseGridsKit.jl tests" begin
     include("multiindexsets_test.jl")
@@ -9,6 +9,7 @@ using Test, Documenter, SparseGridsKit, LinearAlgebra
     include("adaptive_test.jl")
     include("spectral_test.jl")
     include("sgmk_test.jl")
+    include("aqua_test.jl")
 end
 
 @testset "doctest" begin

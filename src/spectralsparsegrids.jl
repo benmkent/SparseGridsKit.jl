@@ -244,7 +244,7 @@ Convert a `SparseGridApproximation` object to its spectral approximation.
 - Spectral Sparse Grid Approximation representing `sga`.
 """
 function convert_to_spectral_approximation(sga::SparseGridApproximation)
-    return convert_to_spectral_approximation(sga.sparsegrid, sga.fongrid)
+    return convert_to_spectral_approximation(sga.sg, sga.fongrid)
 end
 
 """

@@ -1,5 +1,5 @@
 """
-    adaptive_sparsegrid(f, ndims; maxpts = 100, proftol = 1e-4, rule=doubling, knots=ccpoints)
+    adaptive_sparsegrid(f, ndims; maxpts = 100, proftol = 1e-4, rule=doubling, knots=ccpoints, θ=1e-4, type=:deltaint)
 
 Constructs an adaptive sparse grid for approximating the function `f` in `ndims` dimensions.
 
@@ -11,12 +11,13 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `rule`: (Optional) Level function(s) for sparse grid. Default is `doubling`.
 - `knots`: (Optional) Knot function(s) for sparse grid. Default is `ccpoints`.
 - `θ`: (Optional) Threshold for marking. Default is `1e-4`.
+- `type`: (Optional) Type of profit computation. Default is `:deltaint`.
 
 # Returns
 - `sg`: Final sparse grid used to approximate `f`
 - `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
 """
-function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4)
+function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4, type=:deltaint)
     MI = create_smolyak_miset(ndims,0)
     sg = create_sparsegrid(MI, domain; rule=rule, knots=knots)
 
@@ -53,7 +54,7 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
         end
 
         # ESTIMATE
-        p_α = adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
+        p_α = adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots, type=type)
 
         # MARK
         α_marked = adaptive_mark(RM, p_α, θ)
@@ -102,7 +103,7 @@ function adaptive_solve(f, sg,sg_enhanced, f_on_z)
 end
 
 """
-    adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl)
+    adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, type=:deltaint)
 
 Estimates the profit of adding multi-indices {α} in reduced margin to the sparse grid.
 
@@ -113,11 +114,12 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 - `pcl`: Precomputed Lagrange integrals.
 - `rule`: Level function(s) for sparse grid.
 - `knots`: Knot function(s) for sparse grid.
+- `type`: Type of profit computation. Default is `:deltaint`.
 
 # Returns
 - Vector of profits for each multi-index α.
 """
-function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
+function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots; type=:deltaint)
     Z_enhanced = get_grid_points(sg_enhanced)
     f_on_z = f_on_z_enhanced[mapfromto(sg,sg_enhanced)]
     f_sg_on_z_enhanced = interpolate_on_sparsegrid(sg,f_on_z, Z_enhanced)
@@ -132,27 +134,42 @@ function adaptive_estimate(sg, sg_enhanced, f_on_z_enhanced, pcl, rule, knots)
         f_on_z_α = f_on_z_enhanced[sg_map_α]
         
         f_diff_α = f_on_z_α - f_sg_on_z_enhanced[sg_map_α]
+        cost = get_n_grid_points(sg_α) - get_n_grid_points(sg)
 
-        p_α[i] = compute_profit(sg_α, f_diff_α,pcl)
+        p_α[i] = compute_profit(sg_α, f_diff_α, cost, pcl, type=type)
     end
     return p_α
 end
 
 """
-    compute_profit(sg_α, f_diff_α, pcl)
+    compute_profit(sg_α, f_diff_α, cost, pcl; type=:deltaint)
 
 Computes the "profit" of a sparse grid supplemented by a multi-index α
 
 # Arguments
 - `sg_α`: Enhanced sparse grid with α
 - `f_diff_α`: Function differences (surpluses) at the enhanced sparse grid points.
+- `cost`: Cost of adding α to the sparse grid.
 - `pcl`: Precomputed Lagrange integrals
+- `type`: Type of profit computation. Default is `:deltaint`. Options are `:deltaint`, `:deltaintcost`, `:Linf`, `:Linfcost`.
 
 # Returns
 - Computed profit as Expected change in approximation.
 """
-function compute_profit(sg_α, f_diff_α, pcl)
-    return integrate_on_sparsegrid(sg_α, abs.(f_diff_α), pcl)
+function compute_profit(sg_α, f_diff_α, cost, pcl; type=:deltaint)
+    if type == :deltaint
+        profit =  integrate_on_sparsegrid(sg_α, f_diff_α, pcl)
+    elseif type == :deltaintcost
+        profit = integrate_on_sparsegrid(sg_α, f_diff_α, pcl)/cost
+    elseif type == :Linf
+        profit = maximum(abs.(f_diff_α))
+    elseif type == :Linfcost
+        profit = maximum(abs.(f_diff_α))/cost
+    else
+        @warn "Invalid profit type " * string(type) * ". Using :deltaint"
+        profit =  integrate_on_sparsegrid(sg_α, f_diff_α, pcl)
+    end
+    return profit
 end
 
 """

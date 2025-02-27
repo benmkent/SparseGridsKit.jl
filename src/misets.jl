@@ -152,3 +152,64 @@ function create_tensor_miset(n, k)
     miset_smolyak = MISet(miset_vec)
     return miset_smolyak
 end
+
+"""
+    create_box_miset(n, k)
+Creates a rectangular multi-index set for a given dimension (`n`) and levels vector (`k`).
+
+# Arguments
+- `n`: The dimensionality of the space.
+- `k`: A vector of levels for each dimension.
+"""
+function create_box_miset(n, k)
+    @assert length(k) == n
+    miset = createtensormiset(n, maximum(k))
+    miset_vec = [Vector(v) for v in eachcol(miset)]
+    mi = get_mi(MISet(miset_vec))
+
+    # Keep only valid rows
+    mi = filter(mi -> all(i -> mi[i] <= k[i], 1:n), mi)
+
+    return MISet(mi)
+end
+
+"""
+    create_totaldegree_miset(n, k)
+Creates a multi-index set for a given dimension (`n`) and with total levels less than or equal to k.
+
+# Arguments
+- `n`: The dimensionality of the space.
+- `k`: Total degree
+"""
+function create_totaldegree_miset(n, k)
+    miset = createtensormiset(n, k)
+
+    miset_vec = [Vector(v) for v in eachcol(miset)]
+    mi = get_mi(MISet(miset_vec))
+
+    # Keep only valid rows
+    mi = filter(mi -> sum(mi.-1) <= k, mi)
+
+    return MISet(mi)
+end
+
+"""
+    create_rule_miset(n, k, rule)
+Creates a multi-index set for a given dimension (`n`) and with rule(mi) less than or equal to k.
+
+# Arguments
+- `n`: The dimensionality of the space.
+- `k`: Maximum for rule(mi)
+- `rule`: Rule to compute on each MI
+"""
+function create_rule_miset(n, k, rule)
+    miset = createtensormiset(n, k)
+
+    miset_vec = [Vector(v) for v in eachcol(miset)]
+    mi = get_mi(MISet(miset_vec))
+
+    # Keep only valid rows
+    mi = filter(mi -> rule(mi) <= k, mi)
+
+    return MISet(mi)
+end

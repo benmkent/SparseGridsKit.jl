@@ -5,6 +5,10 @@
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
+It can be added to your environment through
+```
+] add https://github.com/benmkent/SparseGridsKit.jl
+```
 
 The construction is based upon the sparse operators introduced by Smolyak [Smolyak1963](@cite).
 Key papers defining the model formulation include [Barthelmann2000](@cite), [Gerstner1998](@cite) and [Gerstner2003](@cite).

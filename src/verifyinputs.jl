@@ -56,7 +56,7 @@ function verifyinputs(domain, knots::Union{Function,Vector{Function}})
     check = true
     testknots = Vector{Vector{Float64}}(undef, length(domain))
     for ii in eachindex(domain)
-        if typeof(knots) == Vector{Function}
+        if isa(knots,Vector)
             (x,w) =  knots[ii](testlevel)
         else
             (x,w) = knots(testlevel)

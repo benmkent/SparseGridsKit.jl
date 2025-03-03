@@ -25,6 +25,8 @@ include("misets.jl")
 include("knots.jl")
 include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
+include("verifyinputs.jl")
+
 
 """
     precompute_lagrange_integrals(max_mi, domain)
@@ -56,8 +58,16 @@ Creates a sparse grid based on the provided multi-index set (`mi_set`).
 - A sparse grid object constructed using the specified multi-index set.
 """
 function create_sparsegrid(mi_set, domain; rule=doubling, knots=ccpoints)
+    # Ensure domain is float
+    domain_float = Vector(undef, length(domain))
+    for (ii,d) in enumerate(domain)
+        domain_float[ii] = Float64.(d)
+    end
+    verifyinputs!(mi_set)
+    verifyinputs(domain_float, knots)
+
     miset_matrix = hcat(mi_set.mi...)
-    sg = createsparsegrid(miset_matrix, domain; rule=rule, knots=knots)
+    sg = createsparsegrid(miset_matrix, domain_float; rule=rule, knots=knots)
     return sg
 end
 
@@ -144,6 +154,9 @@ Interpolates a function (`f_on_grid`) defined on a sparse grid (`sg`) to a set o
 """
 function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     #target_points_matrix = hcat(target_points...)'
+
+    verifyinputs(sg.domain, target_points)
+
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
     return f_on_target_points
 end

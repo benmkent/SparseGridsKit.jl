@@ -102,6 +102,7 @@ Retrieves the grid points from a sparse grid (`sg`).
 function get_grid_points(sg)
     matrix_points = sg.sparsegridpts
     grid_point_vector = [Vector(v) for v in eachrow(matrix_points)]
+    @debug "Returned "*string(length(grid_point_vector))*" sparse grid points"
     return grid_point_vector
 end
 
@@ -117,7 +118,9 @@ Returns the number of grid points in the sparse grid (`sg`).
 - The number of grid points in the sparse grid.
 """
 function get_n_grid_points(sg)
-    return size(sg.sparsegridpts, 1)
+    n = size(sg.sparsegridpts, 1)
+    @debug "Number of grid points "*string(n)
+    return n
 end
 
 """
@@ -134,7 +137,9 @@ Generates a downwards-closed set of multi-indices from a sparse grid (`sg`).
 function get_mi_set(sg)
     mi = sg.MI
     mi_matrix = mi
+    @debug "Getting MI set, currently has "*string(size(mi_matrix),1)*" terms"
     mi_matrix_dc = downwards_closed_set(mi_matrix)
+    @debug "Enforced downwards close, now  "*string(size(mi_matrix_dc,1))*" terms"
     mi_set = MISet([Vector(v) for v in eachcol(mi_matrix_dc)])
     return mi_set
 end
@@ -156,7 +161,7 @@ function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     #target_points_matrix = hcat(target_points...)'
 
     verifyinputs(sg.domain, target_points)
-
+    @debug "Interpolating onto "*string(length(target_points))*" target points"
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
     return f_on_target_points
 end

@@ -87,7 +87,6 @@ function Base.:copy(sg::SparseGrid)
 end
 
 function sparsegridprecompute(maxmi, domain, knots=ccpoints, rule=doubling)
-
     if isa(knots, Function)
         knots = fill(knots, length(domain))
     end
@@ -99,6 +98,7 @@ function sparsegridprecompute(maxmi, domain, knots=ccpoints, rule=doubling)
         (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
         productintegrals[ii] = sparsegridproductintegrals(polyperlevel, maxmi, knots[ii], rule[ii])
     end
+    @debug "Computed weighted L^2 product integrals in each dimension"
     return (; productintegrals)
 end
 
@@ -149,6 +149,7 @@ function mapfromto(sgfrom, sgto)
     for ii in 1:size(fromptids, 1)
         maptermstosparsegrid[ii] = findfirst(fromptids[ii, :] == uniquerow for uniquerow in eachrow(sgto.sparsegridptids))
     end
+    @debug "Mapped each sparse grid point in sgfrom to sgto"
     return maptermstosparsegrid
 end
 
@@ -219,17 +220,21 @@ function createsparsegrid(MI, domain; rule=doubling, knots=ccpoints)
     maxmi = maximum(MI)
     dims = size(MI, 1)
 
+    @debug "Creating sparse grid with parameter dimension "*string(dims)
+
     if isa(knots, Function)
         knots = fill(knots, dims)
+        @debug "Using the same notes in all dimensions"
     end
     if isa(rule, Function)
         rule = fill(rule, dims)
+        @debug "Using the same rule in all dimensions"
     end
     try
         @assert (size(rule,1) == size(knots,1))
         @assert (size(rule,1) == dims)
     catch e
-        @error "If specified, rule and knots must be the same length as the number of dimensions"
+        DimensionMismatch("If specified, rule and knots must be the same length as the number of dimensions")
     end
     ptsunique = Vector{Any}(undef,dims)
     ptsperlevel = Vector{Any}(undef,dims)
@@ -238,16 +243,20 @@ function createsparsegrid(MI, domain; rule=doubling, knots=ccpoints)
     for ii = eachindex(knots)
         (ptsunique[ii], ptsperlevel[ii], polyperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
     end
+    @debug "Constructed one dimensional grid data"
 
     (grid, cterms, cmi, MI) = sparsegridterms(MI, ptsperlevel)
+    @debug "Constructed combintion technique data"
 
     filter_vector = cterms .!= 0
     grid = grid[filter_vector]
     cterms = cterms[filter_vector]
 
     (sparsegridptids, sparsegridpts, maptermstosparsegrid) = sparsegridpoints(grid, pintsmap, ptsunique, dims)
+    @debug "Created sparse grid term to sparse grid points mappings"
 
     sparsegrid = SparseGrid(dims, MI, grid, sparsegridptids, maptermstosparsegrid, cterms, cmi, pintsmap, ptsperlevel, ptsunique, sparsegridpts, polyperlevel, domain)
+    @debug "Created sparse grid"
     return sparsegrid
 end
 
@@ -433,7 +442,7 @@ function integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing
     for (i, row) = enumerate(eachrow(terms))
         val[i] = cterms[i] * prod(productintegrals[j][row[1][j][1], 1, row[1][j][2], 1] for j in eachindex(row[1]))
     end
-
+    @debug "Computed integral on sparse grid"
     feval = sum(val[i] * fongrid[maprowtouniquept[i]] for i=1:nterms)
     return feval
 end

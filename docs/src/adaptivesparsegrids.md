@@ -22,7 +22,7 @@ domain = [[-1,1]]
 The function `f` can be exactly represented by a three point interpolant, which is identified in the adaptive algorithm.
 ```@example 1d
 test_points = range(-1,stop=1,length=100)
-all([f(x)] ≈ interpolate_on_sparsegrid(sg,f_on_Z,x) for x in test_points),  get_n_grid_points(sg)
+all([f(x)] ≈ interpolate_on_sparsegrid(sg,f_on_Z,x) for x in test_points),  get_n_grid_points(sg) == 3
 ```
 Taking powers $k$ of the polynomial $f$ gives a polynomial $f^k$ of polynomial degree $2^k$. Consequently, this is represented exactly using $2^k+1$ interpolation points.
 The adaptive algorithm identifies this.
@@ -31,13 +31,14 @@ The adaptive algorithm identifies this.
         (sg, f2_on_Z) = adaptive_sparsegrid(f2, domain, ndims)
         # Expect three point approx cubic (1 iteration to suffice)
         all([f2(x)] ≈ interpolate_on_sparsegrid(sg,f2_on_Z,x) for x in test_points), 
-        get_n_grid_points(sg)
+        get_n_grid_points(sg) == 5
 ```
 ```@example 1d
         f3(x) = f(x).^3
         (sg, f3_on_Z) = adaptive_sparsegrid(f3, domain, ndims)
         # Expect three point approx cubic (1 iteration to suffice)
-        all([f3(x)] ≈ interpolate_on_sparsegrid(sg,f3_on_Z,x) for x in test_points),get_n_grid_points(sg)
+        all([f3(x)] ≈ interpolate_on_sparsegrid(sg,f3_on_Z,x) for x in test_points)
+        get_n_grid_points(sg)
 ```
 ## Multi-dimensional example
 The adaptive algorithm is also applicable for higher dimensional functions.
@@ -73,7 +74,6 @@ Reducing `proftol` allows further iterations and a more accurate approximation.
     f_approx_on_test = interpolate_on_sparsegrid(sg,f_on_Z,test_points)
 
     norm([f(x) - f_approx_on_test[i] for (i,x) in enumerate(test_points)])
-
 ```
 
 ## Functions

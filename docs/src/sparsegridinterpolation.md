@@ -41,13 +41,13 @@ f_on_grid_new = [f(x) for x in get_grid_points(sg_new)]
 
 interpolation_result_new = interpolate_on_sparsegrid(sg_new, f_on_grid_new, target_points)
 
-norm([interpolation_result_new[i] - f(target_points[i]) for i in eachindex(target_points)])
+norm([interpolation_result_new[i] - f(target_points[i]) for i in eachindex(target_points)]) < 1e-5
 ```
 
 The number of grid points can be checked using [`get_n_grid_points`](@ref) and is seen to equal three.
 It is therefore no surprise that the approximation error is at machine precision - we can exactly represent the function `f` as a three point interpolant.
 ```@example interp1
-get_n_grid_points(sg_new)
+get_n_grid_points(sg_new) == 3
 ```
 ## Multi-dimensional interpolation
 These ideas extend to vector valued functions with multi-dimensional domains.
@@ -104,7 +104,7 @@ mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set,domain)
 f_on_grid = [f(x) for x in get_grid_points(sg)]
 f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, V)
-norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
+norm([f_on_v[i] - f(V[i]) for i in eachindex(V)]) < 1e-5
 ```
 Later, the function [`adaptive_sparsegrid`](@ref) will consider a greedy construction of the multi-index set to reduce the approximation error.
 

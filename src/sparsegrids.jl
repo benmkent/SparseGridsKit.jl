@@ -340,8 +340,8 @@ function sparsegridterms(MI, ptsperlevel; cmi=nothing)
 end
 
 function sparsegridonedimdata(maxmi, knots, rule, domain)
-    ptsunique = Vector{Float64}(undef, 0)
-    ptsperlevel = Vector{Vector{Float64}}(undef, maxmi)
+    ptsunique = Vector{Real}(undef, 0)
+    ptsperlevel = Vector{Vector{Real}}(undef, maxmi)
     #poly = Vector{Vector{Polynomial{Float64,:x}}}(undef, maxmi)
     polyperlevel = Vector{Any}(undef, maxmi)
     pintsmap = Dict{}()
@@ -350,7 +350,12 @@ function sparsegridonedimdata(maxmi, knots, rule, domain)
     space = spaceselector(domain)
 
     for ii = 1:maxmi
-        ptsperlevel[ii], w = knots(rule(ii))
+        # Detect special case of fidelity
+        if knots === fidelitypoints
+            ptsperlevel[ii], w = knots(ii)
+        else
+            ptsperlevel[ii], w = knots(rule(ii))
+        end
         polyperlevel[ii] = createlagrangepolys(ptsperlevel[ii], space)
 
         # Build points map
@@ -406,8 +411,19 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         targetpt = targetpoints[k]
         #for (i, row) = enumerate(eachrow(terms))
             #val = c[i]*prod([polyperlevel[row[1][j][1]][row[1][j][2]](newpt[1][j]) for j in eachindex(row[1])])
+            try
             @inbounds  cweightedpolyprod[k,i] = cterms[i] * prod(poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1]))
             #feval[k] = feval[k] .+ cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]]
+            catch
+                @show k, i
+                @show cterms[i]
+                @show row
+                @show poly
+                @show targetpt
+
+                @show [poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1])]
+                rethrow()
+            end
         #end
     end
     @inbounds @fastmath feval = [sum(cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]] for i in 1:size(terms,1)) for k=1:length(feval)]
@@ -655,5 +671,5 @@ function spaceselector(domain)
     else
         space = Chebyshev(domain)
     end
+    return space
 end
-

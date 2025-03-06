@@ -12,13 +12,14 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `knots`: (Optional) Knot function(s) for sparse grid. Default is `ccpoints`.
 - `θ`: (Optional) Threshold for marking. Default is `1e-4`.
 - `type`: (Optional) Type of profit computation. Default is `:deltaint`.
+- `costfunction` (Optional) Cost function for fidelity related multi-indices.
 
 # Returns
 - `sg`: Final sparse grid used to approximate `f`
 - `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
 """
-function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4, type=:deltaint)
-    MI = create_smolyak_miset(ndims,0)
+function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4, type=:deltaint, costfunction=nothing)
+    MI = create_smolyak_miset(length(domain),0)
     sg = create_sparsegrid(MI, domain; rule=rule, knots=knots)
 
     Z = get_grid_points(sg)
@@ -53,7 +54,7 @@ function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule 
         end
 
         # ESTIMATE
-        p_α = adaptive_estimate(sg, datastore, pcl, rule, knots, type=type)
+        p_α = adaptive_estimate(sg, datastore, pcl, rule, knots, type=type, costfunction=costfunction)
 
         # MARK
         α_marked = adaptive_mark(RM, p_α, θ)
@@ -116,7 +117,7 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 # Returns
 - Vector of profits for each multi-index α.
 """
-function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint)
+function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint, costfunction=nothing)
     f_on_z = retrieve_evaluations(datastore, sg)
 
     MI = get_mi_set(sg)
@@ -129,6 +130,11 @@ function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint)
         
         # cost = get_n_grid_points(sg_α) - get_n_grid_points(sg)
         cost = length(setdiff(get_grid_points(sg_α), get_grid_points(sg)))
+        if costfunction != nothing
+            α_fidelities = α[knots === fidelitypoints]
+            costpersolve = costfunction(α_fidelities)
+            cost = cost*costpersolve
+        end
 
         p_α[i] = compute_profit(sg_α, sg, f_on_z_α, f_on_z, cost, pcl, type=type)
     end

@@ -12,8 +12,10 @@ export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid
 export convert_to_spectral_approximation
 
-export ccpoints, uniformpoints, linearpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
+export ccpoints, uniformpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
 export doubling, linear, tripling, twostep
+
+export fidelity, fidelitypoints, multifidelityfunctionwrapper
 
 export genz
 
@@ -26,7 +28,7 @@ include("knots.jl")
 include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
 include("verifyinputs.jl")
-
+include("multifidelity.jl")
 
 """
     precompute_lagrange_integrals(max_mi, domain)
@@ -45,12 +47,13 @@ function precompute_lagrange_integrals(max_mi, domain, knots=ccpoints, rule=doub
 end
 
 """
-    create_sparsegrid(mi_set, domain)
+    create_sparsegrid(mi_set, domain; rule=doubling, knots=ccpoints)
 
 Creates a sparse grid based on the provided multi-index set (`mi_set`).
 
 # Arguments
 - `mi_set`: An instance of `MISet` containing the multi-index set for grid construction.
+- `domain`: The domain of the approximation.
 - `rule`: Map from index to number of points. Optional (default doubling). Function or vector of functions (for each dimension).
 - `knots`: Type of knots. Optional (default Clenshaw--Curtis). Function or vector of functions (for each dimension).
 

@@ -1,7 +1,7 @@
 @testset "Mixed Grids Tests" begin
     # Test create_sparsegrid
     n,k =3,0
-    knots = [linearpoints, ccpoints, uniformpoints]
+    knots = [gausshermitepoints, ccpoints, uniformpoints]
     rules = [linear, doubling, doubling]
     mi_set = create_smolyak_miset(n,k)
     domain = [[0,Inf],[-1,1],[0,1]]

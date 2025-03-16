@@ -156,8 +156,9 @@ Subtracts `SpectralSparseGridApproximation` objects
 - `SpectralSparseGridApproximation` object representing the subtraction.
 """
 function -(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridApproximation)
-    grid2.coefficients = -grid2.coefficients
-    return grid1 + grid2 
+    grid2copy = deepcopy(grid2)
+    grid2copy.coefficients = -grid2copy.coefficients
+    return grid1 + grid2copy 
 end 
 
 function get_spectral_poly_representation(expansiondimensions, coefficients)

@@ -12,8 +12,10 @@ export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid
 export convert_to_spectral_approximation
 
-export ccpoints, uniformpoints, linearpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
+export ccpoints, uniformpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
 export doubling, linear, tripling, twostep
+
+export fidelity, fidelitypoints, multifidelityfunctionwrapper
 
 export genz
 
@@ -26,7 +28,7 @@ include("knots.jl")
 include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
 include("verifyinputs.jl")
-
+include("multifidelity.jl")
 
 """
     precompute_lagrange_integrals(max_mi, domain)
@@ -45,12 +47,13 @@ function precompute_lagrange_integrals(max_mi, domain, knots=ccpoints, rule=doub
 end
 
 """
-    create_sparsegrid(mi_set, domain)
+    create_sparsegrid(mi_set, domain; rule=doubling, knots=ccpoints)
 
 Creates a sparse grid based on the provided multi-index set (`mi_set`).
 
 # Arguments
 - `mi_set`: An instance of `MISet` containing the multi-index set for grid construction.
+- `domain`: The domain of the approximation.
 - `rule`: Map from index to number of points. Optional (default doubling). Function or vector of functions (for each dimension).
 - `knots`: Type of knots. Optional (default Clenshaw--Curtis). Function or vector of functions (for each dimension).
 
@@ -102,6 +105,7 @@ Retrieves the grid points from a sparse grid (`sg`).
 function get_grid_points(sg)
     matrix_points = sg.sparsegridpts
     grid_point_vector = [Vector(v) for v in eachrow(matrix_points)]
+    @debug "Returned "*string(length(grid_point_vector))*" sparse grid points"
     return grid_point_vector
 end
 
@@ -117,7 +121,9 @@ Returns the number of grid points in the sparse grid (`sg`).
 - The number of grid points in the sparse grid.
 """
 function get_n_grid_points(sg)
-    return size(sg.sparsegridpts, 1)
+    n = size(sg.sparsegridpts, 1)
+    @debug "Number of grid points "*string(n)
+    return n
 end
 
 """
@@ -134,7 +140,9 @@ Generates a downwards-closed set of multi-indices from a sparse grid (`sg`).
 function get_mi_set(sg)
     mi = sg.MI
     mi_matrix = mi
+    @debug "Getting MI set, currently has "*string(size(mi_matrix),1)*" terms"
     mi_matrix_dc = downwards_closed_set(mi_matrix)
+    @debug "Enforced downwards close, now  "*string(size(mi_matrix_dc,1))*" terms"
     mi_set = MISet([Vector(v) for v in eachcol(mi_matrix_dc)])
     return mi_set
 end
@@ -156,7 +164,7 @@ function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     #target_points_matrix = hcat(target_points...)'
 
     verifyinputs(sg.domain, target_points)
-
+    @debug "Interpolating onto "*string(length(target_points))*" target points"
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
     return f_on_target_points
 end

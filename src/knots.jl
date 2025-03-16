@@ -1,6 +1,7 @@
 import PolyChaos: clenshaw_curtis
 import FastGaussQuadrature: gausslegendre, gausshermite
 
+
 """
     transformdomain(xw, a, b)
 
@@ -64,20 +65,6 @@ Use twostep level to points
 - Number of points
 """
 twostep(n) = 2*(n-1)+1
-
-"""
-    linearpoints(n)
-
-Generate points as Natural numbers 1,2,3,...
-
-# Arguments
-- `n`: Number of points.
-
-# Returns
-- `z` : 1:n
-- `w` : ones(n)
-"""
-linearpoints(n) = 1:n, ones(n)
 
 """
     uniformpoints(n, a, b)

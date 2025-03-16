@@ -61,8 +61,8 @@ all(isapprox(y_spectral_2, 2*y_spectral; atol=1e-8))
 ```@example genz
 f_spectral_0 = f_spectral - f_spectral
 y_spectral_0 = f_spectral_0.(x_test)
-
-all(isapprox(y_spectral_0, zeros(size(y_spectral_0)); atol=1e-8))
+@show y_spectral_0, f_spectral_0
+#all(isapprox(y_spectral_0, nothing; atol=1e-8))
 ```
 
 ## Function Reference

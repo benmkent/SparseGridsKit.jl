@@ -411,19 +411,8 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         targetpt = targetpoints[k]
         #for (i, row) = enumerate(eachrow(terms))
             #val = c[i]*prod([polyperlevel[row[1][j][1]][row[1][j][2]](newpt[1][j]) for j in eachindex(row[1])])
-            try
             @inbounds  cweightedpolyprod[k,i] = cterms[i] * prod(poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1]))
             #feval[k] = feval[k] .+ cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]]
-            catch
-                @show k, i
-                @show cterms[i]
-                @show row
-                @show poly
-                @show targetpt
-
-                @show [poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1])]
-                rethrow()
-            end
         #end
     end
     @inbounds @fastmath feval = [sum(cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]] for i in 1:size(terms,1)) for k=1:length(feval)]

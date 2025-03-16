@@ -54,3 +54,4 @@ function plot_sparse_grid(sg; dims=nothing)
 
     return p
 end
+

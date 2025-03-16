@@ -1,4 +1,4 @@
-Multi-fidelity Modelling
+# Multi-fidelity Modelling
 The construction offers support for multi-fidelity modelling.
 A special type of knot function is included which simply maps a level to the same integer, to then be use to specify the model.
 This has a weight $w=1.0$ and a corresponding polynomial equal to $1$ for all inputs.
@@ -61,4 +61,10 @@ A `costfunction` can be supplied to give a representative cost for each fidelity
 This acts on a vector $\vec{α}$ of the fidelities.
 ```@example mf
 (sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, domain, ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
+```
+
+## Function Reference
+```@autodocs
+Modules = [SparseGridsKit]
+Pages   = ["misets.jl"]
 ```

@@ -27,7 +27,7 @@ using SparseGridsKit
     pcl = precompute_lagrange_integrals(5, domain, knots, rule)
 
     integral_result = integrate_on_sparsegrid(sg, f_eval, pcl)
-    @test integral_result 0.001
+    @test integral_result ≈ 0.001
 
     (sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, domain, ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
 

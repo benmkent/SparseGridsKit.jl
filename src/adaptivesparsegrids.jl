@@ -131,7 +131,7 @@ function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint, cost
         # cost = get_n_grid_points(sg_α) - get_n_grid_points(sg)
         cost = length(setdiff(get_grid_points(sg_α), get_grid_points(sg)))
         if costfunction != nothing
-            α_fidelities = α[knots === fidelitypoints]
+            α_fidelities = α[knots .=== fidelitypoints]
             costpersolve = costfunction(α_fidelities)
             cost = cost*costpersolve
         end

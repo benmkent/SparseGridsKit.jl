@@ -1,6 +1,7 @@
 import PolyChaos: clenshaw_curtis
 import FastGaussQuadrature: gausslegendre, gausshermite
 
+
 """
     transformdomain(xw, a, b)
 

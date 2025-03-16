@@ -41,6 +41,12 @@ Wrap a function for multifidelity evaluation
 - `nfid`: Number of fidelity indices
 - `nparam`: Number of parameters
 """
-function multifidelityfunctionwrapper(f, nfid, nparam)
-        return z -> f(z[1:nfid],z[nfid+1:-1])
+function multifidelityfunctionwrapper(f, knots)
+    if !isa(knots, Vector)
+        f_wrapped = z -> f(z)
+    else
+        fidelity_mask = knots .=== fidelitypoints
+        f_wrapped = z -> f(z[fidelity_mask],z[.!fidelity_mask])
+    end
+    return f_wrapped
 end

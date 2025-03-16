@@ -66,5 +66,5 @@ This acts on a vector $\vec{α}$ of the fidelities.
 ## Function Reference
 ```@autodocs
 Modules = [SparseGridsKit]
-Pages   = ["misets.jl"]
+Pages   = ["multifidelity.jl"]
 ```

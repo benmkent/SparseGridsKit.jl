@@ -10,6 +10,7 @@ using Test, SparseGridsKit, Documenter, LinearAlgebra
     include("spectral_test.jl")
     include("sgmk_test.jl")
     include("aqua_test.jl")
+    include("multifidelity_tests.jl")
 end
 
 @testset "doctest" begin

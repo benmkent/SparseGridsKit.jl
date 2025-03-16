@@ -66,7 +66,7 @@ The integral can be evaluated explicitly, and it is seen that using an larger sp
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid
     integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
-    integral_results ≈ [2.0,92/15]
+    integral_result ≈ [2.0,92/15]
 ```
 This is of course expected --- the polynomial approximation space represented by the larger sparse grid contains the function 
 $[f(x_1), f(x_2)^2]$.

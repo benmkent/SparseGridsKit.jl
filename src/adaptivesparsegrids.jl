@@ -1,5 +1,5 @@
 """
-    adaptive_sparsegrid(f, ndims; maxpts = 100, proftol = 1e-4, rule=doubling, knots=ccpoints, θ=1e-4, type=:deltaint)
+    adaptive_sparsegrid(f, ndims; maxpts = 100, proftol = 1e-4, rule=Doubling(), knots=CCPoints(), θ=1e-4, type=:deltaint)
 
 Constructs an adaptive sparse grid for approximating the function `f` in `ndims` dimensions.
 
@@ -8,8 +8,8 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `ndims`: Dimension of domain.
 - `maxpts`: (Optional) Maximum number of points to include in the sparse grid. Default is `100`.
 - `proftol`: (Optional) Tolerance for profits. Default is `1e-4`.
-- `rule`: (Optional) Level function(s) for sparse grid. Default is `doubling`.
-- `knots`: (Optional) Knot function(s) for sparse grid. Default is `ccpoints`.
+- `rule`: (Optional) Level function(s) for sparse grid. Default is `Doubling()`.
+- `knots`: (Optional) Knot function(s) for sparse grid. Default is `CCPoints()`.
 - `θ`: (Optional) Threshold for marking. Default is `1e-4`.
 - `type`: (Optional) Type of profit computation. Default is `:deltaint`.
 - `costfunction` (Optional) Cost function for fidelity related multi-indices.
@@ -18,7 +18,7 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `sg`: Final sparse grid used to approximate `f`
 - `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
 """
-function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = doubling, knots = ccpoints, θ=1e-4, type=:deltaint, costfunction=nothing)
+function adaptive_sparsegrid(f, domain, ndims; maxpts = 100, proftol=1e-4, rule = Doubling(), knots = CCPoints(), θ=1e-4, type=:deltaint, costfunction=nothing)
     MI = create_smolyak_miset(length(domain),0)
     sg = create_sparsegrid(MI, domain; rule=rule, knots=knots)
 
@@ -131,7 +131,7 @@ function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint, cost
         # cost = get_n_grid_points(sg_α) - get_n_grid_points(sg)
         cost = length(setdiff(get_grid_points(sg_α), get_grid_points(sg)))
         if costfunction != nothing
-            α_fidelities = α[knots .=== fidelitypoints]
+            α_fidelities = α[isa.(knots,FidelityPoints)]
             costpersolve = costfunction(α_fidelities)
             cost = cost*costpersolve
         end

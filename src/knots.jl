@@ -1,7 +1,6 @@
 import PolyChaos: clenshaw_curtis
 import FastGaussQuadrature: gausslegendre, gausshermite
 
-
 """
     transformdomain(xw, a, b)
 
@@ -163,7 +162,7 @@ Generate Gauss-Legendre quadrature points and weights on domain [a,b].
 # Returns
 - Points and weights in `[a, b]`.
 """
-gausslegendrepoints(n, a, b) = transformdomain(gausslegendre(n), a, b)
+gausslegendrepoints(n, a, b) = transformdomain(gausslegendrepoints(n), a, b)
 
 """
     gausshermitepoints(n)
@@ -177,6 +176,12 @@ Generate Gauss-Hermite quadrature points and weights on domain `[-∞, ∞]`.
 - Points and weights in `[-∞, ∞]`.
 """
 function gausshermitepoints(n)
+    x,w = gausshermite(n);
+    x=x*sqrt(2)
+    w = w/sqrt(π)
+    return x, w
+end
+function gausshermitepoints(n,a,b)
     x,w = gausshermite(n);
     x=x*sqrt(2)
     w = w/sqrt(π)

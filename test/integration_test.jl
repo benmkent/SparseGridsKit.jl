@@ -4,7 +4,7 @@
     n,k = 2,0
 
     domain=fill([-1,1],n)
-    pcl = precompute_lagrange_integrals(7, domain, ccpoints, doubling)
+    pcl = precompute_lagrange_integrals(7, domain, CCPoints(), Doubling())
 
     mi_set = create_smolyak_miset(n,k)
     domain = fill([-1, 1], n)

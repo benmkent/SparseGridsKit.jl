@@ -2,7 +2,7 @@ using Test
 using SparseGridsKit
 
 @testset "Multi-fidelity Modelling" begin
-    fidelitypoints(3), fidelity(3)
+    # FidelityPoints()(3), Fidelity(3)
 
     f(y) = 100*y[1] + 10*y[2] + 1*y[3]
 
@@ -12,8 +12,8 @@ using SparseGridsKit
 
     maxfidelity = 5
     domain = [fill([1,maxfidelity],nfid)..., fill([-1,1],ndims)...]
-    rule = [fill(fidelity,nfid)..., fill(doubling,ndims)...]
-    knots = [fill(fidelitypoints,nfid)..., fill(ccpoints,ndims)...]
+    rule = [fill(Fidelity(),nfid)..., fill(Doubling(),ndims)...]
+    knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),ndims)...]
 
     f_wrapped = multifidelityfunctionwrapper(f_fidelities,knots)
 

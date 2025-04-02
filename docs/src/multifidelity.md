@@ -5,7 +5,7 @@ This has a weight $w=1.0$ and a corresponding polynomial equal to $1$ for all in
 In practice, for interpolation there is no parameter to be evaluated, but this set up provides the correct multi-fidelity structure using the existing single fidelity construction.
 ```@example mf
 using SparseGridsKit
-fidelitypoints(3), fidelity(3)
+FidelityPoints()(3), fidelity(3)
 ```
 
 A simple multi-fidelity model considers a constant function $f(x)=y_1^2 + sin(y_2) + y_3$, subject to errors $10^-alpha$.
@@ -26,8 +26,8 @@ The knot function is treated as a special case in the sparse grid construction.
 ```@example mf
 maxfidelity = 5
 domain = [fill([1,maxfidelity],nfid)..., fill([-1,1],ndims)...]
-rule = [fill(fidelity,nfid)..., fill(doubling,ndims)...]
-knots = [fill(fidelitypoints,nfid)..., fill(ccpoints,ndims)...]
+rule = [fill(Fidelity(),nfid)..., fill(Doubling(),ndims)...]
+knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),ndims)...]
 ```
 
 We wrap the function $f$ using [`multifidelityfunctionwrapper`](@ref).

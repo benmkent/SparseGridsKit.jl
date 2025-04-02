@@ -71,8 +71,8 @@ To demonstrate, consider linear points $$n\mapsto\{1,2,...,n\}$$ in the first di
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3
-knots = [ccpoints, n->ccpoints(n,0,100), uniformpoints]
-rules = [doubling, doubling, linear]
+knots = [CCPoints(), n->CCPoints(0,100)(n), UniformPoints()]
+rules = [Doubling(), Doubling(), Linear()]
 mi_set = create_smolyak_miset(n,k)
 domain = [[-1,1],[0,100],[-1,1]]
 sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)

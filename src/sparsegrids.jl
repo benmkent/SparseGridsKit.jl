@@ -86,11 +86,11 @@ function Base.:copy(sg::SparseGrid)
     return sgcopy
 end
 
-function sparsegridprecompute(maxmi, domain, knots=ccpoints, rule=doubling)
-    if isa(knots, Function)
+function sparsegridprecompute(maxmi, domain, knots=CCPoints(), rule=Doubling())
+    if isa(knots, Points)
         knots = fill(knots, length(domain))
     end
-    if isa(rule, Function)
+    if isa(rule, Level)
         rule = fill(rule, length(domain))
     end
     productintegrals = Vector{Any}(undef, length(knots))
@@ -215,18 +215,18 @@ function reducedmargin(MI)
     return sortmi(rm)
 end
 
-function createsparsegrid(MI, domain; rule=doubling, knots=ccpoints)
+function createsparsegrid(MI, domain; rule=Doubling(), knots=CCPoints())
     MI = sortmi(MI)
     maxmi = maximum(MI)
     dims = size(MI, 1)
 
     @debug "Creating sparse grid with parameter dimension "*string(dims)
 
-    if isa(knots, Function)
+    if isa(knots, Points)
         knots = fill(knots, dims)
         @debug "Using the same notes in all dimensions"
     end
-    if isa(rule, Function)
+    if isa(rule, Level)
         rule = fill(rule, dims)
         @debug "Using the same rule in all dimensions"
     end
@@ -351,7 +351,7 @@ function sparsegridonedimdata(maxmi, knots, rule, domain)
 
     for ii = 1:maxmi
         # Detect special case of fidelity
-        if knots === fidelitypoints
+        if isa(knots, FidelityPoints)
             ptsperlevel[ii], w = knots(ii)
         else
             ptsperlevel[ii], w = knots(rule(ii))

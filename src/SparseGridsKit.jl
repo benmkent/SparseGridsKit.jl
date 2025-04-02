@@ -12,10 +12,11 @@ export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid
 export convert_to_spectral_approximation
 
-export ccpoints, uniformpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
-export doubling, linear, tripling, twostep
+#export ccpoints, uniformpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
+export CCPoints, UniformPoints, GaussLegendrePoints, GaussHermitePoints, LejaPoints
+export Doubling, Linear, Tripling, TwoStep
 
-export fidelity, fidelitypoints, multifidelityfunctionwrapper
+export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
 export genz
 
@@ -25,6 +26,7 @@ include("genz.jl")
 include("sparsegridplots.jl")
 include("misets.jl")
 include("knots.jl")
+include("knots_structures.jl")
 include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
 include("verifyinputs.jl")
@@ -41,26 +43,26 @@ Precomputes the product integrals for Lagrange basis functions up to a given max
 # Returns
 - A vector of precomputed product integrals for the Lagrange basis.
 """
-function precompute_lagrange_integrals(max_mi, domain, knots=ccpoints, rule=doubling)
+function precompute_lagrange_integrals(max_mi, domain, knots=CCPoints(), rule=Doubling())
     precompute = sparsegridprecompute(max_mi, domain, knots, rule)
     return precompute.productintegrals
 end
 
 """
-    create_sparsegrid(mi_set, domain; rule=doubling, knots=ccpoints)
+    create_sparsegrid(mi_set, domain; rule=Doubling(), knots=CCPoints())
 
 Creates a sparse grid based on the provided multi-index set (`mi_set`).
 
 # Arguments
 - `mi_set`: An instance of `MISet` containing the multi-index set for grid construction.
 - `domain`: The domain of the approximation.
-- `rule`: Map from index to number of points. Optional (default doubling). Function or vector of functions (for each dimension).
+- `rule`: Map from index to number of points. Optional (default Doubling()). Function or vector of functions (for each dimension).
 - `knots`: Type of knots. Optional (default Clenshaw--Curtis). Function or vector of functions (for each dimension).
 
 # Returns
 - A sparse grid object constructed using the specified multi-index set.
 """
-function create_sparsegrid(mi_set, domain; rule=doubling, knots=ccpoints)
+function create_sparsegrid(mi_set, domain; rule=Doubling(), knots=CCPoints())
     # Ensure domain is float
     domain_float = Vector(undef, length(domain))
     for (ii,d) in enumerate(domain)

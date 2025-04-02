@@ -24,8 +24,8 @@ In this case we choose a grid with dimension `n=3` and Smolyak level `w=3`.
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3
-knots = [gausshermitepoints, ccpoints, uniformpoints]
-rules = [linear, doubling, doubling]
+knots = [GaussHermitePoints(), CCPoints(), UniformPoints()]
+rules = [Linear(), Doubling(), Doubling()]
 mi_set = create_smolyak_miset(n,k)
 domain = [[-1,1],[-1,1],[-1,1]]
 sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)

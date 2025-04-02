@@ -51,7 +51,7 @@ Checks domain and knots are compatible
 # Returns
 - `check`: Boolean
 """
-function verifyinputs(domain, knots::Union{Function,Vector{Function}})
+function verifyinputs(domain, knots::Union{Points,Vector{Points}})
     testlevel = 3
     check = true
     testknots = Vector{Vector{Float64}}(undef, length(domain))

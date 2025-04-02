@@ -19,9 +19,9 @@ f_fidelities(alpha,y) = f(y) + 10^(-alpha[1])
 ```
 
 The domain is defined, where the fidelity domain should represent the maximum allowable fidelities.
-The rule for fidelity is (`fidelity`)(@ref).
+The rule for fidelity is (`Fidelity`)(@ref).
 This returns $1$ for all input levels as there is only one model per level.
-The knots are [`fidelitypoints`](@ref), which returns the input value plus a weight zero.
+The knots are [`FidelityPoints`](@ref), which returns the input value plus a weight zero.
 The knot function is treated as a special case in the sparse grid construction.
 ```@example mf
 maxfidelity = 5

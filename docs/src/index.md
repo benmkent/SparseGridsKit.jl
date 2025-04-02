@@ -15,8 +15,8 @@ An example sparse grid construction is illustrated below.
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3
-knots = [ccpoints, ccpoints, uniformpoints]
-rules = [doubling, doubling, linear]
+knots = [CCPoints(), CCPoints(), UniformPoints()]
+rules = [Doubling(), Doubling(), Linear()]
 mi_set = create_smolyak_miset(n,k)
 domain = [[-1,1],[-1,1],[-1,1]]
 sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)

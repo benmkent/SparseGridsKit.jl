@@ -48,10 +48,10 @@ using MAT, Downloads, FastGaussQuadrature
 
     @testset "Level to Knots" begin
     ii = [1, 2, 3, 4];
-    m_lin = linear.(ii);
-    m_2step = twostep.(ii);
-    m_doub = doubling.(ii);
-    m_trip = tripling.(ii);
+    m_lin = Linear().(ii);
+    m_2step = TwoStep().(ii);
+    m_doub = Doubling().(ii);
+    m_trip = Tripling().(ii);
     # m_GK = lev2knots_GK.(ii);
 
     S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_lev2knots.mat")
@@ -65,8 +65,8 @@ using MAT, Downloads, FastGaussQuadrature
     @testset "Knots" begin
     n = 5; a = 1; b =4 ;
     # uniform pdf
-    x_unif,w_unif         = transformdomain(gausslegendrepoints(n),a,b);
-    x_CC,w_CC             = ccpoints(n,a,b);
+    x_unif,w_unif         = GaussLegendrePoints(a,b)(n);
+    x_CC,w_CC             = CCPoints(a,b)(n);
     # [x_leja,w_leja]         = knots_leja(n,a,b,'line');
     # [x_sym_leja,w_sym_leja] = knots_leja(n,a,b,'sym_line');
     # [x_p_leja,w_p_leja]     = knots_leja(n,a,b,'p_disk');
@@ -75,7 +75,7 @@ using MAT, Downloads, FastGaussQuadrature
 
     # normal pdf
     n = 9; mu = 0; sigma = 1;
-    x_norm,w_norm                     = gausshermitepoints(n);
+    x_norm,w_norm                     = GaussHermitePoints()(n);
     # [x_GK,w_GK]                         = knots_GK(n,mu,sigma);
     # [x_norm_Leja,w_norm_Leja]           = knots_normal_leja(n,mu,sigma,'line');
     # [x_norm_sym_Leja,w_norm_sym_Leja]   = knots_normal_leja(n,mu,sigma,'sym_line');
@@ -261,23 +261,23 @@ using MAT, Downloads, FastGaussQuadrature
             [3, 1]
         ];
         I = MISet(I)
-        knots1(n)           = gausslegendrepoints(n,0,1);
-        knots2(n)           = lejapoints(n,-1,1);
-        lev2knots(l)     = linear(l);
+        knots1           = GaussLegendrePoints(0,1);
+        knots2           = LejaPoints(-1,1);
+        lev2knots(l)     = Linear()(l);
         domain = [[0,1],[-1,1]]
         S_given_multiidx = create_sparsegrid(I,domain,knots=[knots1,knots2],rule=[lev2knots,lev2knots]);
 
 
         N=2; w=3;
-        knots(n) = ccpoints(n,-1,1);
+        knots = CCPoints(-1,1);
         domain = fill([-1,1],N);
         I_smolyak = create_smolyak_miset(N,w);
-        S_smolyak = create_sparsegrid(I_smolyak,domain,knots=knots,rule=doubling);
+        S_smolyak = create_sparsegrid(I_smolyak,domain,knots=knots,rule=Doubling());
 
         # adding one multi-index to S_smolyak
         new_idx = [5, 1];
         I_add = add_mi(I_smolyak,new_idx);
-        S_add = create_sparsegrid(I_add,domain,knots=knots,rule=doubling);
+        S_add = create_sparsegrid(I_add,domain,knots=knots,rule=Doubling());
         
         
         # quick preset
@@ -299,8 +299,8 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = sum(x);
         N = 2; w = 3;
         miset = create_smolyak_miset(N,w)
-        knots(n) = gausslegendrepoints(n,-1,1)
-        rule(l) = linear(l)
+        knots = GaussLegendrePoints(-1,1)
+        rule = Linear()
         domain = fill([-1,1],N)
         S  = create_sparsegrid(miset,domain,knots=knots,rule=rule);
 
@@ -320,8 +320,8 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = prod(1.0 ./sqrt.(x.+3));
 
         N = 4; w =4 ;
-        knots(n) = ccpoints(n,-1,1);
-        rule = doubling
+        knots = CCPoints(-1,1);
+        rule = Doubling()
         miset = create_smolyak_miset(N,w)
         domain = fill([-1,1],N)
 
@@ -338,8 +338,8 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = prod(1.0 ./sqrt.(x.+3));
 
         N = 2; w = 4;
-        knots(n) = ccpoints(n,-1,1);
-        rule = doubling
+        knots = CCPoints(-1,1);
+        rule = Doubling()
         miset = create_smolyak_miset(N,w)
         domain = fill([-1,1],N)
 
@@ -358,8 +358,8 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = prod(1.0 ./sqrt.(x.+3));
 
         N = 2; w = 5; a = -1; b = 1;
-        knots(n) = ccpoints(n,a,b);
-        rule = linear
+        knots = CCPoints(a,b);
+        rule = Linear()
         idxset(mi) = prod(mi)
         miset = create_rule_miset(N,w,idxset)
         domain = fill([a,b],N)
@@ -434,8 +434,8 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = 1.0 ./ (x[1].^2 .+x[2].^2 .+ 0.3);
 
         N = 2; a = -1; b = 1;
-        knots(n)     = ccpoints(n,a,b);
-        lev2knots(l) = doubling(l);
+        knots     = CCPoints(a,b);
+        lev2knots = Doubling();
         controls = Dict(
             :maxpts => 200,
             :proftol => 1e-10,

@@ -1,5 +1,37 @@
+struct FidelityPoints <: Points
+end
 """
-    fidelity(n)
+    FidelityPoints()
+Generate a struct for fidelity points
+# Returns
+- `FidelityPoints` struct
+"""
+
+"""
+    (p::FidelityPoints)(n)
+Generate fidelity points
+# Arguments
+- `n` : Number of points
+"""
+function (p::FidelityPoints)(n)
+    fidelitypoints(n)
+end
+
+struct Fidelity <: Level
+end
+"""
+    (f:Fidelity)(l)
+Fidelity level to knot number mapping
+# Arguments
+- `l` : Fidelity level
+
+# Returns
+- `1`` : Fidelity level always returns 1`
+"""
+(f::Fidelity)(l) = fidelity(l)
+
+"""
+    fidelitypoints(n)
 
 Generate indexes as Natural numbers 1,2,3,... for use as fidelity levels
 
@@ -45,7 +77,7 @@ function multifidelityfunctionwrapper(f, knots)
     if !isa(knots, Vector)
         f_wrapped = z -> f(z)
     else
-        fidelity_mask = knots .=== fidelitypoints
+        fidelity_mask = isa.(knots,FidelityPoints)
         f_wrapped = z -> f(z[fidelity_mask],z[.!fidelity_mask])
     end
     return f_wrapped

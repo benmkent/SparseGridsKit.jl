@@ -20,6 +20,7 @@ mutable struct SpectralSparseGridApproximation
     polytypes::Vector{Any}
     coefficients::SparseVector{Any}
     polydegrees
+    domain
 end
 
 """
@@ -32,14 +33,15 @@ Constructs a spectral sparse grid approximation.
 - `expansiondimensions::Vector{Int}`: Vector of maximum polynomial degree in each dimension.
 - `polytypes::Vector{Any}`: Vector of polynomial spaces.
 - `coefficients::Vector{Any}`: Kronecker product vector of polynomial coefficients
+- `domain::Vector{Vector{Real}}`: Vector of domains for inputs
 
 # Returns
 - `SpectralSparseGridApproximation`: An instance of `SpectralSparseGridApproximation`.
 """
-function SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
+function SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients, domain)
     coefficients = sparse(coefficients)
     polydegrees, coefficients = get_spectral_poly_representation(expansiondims, coefficients)
-    return SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients, polydegrees)
+    return SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients, polydegrees, domain)
 end
 
 """
@@ -140,7 +142,7 @@ function +(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridAppr
     end
 
     # Return the sum of the two sparse vectors
-    return SpectralSparseGridApproximation(grid1.dims, max_dims, grid1.polytypes, coeffs1_padded + coeffs2_padded)
+    return SpectralSparseGridApproximation(grid1.dims, max_dims, grid1.polytypes, coeffs1_padded + coeffs2_padded, grid1.domain)
 end
 
 """
@@ -264,6 +266,7 @@ function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
     terms = sparsegrid.terms
     cterms = sparsegrid.cterms
     maprowtouniquept = sparsegrid.maptermstosparsegrid
+    domain = sparsegrid.domain
 
     ndims = sparsegrid.dims
     
@@ -282,14 +285,14 @@ function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
         polytypes[ii] = poly[ii][1][1].space
     end
 
-    SSG_total = SpectralSparseGridApproximation(ndims, zeros(Int,ndims), polytypes, [])
+    SSG_total = SpectralSparseGridApproximation(ndims, zeros(Int,ndims), polytypes, [], domain)
     for (i, row) = enumerate(eachrow(terms))
         if cterms[i] == 0
             continue
         end
         vectors  = [poly[j][row[1][j][1]][row[1][j][2]].coefficients for j = 1:ndims]
         f_Fun_i, dims = truncated_kron(vectors)
-        SSG_i = SpectralSparseGridApproximation(ndims, dims, polytypes, fongrid[maprowtouniquept[i]] * cterms[i] * f_Fun_i)
+        SSG_i = SpectralSparseGridApproximation(ndims, dims, polytypes, fongrid[maprowtouniquept[i]] * cterms[i] * f_Fun_i, domain)
         SSG_total = SSG_i + SSG_total
     end
 

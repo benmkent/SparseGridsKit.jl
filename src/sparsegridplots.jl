@@ -1,57 +1,129 @@
-export plot_pairwise_mi, plot_sparse_grid
+using RecipesBase
+using StatsBase
 
-using Plots, StatsPlots
 """
-    plot_pairwise_mi(miset)
-Plots the pairwise histograms for each variable pair.
+    f(p::Points; n = 11)
+
+Recipe to plot scatter of knots and weights.
+
+# Arguments
+- `p::Points`: `Points` object.
+- `n::Int`: (Optional) Number of knots. Defaults to `11`.
 """
-function plot_pairwise_mi(miset)
-    mi_vec = get_mi(miset)
-    mi_vec_matrix=transpose(hcat(mi_vec...))
-    nmi, ndim = size(mi_vec_matrix)
-    psub = Matrix{Any}(undef,ndim,ndim)
-    for ii=1:ndim, jj=1:ndim
-        countdict =StatsPlots.countmap([mi_vec_matrix[kk,[ii,jj]] for kk=1:nmi])
-        keyvalues = collect(keys(countdict))
-        cvalues = collect(values(countdict))
-        x = [k[1] for k in keyvalues]
-        y = [k[2] for k in keyvalues]
-        z = [c[1] for c in cvalues]
-        psub[ii,jj] = scatter(x,y, zcolor=collect(values(countdict)),legend=:none)
-        if ii == 1
-        plot!(ylabel="Parameter "*string(jj))
-        end
-        if jj == 1
-        plot!(xlabel="Parameter "*string(ii))
-        end
-    end
-    p=plot([psub[ii,jj] for jj=ndim:-1:1 for ii=1:ndim]...,layout=(ndim,ndim))
+@recipe function f(p::Points; n = 11)
+    seriestype  :=  :scatter
+    label --> string(typeof(p))*" "*string(n)
+    xlabel --> "Knots"
+    ylabel --> "Weight"
+    x,w = p(n)
 end
 
 """
-    plot_sparse_grid(sg)
-Plots the sparse grid points
+    misetplot(miset::MISet)
+
+    Scatter plot of MI in pairs of dimensions
+
 # Arguments
-- `sg`: Sparse grid to plot
-- `dims`: (optional) for sparse grids with dimension greater than 3, then selects which 3 dimensions to plot as xyz.
+- `miset` : Multi-index set to plot
+"""
+@userplot MISetPlot
+@recipe function f(h::MISetPlot)
+    miset = h.args[1]
+    @assert isa(miset, MISet)
+    data = hcat(get_mi(miset)...)'
+
+    n, k = size(data, 1), size(data, 2)
+    
+    title --> "Multi-Index Pair Plot"
+
+    # Set up subplots (creating a k x k grid)
+    layout := @layout (k,k)  # Create a k x k layout grid
+
+    # Loop through the data to create scatter plots
+    for jj = 1:k
+        for ii = 1:jj  # Only plot the lower triangle and diagonal
+            x, y = data[:, ii], data[:, jj]
+            # # Marker size for frequency
+            # points = [(x[i], y[i]) for i in 1:length(x)]
+            # point_counts = countmap(points)
+            # unique_points = keys(point_counts)
+            # frequencies = values(point_counts)
+            # sizes = [100 * frequencies[findfirst(isequal(p), unique_points)] for p in points]
+            @series begin
+                subplot := ii + k*(jj-1)  # Assign subplot to the correct position
+                seriestype := :scatter  # Define the plot type
+                xlabel --> "Variable $ii"
+                ylabel --> "Variable $jj"
+                # Return x,y
+                x,y
+            end
+        end
+    end
+end
 
 """
-function plot_sparse_grid(sg; dims=nothing)
-    pts = get_grid_points(sg)
-    p = plot()
+    f(sg::SparseGrid; targetdims=[1,2,3])
 
-    if sg.dims == 1
-        scatter!(p, [pt[1] for pt in pts], fill(1, length(pts)))
-    elseif sg.dims == 2
-        scatter!(p, [pt[1] for pt in pts], [pt[2] for pt in pts])
-    elseif isnothing(dims)
-        scatter!(p, [pt[1] for pt in pts], [pt[2] for pt in pts], [pt[3] for pt in pts])
-    elseif length(dims) == 3
-        scatter!(p, [pt[dims[1]] for pt in pts], [pt[dims[2]] for pt in pts], [pt[dims[3]] for pt in pts])
-    else
-        error("Invalid dims argument. Provide exactly 3 dimensions for higher-dimensional plots.")
+    Recipe to convert sparse grid to set of x,y,z points in dimensions given by targetdims
+
+# Arguments
+- `sg` : Sparse grid
+- `targetdims` : (Optional) Cross section dimensions
+"""
+@recipe function f(sg::SparseGrid; targetdims=[1,2,3])
+    points = get_grid_points(sg)
+    points_matrix = hcat(points...)'
+    x,y,z = nothing, nothing, nothing
+
+    seriestype  :=  :scatter3d
+    title --> "Sparse Grid"
+    xlabel --> "Parameter "*string(targetdims[1])
+    x = points_matrix[:,targetdims[1]]
+    y = zeros(size(x))
+    z = zeros(size(x))
+    if sg.dims > 1
+        ylabel --> "Parameter "*string(targetdims[2])
+        y = points_matrix[:,targetdims[2]]
+    end
+    if sg.dims > 2
+        zlabel --> "Parameter "*string(targetdims[3])
+        z = points_matrix[:,targetdims[3]]
+    end
+    x,y,z
+end
+
+"""
+    f(sga::SparseGridApproximation)
+    f(sg::SpectralSparseGridApproximation)
+
+Recipe for plotting approximations based on sparse grids. For more than two dimensions it is a slice with the other parameters fixed at the midpoint.
+
+"""
+@recipe function f(sga::Union{SparseGridApproximation,SpectralSparseGridApproximation}; targetdims=[1,2])
+    midpoint = mean.(sga.domain)
+
+    subdomain1 = sga.domain[targetdims[1]]
+    subdomain2 = sga.domain[targetdims[2]]
+
+    function  modifiedmidpoint(x,i,y,j)
+        value = copy(midpoint)
+        value[i] = x
+        value[j] = y
+        return value        
     end
 
-    return p
+    n = 100
+    x =  range(subdomain1[1], stop=subdomain1[2], length=n)
+    y =  range(subdomain2[1], stop=subdomain2[2], length=n)
+    xy = [modifiedmidpoint(xi,targetdims[1],yi,targetdims[2]) for xi in x for yi in y]
+
+    z = sga.(xy)
+
+    seriestype  -->  :contour
+    title --> "Sparse Grid Approximation"
+    xlabel --> "Parameter "*string(targetdims[1])
+    ylabel --> "Parameter "*string(targetdims[2])
+
+    x,y,z
 end
 

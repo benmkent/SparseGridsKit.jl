@@ -15,8 +15,7 @@ Often, one chooses to use Clenshaw--Curtis points which are available using the 
 using SparseGridsKit, Plots
 p = plot()
 for ii in 1:2:7
-    x, w = CCPoints()(ii)
-    scatter!(x, ii * ones(length(x)), label="n = $ii")
+    plot!(CCPoints(); npts=ii)
 end
 xlabel!("Clenshaw-Curtis Points")
 ```
@@ -26,9 +25,7 @@ Perhaps we wish to use Clenshaw-Curtis points on a parameter domain $\Gamma=[0,1
 ```@example cc
 a = 0
 b = 100
-x,w = CCPoints(a, b)(3)
-p = plot()
-scatter!(x, 0.0 * ones(length(x)))
+p = plot(CCPoints(a,b))
 xlabel!("Clenshaw-Curtis Points")
 ```
 
@@ -50,9 +47,7 @@ For Clenshaw-Curtis points this is achieved using the doubling rule.
 using SparseGridsKit, Plots
 p = plot()
 for ii in 1:5
-    n = Doubling()(ii)
-    x, w = CCPoints()(n)  # Use `ii` to vary the number of points
-    scatter!(x, ii * ones(length(x)), label="n = $n")
+    plot!(CCPoints(); npts=Doubling()(ii))
 end
 xlabel!("Clenshaw-Curtis Points")
 ylabel!("Level")
@@ -64,14 +59,10 @@ For example, one could use the quadrature points provided in the [`FastGaussQuad
 ```@example
 using SparseGridsKit, FastGaussQuadrature, Plots
 p = plot()
-x, w = CCPoints()(5)
-scatter!(x, 1 * ones(length(x)), label="CC")
-x, w = UniformPoints()(5)
-scatter!(x, 2 * ones(length(x)), label="Uniform")
-x, w = gausschebyshevt(5)
-scatter!(x, 3 * ones(length(x)), label="Gauss-Chebyshev t")
-x, w = gausslegendre(5)
-scatter!(x, 4 * ones(length(x)), label="Gauss-Legendre")
+plot!(CCPoints(); npts=5)
+plot!(UniformPoints(); npts=5)
+plot!(gausschebyshevt(5)..., label="Gauss-Chebyshev t")
+plot!(gausslegendre(5)..., label="Gauss-Legendre")
 ```
 ## Function Reference
 ```@autodocs

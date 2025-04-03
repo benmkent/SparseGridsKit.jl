@@ -23,6 +23,11 @@ end
 mutable struct SparseGridApproximation
     sg::SparseGrid
     fongrid::Vector
+    domain::Vector
+end
+
+function SparseGridApproximation(sg, fongrid)
+    SparseGridApproximation(sg,fongrid,sg.domain)
 end
 
 function (sga::SparseGridApproximation)(x)

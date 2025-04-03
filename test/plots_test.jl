@@ -4,18 +4,18 @@ using Plots
     p = plot(CCPoints(-3,3))
     try
         plot!(CCPoints(-3,3); npts=21)
-        plotpoints == true
+        global plotpoints == true
     catch
-        plotpoints = false
+        global plotpoints = false
     end
     @test plotpoints
 
     miset = create_smolyak_miset(3,3)
     try
         p = misetplot(miset)
-        plotmiset = true
+        global plotmiset = true
     catch
-        plotmiset = false
+        global plotmiset = false
     end
     @test plotmiset
 
@@ -37,9 +37,9 @@ using Plots
             plot(ssg; seriestype=:surface, targetdims=[2,3]),
             layout = (2,2)
         )
-        plotapproximations = true
+        global plotapproximations = true
     catch
-        plotapproximations = false
+        global plotapproximations = false
     end
     @test plotapproximations
 

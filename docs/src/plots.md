@@ -37,10 +37,10 @@ sga = SparseGridApproximation(sg,f_on_sg)
 ssg = convert_to_spectral_approximation(sga)
 
 p = plot(
-    plot(sga; fill=true),
-    plot(sga; targetdims=[2,3]),
-    plot(ssg; color=:turbo, fill=true),
-    plot(ssg; seriestype=:surface, targetdims=[2,3]),
+    plot(sga; fill=true, title="fill=true"),
+    plot(sga; targetdims=[2,3],title="targetdims"),
+    plot(ssg; color=:turbo, fill=true, title=":turbo"),
+    plot(ssg; seriestype=:surface, targetdims=[2,3], title="surface"),
     layout = (2,2)
 )
 ```

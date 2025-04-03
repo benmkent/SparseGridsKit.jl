@@ -1,23 +1,14 @@
 using Plots
 @testset "Sparse Grid Adaptivity Tests" begin
-
+    # This test set is simple, it will fail if the plotting fails but otherwise tests nothing
     p = plot(CCPoints(-3,3))
-    try
-        plot!(CCPoints(-3,3); npts=21)
-        global plotpoints == true
-    catch
-        global plotpoints = false
-    end
-    @test plotpoints
+    plot!(CCPoints(-3,3); npts=21)
+    
+    @test true
 
     miset = create_smolyak_miset(3,3)
-    try
-        p = misetplot(miset)
-        global plotmiset = true
-    catch
-        global plotmiset = false
-    end
-    @test plotmiset
+    p = misetplot(miset)
+    @test true
 
 
     sg = create_sparsegrid(miset,fill([-1,1],3))
@@ -29,18 +20,13 @@ using Plots
     sga = SparseGridApproximation(sg,f_on_sg)
     ssg = convert_to_spectral_approximation(sga)
 
-    try
-        p = plot(
-            plot(sga; fill=true),
-            plot(sga; targetdims=[2,3]),
-            plot(ssg; color=:turbo, fill=true),
-            plot(ssg; seriestype=:surface, targetdims=[2,3]),
-            layout = (2,2)
-        )
-        global plotapproximations = true
-    catch
-        global plotapproximations = false
-    end
-    @test plotapproximations
+    p = plot(
+        plot(sga; fill=true),
+        plot(sga; targetdims=[2,3]),
+        plot(ssg; color=:turbo, fill=true),
+        plot(ssg; seriestype=:surface, targetdims=[2,3]),
+        layout = (2,2)
+    )
+    @test true
 
 end

@@ -21,7 +21,7 @@ points = get_grid_points(sg)
 
 ```@example sg
 using Plots, LaTeXStrings
-plot_sparse_grid(sg)
+plot(sg)
 plot!(title="Sparse Grid n,k="*string(n)*","*string(k),
         xlabel=L"y_1",
         ylabel=L"y_2")
@@ -38,7 +38,7 @@ points = get_grid_points(sg_combined)
 x = [p[1] for p in points]
 y = [p[2] for p in points]
 
-plot_sparse_grid(sg_combined)
+plot(sg_combined)
 plot!(  title="Sparse Grid Combined",
         xlabel="y_1",
         ylabel="y_2")
@@ -56,7 +56,7 @@ This can still be easily visualised.
 ```@example sg
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
-        plot_sparse_grid(sg)
+        plot(sg)
         plot!(title="Sparse Grid n,k="*string(n)*","*string(k),
                 xlabel=L"y_1",
                 ylabel=L"y_2",
@@ -78,7 +78,7 @@ domain = [[-1,1],[0,100],[-1,1]]
 sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
-        plot_sparse_grid(sg)
+        plot(sg)
         plot!(
                 title="Sparse Grid n,k="*string(n)*","*string(k),
                 xlabel=L"y_1",

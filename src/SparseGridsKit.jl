@@ -23,7 +23,6 @@ export genz
 ## Use functionality defined in import file
 include("sparsegrids.jl")
 include("genz.jl")
-include("sparsegridplots.jl")
 include("misets.jl")
 include("knots.jl")
 include("knots_structures.jl")
@@ -31,6 +30,8 @@ include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
 include("verifyinputs.jl")
 include("multifidelity.jl")
+# Include plots last
+include("sparsegridplots.jl")
 
 """
     precompute_lagrange_integrals(max_mi, domain)
@@ -169,6 +170,21 @@ function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     @debug "Interpolating onto "*string(length(target_points))*" target points"
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
     return f_on_target_points
+end
+"""
+    interpolate_on_sparsegrid(sga::SparseGridApproximation, target_points)
+
+Interpolates a SparseGridApproximation to a set of target points.
+
+# Arguments
+- `sga`: SparseGridApproximation.
+- `target_points`: A vector of target points for interpolation.
+
+# Returns
+- A vector of interpolated values at the target points.
+"""
+function interpolate_on_sparsegrid(sga::SparseGridApproximation, target_points)
+    interpolate_on_sparsegrid(sga.sg, sga.fongrid, target_points)
 end
 
 """

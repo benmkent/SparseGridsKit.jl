@@ -22,7 +22,7 @@ domain = [[-1,1],[-1,1],[-1,1]]
 sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
-        plot_sparse_grid(sg)
+        plot(sg)
         plot!(
                 title="Sparse Grid n,k="*string(n)*","*string(k),
                 xlabel=L"y_1",

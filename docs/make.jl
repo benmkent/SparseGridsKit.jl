@@ -13,6 +13,7 @@ makedocs(
                     "Adaptive Sparse Grids"=>"adaptivesparsegrids.md",
                     "Spectral Sparse Grids"=>"spectralsparsegrids.md",
                     ],
+    "Plotting" => "plots.md",
     "Extensions" => ["Interpolation of PDE solutions"=>"functioninterpolation.md",
     "UM-Bridge" => "umbridge.md"],
     "SparseGridsKit.jl Public API Reference"=>"reference.md",

@@ -26,8 +26,9 @@ using ApproxFun
         space = Chebyshev(-1..1)
         tensor_1, dims_1 = truncated_kron([[1.0,2.0,3.0],[1.0]])
         tensor_2, dims_2 = truncated_kron([[1.0],[1.0,2.0,3.0]])
-        ssg1 = SpectralSparseGridApproximation(2,dims_1,[space,space],tensor_1)
-        ssg2 = SpectralSparseGridApproximation(2,dims_2,[space,space],tensor_2)
+        domain = fill([-1,1],2)
+        ssg1 = SpectralSparseGridApproximation(2,dims_1,[space,space],tensor_1,domain)
+        ssg2 = SpectralSparseGridApproximation(2,dims_2,[space,space],tensor_2,domain)
 
         ssg = ssg1 + ssg2
 

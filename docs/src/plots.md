@@ -9,7 +9,7 @@ This defaults to 11 points.
 using SparseGridsKit, Plots
 
 p = plot(CCPoints(-3,3))
-plot!(CCPoints(-3,3); npts=21)
+plot!(CCPoints(-3,3); n=21)
 ```
 
 ## Multi-Index Set

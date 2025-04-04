@@ -15,7 +15,7 @@ Often, one chooses to use Clenshaw--Curtis points which are available using the 
 using SparseGridsKit, Plots
 p = plot()
 for ii in 1:2:7
-    plot!(CCPoints(); npts=ii)
+    plot!(CCPoints(); n=ii)
 end
 xlabel!("Clenshaw-Curtis Points")
 ```
@@ -47,7 +47,7 @@ For Clenshaw-Curtis points this is achieved using the doubling rule.
 using SparseGridsKit, Plots
 p = plot()
 for ii in 1:5
-    plot!(CCPoints(); npts=Doubling()(ii))
+    plot!(CCPoints(); n=Doubling()(ii))
 end
 xlabel!("Clenshaw-Curtis Points")
 ylabel!("Level")
@@ -59,8 +59,8 @@ For example, one could use the quadrature points provided in the [`FastGaussQuad
 ```@example
 using SparseGridsKit, FastGaussQuadrature, Plots
 p = plot()
-plot!(CCPoints(); npts=5)
-plot!(UniformPoints(); npts=5)
+plot!(CCPoints(); n=5)
+plot!(UniformPoints(); n=5)
 plot!(gausschebyshevt(5)..., label="Gauss-Chebyshev t")
 plot!(gausslegendre(5)..., label="Gauss-Legendre")
 ```

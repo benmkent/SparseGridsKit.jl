@@ -68,6 +68,7 @@ plot!(CCPoints(); n=5)
 plot!(UniformPoints(); n=5)
 plot!(CustomGaussChebyshevPoints; n=5)
 plot!(CustomGaussLegendrePoints; n=5)
+```
 
 Leja point generation is also supplied.
 This currently either uses an optimisation based approach to iteratively construct points according to

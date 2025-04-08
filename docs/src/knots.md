@@ -25,7 +25,7 @@ Perhaps we wish to use Clenshaw-Curtis points on a parameter domain $\Gamma=[0,1
 ```@example cc
 a = 0
 b = 100
-p = plot(CCPoints(a,b))
+p = plot(CCPoints([a,b]))
 xlabel!("Clenshaw-Curtis Points")
 ```
 

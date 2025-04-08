@@ -56,8 +56,12 @@ integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
 It is also possible to use the adaptive sparse grid construction.
 A `costfunction` can be supplied to give a representative cost for each fidelity.
 This acts on a vector $\vec{α}$ of the fidelities.
+We must supply `knots` and `rules` explictly so that the algorithm can distinguish between model and input dimensions.
+
 ```@example mf
-(sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
+knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),ndims)...]
+rule = [fill(Fidelity(),nfid)..., fill(Doubling(),ndims)...]
+(sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, nfid + ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
 ```
 
 ## Function Reference

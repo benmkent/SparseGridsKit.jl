@@ -18,14 +18,12 @@ ndims = 3
 f_fidelities(alpha,y) = f(y) + 10^(-alpha[1])
 ```
 
-The domain is defined, where the fidelity domain should represent the maximum allowable fidelities.
 The rule for fidelity is (`Fidelity`)(@ref).
 This returns $1$ for all input levels as there is only one model per level.
 The knots are [`FidelityPoints`](@ref), which returns the input value plus a weight zero.
 The knot function is treated as a special case in the sparse grid construction.
 ```@example mf
 maxfidelity = 5
-domain = [fill([1,maxfidelity],nfid)..., fill([-1,1],ndims)...]
 rule = [fill(Fidelity(),nfid)..., fill(Doubling(),ndims)...]
 knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),ndims)...]
 ```
@@ -37,18 +35,17 @@ f_wrapped = multifidelityfunctionwrapper(f_fidelities,knots)
 
 MI = create_smolyak_miset(nfid+ndims,2)
 
-sg = create_sparsegrid(MI, domain; knots=knots, rule=rule)
+sg = create_sparsegrid(MI; knots=knots, rule=rule)
 @show get_grid_points(sg)
 @show f_eval = f_wrapped.(get_grid_points(sg))
 ```
 Finally, interpolation and integration are possible on the sparse grid.
 Interpolation currently requires dummy values to give a complete parameter vector $[\vec{alpha} \vec{y}]$.
-The values must be in the domain specified for the fidelity dimensions.
 In the future this may be simplified.
 ```@example mf
 interpolate_on_sparsegrid(sg, f_eval, [[fill(1,nfid)..., fill(0.0,ndims)...]])
 
-pcl = precompute_lagrange_integrals(5, domain, knots, rule)
+pcl = precompute_lagrange_integrals(5, knots, rule)
 
 f_on_grid = f_wrapped.(get_grid_points(sg))
 
@@ -60,7 +57,7 @@ It is also possible to use the adaptive sparse grid construction.
 A `costfunction` can be supplied to give a representative cost for each fidelity.
 This acts on a vector $\vec{α}$ of the fidelities.
 ```@example mf
-(sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, domain, ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
+(sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
 ```
 
 ## Function Reference

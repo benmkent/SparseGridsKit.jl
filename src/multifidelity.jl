@@ -1,4 +1,5 @@
 struct FidelityPoints <: Points
+    domain::Vector{Integer}
 end
 """
     FidelityPoints()
@@ -6,6 +7,7 @@ Generate a struct for fidelity points
 # Returns
 - `FidelityPoints` struct
 """
+FidelityPoints() = FidelityPoints([1, typemax(Int)])
 
 """
     (p::FidelityPoints)(n)

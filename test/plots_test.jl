@@ -1,8 +1,8 @@
 using Plots
 @testset "Sparse Grid Adaptivity Tests" begin
     # This test set is simple, it will fail if the plotting fails but otherwise tests nothing
-    p = plot(CCPoints(-3,3))
-    plot!(CCPoints(-3,3); npts=21)
+    p = plot(CCPoints([-3,3]))
+    plot!(CCPoints([-3,3]); npts=21)
     
     @test true
 
@@ -11,7 +11,7 @@ using Plots
     @test true
 
 
-    sg = create_sparsegrid(miset,fill([-1,1],3))
+    sg = create_sparsegrid(miset)
     p = plot(sg; targetdims=[3,2,1])
 
     f(x) = x[1]^5 + cos(x[2]) + abs(x[3])

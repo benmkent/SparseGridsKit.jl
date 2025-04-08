@@ -13,8 +13,8 @@ export adaptive_sparsegrid
 export convert_to_spectral_approximation
 
 #export ccpoints, uniformpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
-export CCPoints, UniformPoints, GaussLegendrePoints, GaussHermitePoints, LejaPoints
-export Doubling, Linear, Tripling, TwoStep
+export CCPoints, UniformPoints, GaussLegendrePoints, GaussHermitePoints, LejaPoints, CustomPoints
+export Doubling, Linear, Tripling, TwoStep, CustomLevel
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
@@ -34,7 +34,7 @@ include("multifidelity.jl")
 include("sparsegridplots.jl")
 
 """
-    precompute_lagrange_integrals(max_mi, domain)
+    precompute_lagrange_integrals(max_mi)
 
 Precomputes the product integrals for Lagrange basis functions up to a given maximum multi-index (`max_mi`).
 
@@ -44,36 +44,30 @@ Precomputes the product integrals for Lagrange basis functions up to a given max
 # Returns
 - A vector of precomputed product integrals for the Lagrange basis.
 """
-function precompute_lagrange_integrals(max_mi, domain, knots=CCPoints(), rule=Doubling())
-    precompute = sparsegridprecompute(max_mi, domain, knots, rule)
+function precompute_lagrange_integrals(max_mi, knots=CCPoints(), rule=Doubling())
+    precompute = sparsegridprecompute(max_mi, knots, rule)
     return precompute.productintegrals
 end
 
 """
-    create_sparsegrid(mi_set, domain; rule=Doubling(), knots=CCPoints())
+    create_sparsegrid(mi_set; rule=Doubling(), knots=CCPoints())
 
 Creates a sparse grid based on the provided multi-index set (`mi_set`).
 
 # Arguments
 - `mi_set`: An instance of `MISet` containing the multi-index set for grid construction.
-- `domain`: The domain of the approximation.
 - `rule`: Map from index to number of points. Optional (default Doubling()). Function or vector of functions (for each dimension).
 - `knots`: Type of knots. Optional (default Clenshaw--Curtis). Function or vector of functions (for each dimension).
 
 # Returns
 - A sparse grid object constructed using the specified multi-index set.
 """
-function create_sparsegrid(mi_set, domain; rule=Doubling(), knots=CCPoints())
-    # Ensure domain is float
-    domain_float = Vector(undef, length(domain))
-    for (ii,d) in enumerate(domain)
-        domain_float[ii] = Float64.(d)
-    end
+function create_sparsegrid(mi_set; rule=Doubling(), knots=CCPoints())
     verifyinputs!(mi_set)
-    verifyinputs(domain_float, knots)
+    #verifyinputs(knots)
 
     miset_matrix = hcat(mi_set.mi...)
-    sg = createsparsegrid(miset_matrix, domain_float; rule=rule, knots=knots)
+    sg = createsparsegrid(miset_matrix; rule=rule, knots=knots)
     return sg
 end
 
@@ -167,6 +161,7 @@ function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     #target_points_matrix = hcat(target_points...)'
 
     verifyinputs(sg.domain, target_points)
+
     @debug "Interpolating onto "*string(length(target_points))*" target points"
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
     return f_on_target_points

@@ -1,6 +1,8 @@
 import PolyChaos: clenshaw_curtis
 import FastGaussQuadrature: gausslegendre, gausshermite
 
+using Optim
+
 """
     transformdomain(xw, a, b)
 
@@ -65,19 +67,7 @@ Use twostep level to points
 """
 twostep(n) = 2*(n-1)+1
 
-"""
-    uniformpoints(n, a, b)
 
-Uniformly spaced quadrature points on interval [a,b]
-
-# Arguments
-- `n`: Number of points.
-- `a`, `b`: Interval bounds.
-
-# Returns
-- Points and weights in `[a, b]`.
-"""
-uniformpoints(n, a, b) = transformdomain(uniformpoints(n), a, b)
 
 """
     uniformpoints(n)
@@ -91,20 +81,6 @@ Uniformly spaced quadrature points on interval [-1,1]
 - Points and weights in `[-1, 1]`.
 """
 uniformpoints(n) = n == 1 ? ([0.0], [1.0]) : (range(-1, stop=1, length=n), 1/n .* ones(n))
-
-"""
-    ccpoints(n, a, b)
-
-Generate Clenshaw-Curtis quadrature points and weights on domain [a,b].
-
-# Arguments
-- `n`: Number of points.
-- `a`, `b`: Interval bounds.
-
-# Returns
-- Points and weights in `[a, b]`.
-"""
-ccpoints(n, a, b) = transformdomain(ccpoints(n), a, b)
 
 """
     ccpoints(n)
@@ -151,20 +127,6 @@ function gausslegendrepoints(n)
 end
 
 """
-    gausslegendrepoints(n, a, b)
-    
-Generate Gauss-Legendre quadrature points and weights on domain [a,b].
-
-# Arguments
-- `n`: Number of points.
-- `a`, `b`: Interval bounds.
-
-# Returns
-- Points and weights in `[a, b]`.
-"""
-gausslegendrepoints(n, a, b) = transformdomain(gausslegendrepoints(n), a, b)
-
-"""
     gausshermitepoints(n)
 
 Generate Gauss-Hermite quadrature points and weights on domain `[-∞, ∞]`.
@@ -189,9 +151,9 @@ function gausshermitepoints(n,a,b)
 end
 
 """
-    lejapoints(n)
+    lejapointsdiscretesearch(n)
 
-Generate Leja quadrature points and weights on domain `[-1, 1]`.
+Generate Leja quadrature points and weights on domain `[-1, 1]` using a search over Chebyshev candidates.
 
 # Arguments
 - `n`: Number of points.
@@ -200,9 +162,9 @@ Generate Leja quadrature points and weights on domain `[-1, 1]`.
 - `x`: Knots
 - `w`: Weights
 """
-function lejapoints(n; type=nothing)
+function lejapointsdiscretesearch(n; type=nothing)
     # Use Chebyshev candidates
-    M = 1e3+1 # Number of candidates
+    M = 1e4+1 # Number of candidates
     X = cos.((0:(M-1)) .* π / (M-1))
     
     leja = Vector{Float64}(undef,n)
@@ -229,18 +191,61 @@ function lejapoints(n; type=nothing)
 end
 
 """
-    lejapoints(n, a, b)
-
-Generate Leja quadrature points and weights on domain [a,b].
+    lejapoints(n; v=z->sqrt(0.5), method=GradientDescent())
+    
+Generate Leja quadrature points and weights on domain `[-1, 1]` using an optimisation method.
 
 # Arguments
 - `n`: Number of points.
-- `a`, `b`: Interval bounds.
+- `v`: (Optional) Weight function. Usually `z -> sqrt(\rho(y))` where `\rho(y)`is the density function. Default `\rho=0.5`.
+- `method`: (Optional) Optimisation method. Default is GradientDescent().
+- `symmetric`: (Optional) If true, the points are symmetric about 0. Default is false.
 
 # Returns
 - `x`: Knots
 - `w`: Weights
 """
-function lejapoints(n, a, b; type=nothing)
-    return transformdomain(lejapoints(n; type=type), a, b)
+function lejapoints(n; v=z->sqrt(0.5), method=GradientDescent(), symmetric=false)    
+    leja = Vector{Float64}(undef,n)
+    w = Vector{Float64}(undef,n)
+    leja[1] = 1.0
+
+    # Use Chebyshev candidates for approximate minimiser
+    M = 1e2+1 # Number of candidates
+    X = cos.((0:(M-1)) .* π / (M-1))
+
+    f(z, Z) = - v(z)^2 * prod((z .- Z).^2)
+
+    # Use symm_count to create symmetry if necessary, whilst ignoring repeating 0.0.
+    symm_count = 2
+    for kk in 2:n
+        # Enforce symmetry if required
+        if iseven(symm_count) && symmetric
+            leja[kk] = -leja[kk-1]
+        else
+            g(z) = f(z,leja[1:kk-1])
+
+            # Using the constrained search did not give the expected results.
+            # The sixth point was different to previous results.
+            # results = optimize(g,-1.0,1.0, Brent())
+            # For this reason, a coarser search via candidates is used to find an initial guess.
+            # GradientDescent() is then applied.
+            # Approximate minimizer
+            initial_x = X[argmax(v.(X).*prod(abs.(X .- leja[1:(kk-1)]'), dims=2))]
+            results = optimize(g, [initial_x], method, Optim.Options(f_abstol=1e-14); autodiff= :forward)
+            leja[kk] = results.minimizer[1]
+        end
+        if !isapprox(leja[kk],0.0;atol=1e-14)
+            symm_count += 1
+        end
+    end
+
+    # Compute weights
+    p = Vector{Fun}(undef,1)
+    for ii in eachindex(leja)
+        p[1] = poly_Fun(leja, ii)
+        w[ii] = sum(p[1])*0.5
+    end
+    
+    return leja, w
 end

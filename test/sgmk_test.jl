@@ -65,9 +65,9 @@ using MAT, Downloads, FastGaussQuadrature
     @testset "Knots" begin
     n = 5; a = 1; b =4 ;
     # uniform pdf
-    x_unif,w_unif         = GaussLegendrePoints(a,b)(n);
-    x_CC,w_CC             = CCPoints(a,b)(n);
-    # [x_leja,w_leja]         = knots_leja(n,a,b,'line');
+    x_unif,w_unif         = GaussLegendrePoints([a,b])(n);
+    x_CC,w_CC             = CCPoints([a,b])(n);
+    x_leja,w_leja         = LejaPoints([a,b],false,:classic, z->sqrt(0.5))(n);
     # [x_sym_leja,w_sym_leja] = knots_leja(n,a,b,'sym_line');
     # [x_p_leja,w_p_leja]     = knots_leja(n,a,b,'p_disk');
     # [x_midp,w_midp]         = knots_midpoint(n,a,b);
@@ -112,8 +112,8 @@ using MAT, Downloads, FastGaussQuadrature
     @test vec(w_unif) ≈ vec(S["w_unif"])
     @test vec(x_CC) ≈ vec(S["x_CC"])
     @test vec(w_CC) ≈ vec(S["w_CC"])
-    # @test x_leja ≈ S["x_leja"]
-    # @test w_leja ≈ S["w_leja"]
+    @test isapprox(vec(x_leja),vec(S["x_leja"]); rtol=1e-2) # These are known to be slightly different
+    @test isapprox(vec(w_leja), vec(S["w_leja"]); rtol=1e-2)
     # @test x_sym_leja ≈ S["x_sym_leja"]
     # @test w_sym_leja ≈ S["w_sym_leja"]
     # @test x_p_leja ≈ S["x_p_leja"]
@@ -261,30 +261,27 @@ using MAT, Downloads, FastGaussQuadrature
             [3, 1]
         ];
         I = MISet(I)
-        knots1           = GaussLegendrePoints(0,1);
-        knots2           = LejaPoints(-1,1);
+        knots1           = GaussLegendrePoints([0,1]);
+        knots2           = LejaPoints([-1,1],false,:classic, z->sqrt(0.5));
         lev2knots(l)     = Linear()(l);
-        domain = [[0,1],[-1,1]]
-        S_given_multiidx = create_sparsegrid(I,domain,knots=[knots1,knots2],rule=[lev2knots,lev2knots]);
+        S_given_multiidx = create_sparsegrid(I,knots=[knots1,knots2],rule=[lev2knots,lev2knots]);
 
 
         N=2; w=3;
-        knots = CCPoints(-1,1);
-        domain = fill([-1,1],N);
+        knots = CCPoints([-1,1]);
         I_smolyak = create_smolyak_miset(N,w);
-        S_smolyak = create_sparsegrid(I_smolyak,domain,knots=knots,rule=Doubling());
+        S_smolyak = create_sparsegrid(I_smolyak,knots=knots,rule=Doubling());
 
         # adding one multi-index to S_smolyak
         new_idx = [5, 1];
         I_add = add_mi(I_smolyak,new_idx);
-        S_add = create_sparsegrid(I_add,domain,knots=knots,rule=Doubling());
+        S_add = create_sparsegrid(I_add,knots=knots,rule=Doubling());
         
         
         # quick preset
         N = 2; w = 3;
         I_quick = create_smolyak_miset(N,w)
-        domain = [[-1,1],[-1,1]];
-        S_quick = create_sparsegrid(I_quick,domain)
+        S_quick = create_sparsegrid(I_quick)
         
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_grid_gen_and_red.mat")
 
@@ -299,16 +296,15 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = sum(x);
         N = 2; w = 3;
         miset = create_smolyak_miset(N,w)
-        knots = GaussLegendrePoints(-1,1)
+        knots = GaussLegendrePoints([-1,1])
         rule = Linear()
-        domain = fill([-1,1],N)
-        S  = create_sparsegrid(miset,domain,knots=knots,rule=rule);
+        S  = create_sparsegrid(miset,knots=knots,rule=rule);
 
         f_evals = f.(sort!(get_grid_points(S)));
 
         w = 4;
         miset = create_smolyak_miset(N,w)
-        T = create_sparsegrid(miset,domain,knots=knots,rule=rule);
+        T = create_sparsegrid(miset,knots=knots,rule=rule);
         f_evals_rec = f.(sort!(get_grid_points(T)));
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_evaluate.mat")
@@ -320,14 +316,13 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = prod(1.0 ./sqrt.(x.+3));
 
         N = 4; w =4 ;
-        knots = CCPoints(-1,1);
+        knots = CCPoints([-1,1]);
         rule = Doubling()
         miset = create_smolyak_miset(N,w)
-        domain = fill([-1,1],N)
 
-        S = create_sparsegrid(miset,domain,knots=knots,rule=rule);
+        S = create_sparsegrid(miset,knots=knots,rule=rule);
 
-        pcl = precompute_lagrange_integrals(w+3, domain, knots, rule)
+        pcl = precompute_lagrange_integrals(w+3, knots, rule)
         f_quad = integrate_on_sparsegrid(S,f.(get_grid_points(S)),pcl);
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_quadrature.mat")
@@ -338,12 +333,11 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = prod(1.0 ./sqrt.(x.+3));
 
         N = 2; w = 4;
-        knots = CCPoints(-1,1);
+        knots = CCPoints([-1,1]);
         rule = Doubling()
         miset = create_smolyak_miset(N,w)
-        domain = fill([-1,1],N)
 
-        S = create_sparsegrid(miset,domain,knots=knots,rule=rule);
+        S = create_sparsegrid(miset,knots=knots,rule=rule);
 
         x = range(-1, stop=1, length=10)
         non_grid_points = [[x1,x2] for x1 in x, x2 in x]
@@ -358,12 +352,11 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = prod(1.0 ./sqrt.(x.+3));
 
         N = 2; w = 5; a = -1; b = 1;
-        knots = CCPoints(a,b);
+        knots = CCPoints([a,b]);
         rule = Linear()
         idxset(mi) = prod(mi)
         miset = create_rule_miset(N,w,idxset)
-        domain = fill([a,b],N)
-        S = create_sparsegrid(miset,domain,knots=knots,rule=rule);
+        S = create_sparsegrid(miset,knots=knots,rule=rule);
 
         f_on_grid = f.(get_grid_points(S));
 
@@ -434,18 +427,17 @@ using MAT, Downloads, FastGaussQuadrature
         f(x) = 1.0 ./ (x[1].^2 .+x[2].^2 .+ 0.3);
 
         N = 2; a = -1; b = 1;
-        knots     = CCPoints(a,b);
+        knots     = CCPoints([a,b]);
         lev2knots = Doubling();
         controls = Dict(
             :maxpts => 200,
             :proftol => 1e-10,
         )
-        domain = fill([a,b],N)
 
-        (S_Linf, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:Linf);
-        (S_Linfcost, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol] ,rule=lev2knots,knots=knots, type=:Linfcost);
-        (S_deltaint, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaint);
-        (S_deltaintcost, f_on_z) = adaptive_sparsegrid(f,domain,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaintcost);
+        (S_Linf, f_on_z) = adaptive_sparsegrid(f,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:Linf);
+        (S_Linfcost, f_on_z) = adaptive_sparsegrid(f,N; maxpts=controls[:maxpts], proftol=controls[:proftol] ,rule=lev2knots,knots=knots, type=:Linfcost);
+        (S_deltaint, f_on_z) = adaptive_sparsegrid(f,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaint);
+        (S_deltaintcost, f_on_z) = adaptive_sparsegrid(f,N; maxpts=controls[:maxpts], proftol=controls[:proftol], rule=lev2knots,knots=knots, type=:deltaintcost);
 
         # N = 3; 
         # f = @(x) prod(x);

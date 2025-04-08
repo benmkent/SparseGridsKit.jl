@@ -56,14 +56,37 @@ ylabel!("Level")
 ## More knot functions
 Functionality is not restricted to knot functions included this package.
 For example, one could use the quadrature points provided in the [`FastGaussQuadrature.jl`](https://github.com/JuliaApproximation/FastGaussQuadrature.jl) package.
+These can be wrapped in [`CustomPoints`](@ref).
 ```@example
 using SparseGridsKit, FastGaussQuadrature, Plots
+
+CustomGaussChebyshevPoints = CustomPoints([-1.0,1.0], n->gausschebyshevt(n))
+CustomGaussLegendrePoints = CustomPoints([-1.0,1.0], n->gausslegendre(n))
+
 p = plot()
 plot!(CCPoints(); n=5)
 plot!(UniformPoints(); n=5)
-plot!(gausschebyshevt(5)..., label="Gauss-Chebyshev t")
-plot!(gausslegendre(5)..., label="Gauss-Legendre")
+plot!(CustomGaussChebyshevPoints; n=5)
+plot!(CustomGaussLegendrePoints; n=5)
+
+Leja point generation is also supplied.
+This currently either uses an optimisation based approach to iteratively construct points according to
+```math
+z^{k+1} = \argmax_{z\in[-1,1]} v(z) \prod_{i=1}^{k} \abs(z-z^i)
 ```
+where $v(z)$ is the weight function.
+Optimisation based points differ slightly to points generated using a discrete search.
+The default weight is $v(z)= \sqrt(\rho(z))$ for $\rho(z)=0.5$ and unsymmetrical points.
+```@example
+p = plot()
+symmetric = false
+v(z) = sqrt(0.5)
+plot!(LejaPoints(), label="default")
+plot!(LejaPoints(-1,1,symmetric,:optim,v), label="unsymmetrical")
+symmetric = true
+plot!(LejaPoints(-1,1,symmetric), label="symmetrical")
+```
+
 ## Function Reference
 ```@autodocs
 Modules = [SparseGridsKit]

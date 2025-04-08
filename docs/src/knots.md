@@ -83,9 +83,9 @@ p = plot()
 symmetric = false
 v(z) = sqrt(0.5)
 plot!(LejaPoints(), label="default")
-plot!(LejaPoints(-1,1,symmetric,:optim,v), label="unsymmetrical")
+plot!(LejaPoints([-1,1],symmetric,:optim,v), label="unsymmetrical")
 symmetric = true
-plot!(LejaPoints(-1,1,symmetric), label="symmetrical")
+plot!(LejaPoints([-1,1],symmetric), label="symmetrical")
 ```
 
 ## Function Reference

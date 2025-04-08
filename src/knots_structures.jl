@@ -103,10 +103,10 @@ function (p::GaussLegendrePoints)(n)
 end
 
 """
-    LejaPoints(a,b,type,v,symmetric)
+    LejaPoints([a,b],type,v,symmetric)
     LejaPoints() = LejaPoints([-1,1], :optim, z->sqrt(0.5), false)
-    LejaPoints(a,b) = LejaPoints(domain, :optim, z->sqrt(0.5), false)
-    LejaPoints(a,b,type) = LejaPoints(domain,type, z->sqrt(0.5), false)
+    LejaPoints(domain) = LejaPoints(domain, :optim, z->sqrt(0.5), false)
+    LejaPoints(domain,type) = LejaPoints(domain,type, z->sqrt(0.5), false)
 
 
 Generate Leja points on interval [domain[1],domain[2].

@@ -8,8 +8,8 @@ This defaults to 11 points.
 ```@example plots
 using SparseGridsKit, Plots
 
-p = plot(CCPoints(-3,3))
-plot!(CCPoints(-3,3); n=21)
+p = plot(CCPoints([-3,3]))
+plot!(CCPoints([-3,3]); n=21)
 ```
 
 ## Multi-Index Set
@@ -23,7 +23,7 @@ p = misetplot(miset)
 Sparse grid points in a `SparseGrid` can be plotted.
 This has an optional arguement to select which indices are plotted which is useful in dimensions greater than 3.
 ```@example plots
-sg = create_sparsegrid(miset,fill([-1,1],3))
+sg = create_sparsegrid(miset)
 p = plot(sg; targetdims=[3,2,1])
 ```
 

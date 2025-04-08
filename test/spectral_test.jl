@@ -26,9 +26,8 @@ using ApproxFun
         space = Chebyshev(-1..1)
         tensor_1, dims_1 = truncated_kron([[1.0,2.0,3.0],[1.0]])
         tensor_2, dims_2 = truncated_kron([[1.0],[1.0,2.0,3.0]])
-        domain = fill([-1,1],2)
-        ssg1 = SpectralSparseGridApproximation(2,dims_1,[space,space],tensor_1,domain)
-        ssg2 = SpectralSparseGridApproximation(2,dims_2,[space,space],tensor_2,domain)
+        ssg1 = SpectralSparseGridApproximation(2,dims_1,[space,space],tensor_1)
+        ssg2 = SpectralSparseGridApproximation(2,dims_2,[space,space],tensor_2)
 
         ssg = ssg1 + ssg2
 
@@ -68,9 +67,8 @@ using ApproxFun
         T = "exponentialdecay"
         N = "gaussianpeak"
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
-        domain = fill([-1,1],n)
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
         
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
@@ -83,10 +81,9 @@ using ApproxFun
         @test all(isapprox(y_test[i], y_spectral[i]; atol=1e-8) for i in 1:length(x_test))
 
         n = 2
-        domain = fill([-1,1],n)
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral
@@ -99,9 +96,8 @@ using ApproxFun
 
         n = 3
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
-        domain = fill([-1,1],n)
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral
@@ -117,7 +113,7 @@ using ApproxFun
         domain = fill([-1,1],n)
 
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral
@@ -130,10 +126,9 @@ using ApproxFun
 
         n = 8
         f = genz(n::Int, C::Float64, W::Float64, T::String, N::String)
-        domain = fill([-1,1],n)
 
         # Approximate
-        (sg, f_on_Z) = adaptive_sparsegrid(f, domain, n)
+        (sg, f_on_Z) = adaptive_sparsegrid(f, n)
         f_sg = SparseGridApproximation(sg,f_on_Z)
 
         # Convert to spectral

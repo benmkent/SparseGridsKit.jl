@@ -18,8 +18,7 @@ n,k =3,3
 knots = [CCPoints(), CCPoints(), UniformPoints()]
 rules = [Doubling(), Doubling(), Linear()]
 mi_set = create_smolyak_miset(n,k)
-domain = [[-1,1],[-1,1],[-1,1]]
-sg = create_sparsegrid(mi_set, domain, knots=knots, rule=rules)
+sg = create_sparsegrid(mi_set, knots=knots, rule=rules)
 nsteps = 100
 @gif for i in range(0, stop = 2π, length = nsteps)
         plot(sg)

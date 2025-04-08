@@ -91,16 +91,17 @@ function Base.:copy(sg::SparseGrid)
     return sgcopy
 end
 
-function sparsegridprecompute(maxmi, domain, knots=CCPoints(), rule=Doubling())
+function sparsegridprecompute(maxmi, knots=CCPoints(), rule=Doubling())
     if isa(knots, Points)
-        knots = fill(knots, length(domain))
+        ndims=1
+        knots = fill(knots, ndims)
     end
     if isa(rule, Level)
-        rule = fill(rule, length(domain))
+        rule = fill(rule, ndims)
     end
     productintegrals = Vector{Any}(undef, length(knots))
     for ii = eachindex(knots)
-        (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
+        (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], knots[ii].domain)
         productintegrals[ii] = sparsegridproductintegrals(polyperlevel, maxmi, knots[ii], rule[ii])
     end
     @debug "Computed weighted L^2 product integrals in each dimension"
@@ -220,7 +221,7 @@ function reducedmargin(MI)
     return sortmi(rm)
 end
 
-function createsparsegrid(MI, domain; rule=Doubling(), knots=CCPoints())
+function createsparsegrid(MI; rule=Doubling(), knots=CCPoints())
     MI = sortmi(MI)
     maxmi = maximum(MI)
     dims = size(MI, 1)
@@ -245,7 +246,9 @@ function createsparsegrid(MI, domain; rule=Doubling(), knots=CCPoints())
     ptsperlevel = Vector{Any}(undef,dims)
     polyperlevel = Vector{Any}(undef,dims)
     pintsmap = Vector{Any}(undef,dims)
+    domain = Vector{Any}(undef,dims)
     for ii = eachindex(knots)
+        domain[ii]=knots[ii].domain
         (ptsunique[ii], ptsperlevel[ii], polyperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
     end
     @debug "Constructed one dimensional grid data"
@@ -439,10 +442,10 @@ function integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing
     maprowtouniquept = sparsegrid.maptermstosparsegrid
     nterms = size(terms,1)
     ndims = sparsegrid.dims
-    if ~isa(precompute.productintegrals,Vector)
+    if length(precompute.productintegrals) == 1
         productintegrals = Vector{Any}(undef,ndims) 
         for ii = 1:ndims
-            productintegrals[ii] = precompute.productintegrals
+            productintegrals[ii] = precompute.productintegrals[1]
         end
     else
         productintegrals = precompute.productintegrals 
@@ -487,10 +490,10 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
     cterms = sparsegrid.cterms
     maprowtouniquept = sparsegrid.maptermstosparsegrid
     ndims = sparsegrid.dims
-    if ~isa(precompute.productintegrals,Vector)
+    if length(precompute.productintegrals) == 1
         productintegrals = Vector{Any}(undef,ndims) 
         for ii = 1:ndims
-            productintegrals[ii] = precompute.productintegrals
+            productintegrals[ii] = precompute.productintegrals[1]
         end
     else
         productintegrals = precompute.productintegrals 
@@ -659,7 +662,7 @@ function spaceselector(domain)
     domain = xmin..xmax
 
     if isinf(domain.left) && isinf(domain.right)
-        space = Hermite(domain)
+        space = Hermite()
     elseif iszero(domain.left) && isinf(domain.right)
         space = Laguerre()
     else

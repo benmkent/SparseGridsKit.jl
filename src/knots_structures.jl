@@ -11,53 +11,49 @@ function (p::Points)(n)
 end
 
 """
-    UniformPoints(a::Real, b::Real)
-Generate uniform points on interval [a,b].
+    UniformPoints(domain::Vector{Real})
+Generate uniform points on interval [domain[1],domain[2]].
 # Arguments
-- `a` : Lower bound
-- `b` : Upper bound
+- `domain` : Domain vector [a,b]
 # Returns
 - `UniformPoints` struct
 """
 struct UniformPoints{T<:Real} <: Points
-    a::T
-    b::T
+    domain::Vector{T}
 end
-UniformPoints() = UniformPoints(-1.0, 1.0)
+UniformPoints() = UniformPoints([-1.0, 1.0])
 
 """
     (p::UniformPoints)(n)
-Generate uniform points on interval [a,b].
+Generate uniform points on domain.
 # Arguments
 - `n` : Number of points
 """
 function (p::UniformPoints)(n)
-    uniformpoints(n, p.a, p.b)
+    transformdomain(uniformpoints(n), p.domain[1], p.domain[2])
 end
 
 """
-    CCPoints(a::Real, b::Real)
-Generate Clenshaw--Curtis points on interval [a,b].
+    CCPoints(domain::Vector{Real})
+Generate Clenshaw--Curtis points on interval [domain[1] domain[2]].
 # Arguments
-- `a` : Lower bound
-- `b` : Upper bound
+- `domain` : Domain
 # Returns
 - `CCPoints` struct
 """
 struct CCPoints{T<:Real} <: Points
-    a::T
-    b::T
+    domain::Vector{T}
 end
-CCPoints() = CCPoints(-1.0,1.0)
+CCPoints() = CCPoints([-1.0,1.0])
 
 """
     (p::CCPoints)(n)
-Generate Clenshaw-Curtis points on interval [a,b].
+Generate Clenshaw-Curtis points on domain.
 # Arguments
 - `n` : Number of points
 """
 function (p::CCPoints)(n)
-    ccpoints(n, p.a, p.b)
+    transformdomain(ccpoints(n),p.domain[1], p.domain[2])
 end
 
 """
@@ -69,8 +65,9 @@ Generate Gauss--Hermite points.
 - `GaussHermitePoints` struct
 """
 struct GaussHermitePoints{T<:Real} <: Points
+    domain::Vector{T}
 end
-GaussHermitePoints() = GaussHermitePoints{Float64}()
+GaussHermitePoints() = GaussHermitePoints([-Inf, Inf])
 
 
 """
@@ -84,44 +81,53 @@ function (p::GaussHermitePoints)(n)
 end
 
 """
-    GaussLegendrePoints(a::Real, b::Real)
-Generate Gauss--Legendre points on interval [a,b].
+    GaussLegendrePoints(domain::Vector{Real})
+Generate Gauss--Legendre points on interval [domain[1],domain[2]].
 # Arguments
-- `a` : Lower bound
-- `b` : Upper bound
+- `domain` : Domain
 # Returns
 - `GaussLegendrePoints` struct
 """
 struct GaussLegendrePoints{T<:Real} <: Points
-    a::T
-    b::T
+    domain::Vector{T}
 end
-GaussLegendrePoints() = GaussLegendrePoints(-1.0,1.0)
+GaussLegendrePoints() = GaussLegendrePoints([-1.0,1.0])
 """
     (p::GaussLegendrePoints)(n)
-Generate Gauss-Legendre points on interval [a,b].
+Generate Gauss-Legendre points on domain.
 # Arguments
 - `n` : Number of points
 """
 function (p::GaussLegendrePoints)(n)
-    gausslegendrepoints(n, p.a, p.b)
+    transformdomain(gausslegendrepoints(n), p.domain[1], p.domain[2])
 end
 
 """
-    LejaPoints(a::Real, b::Real)
-Generate Leja points on interval [a,b].
+    LejaPoints([a,b],type,v,symmetric)
+    LejaPoints() = LejaPoints([-1,1], :optim, z->sqrt(0.5), false)
+    LejaPoints(domain) = LejaPoints(domain, :optim, z->sqrt(0.5), false)
+    LejaPoints(domain,type) = LejaPoints(domain,type, z->sqrt(0.5), false)
+
+
+Generate Leja points on interval [domain[1],domain[2].
 # Arguments
-- `a` : Lower bound
-- `b` : Upper bound
+- `domain` : Domain
+- `symmetric` : Boolean indicating if the points are symmetric (default is false).
+- `type` : Type of Leja points (:optim or :classic), to use optimisation based or discrete search minimisation.
+- `v` : Function to compute the weight function (default is sqrt(0.5)).
 # Returns
 - `LejaPoints` struct
 """
-
 struct LejaPoints{T<:Real} <: Points
-    a::T
-    b::T
+    domain::Vector{T}
+    symmetric::Bool
+    type::Symbol
+    v::Function
 end
-LejaPoints() = LejaPoints(-1.0,1.0)
+LejaPoints() = LejaPoints([-1.0, 1.0], false, :optim, z->sqrt(0.5))
+LejaPoints(domain) = LejaPoints(domain, false, :optim, z->sqrt(0.5))
+LejaPoints(domain,symmetric) = LejaPoints(domain, symmetric, :optim, z->sqrt(0.5))
+
 """
     (p::LejaPoints)(n)
 Generate Leja points on interval [a,b].
@@ -129,7 +135,40 @@ Generate Leja points on interval [a,b].
 - `n` : Number of points
 """
 function (p::LejaPoints)(n)
-    lejapoints(n, p.a, p.b)
+    if p.type == :optim
+        xw = lejapoints(n; v=p.v, symmetric=p.symmetric)
+    elseif p.type == :classic
+        xw = lejapointsdiscretesearch(n, type=p.symmetric)
+    else
+        error("Unknown Leja points type: $(p.type)")
+    end
+    return transformdomain(xw, p.domain[1], p.domain[2])
+end
+
+"""
+    CustomPoints(domain::Vector{Real}, knotsfunction::Function)
+Generate custom points on interval [domain[1],domain[2]].
+
+# Arguments
+- `domain` : Domain
+- `knotsfunction` : Function to generate knots from `n` points
+
+# Returns
+- `CustomPoints` struct
+"""
+struct CustomPoints{T<:Real} <: Points
+    domain::Vector{T}
+    knotsfunction::Function
+end
+"""
+    (p::CustomPoints)(n)
+Generate custom points on domain.
+
+# Arguments
+- `n` : Number of points
+"""
+function (p::CustomPoints)(n)
+    p.knotsfunction(n)
 end
 
 abstract type Level end
@@ -201,4 +240,20 @@ TwoStep rule
 """
 function (level::TwoStep)(l)
     return twostep(l)
+end
+
+struct CustomLevel <: Level
+    f::Function
+end
+"""
+    (level::CustomLevel)(l, function)
+Custom rule
+# Arguments
+- `l` : Level number
+- `function` : Function to generate knots from `n` points
+# Returns
+- ``n` : Number of knots
+"""
+function (level::CustomLevel)(l)
+    return level.f(l)
 end

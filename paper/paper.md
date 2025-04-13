@@ -1,15 +1,17 @@
 ---
 title: 'SparseGridsKit.jl: A Julia sparse grids approximation implementation'
 tags:
-  - Julia
   - numerical approximation
+  - surrogate modelling
   - sparse grids
+  - multi-fidelity
   - uncertainty quantification
+  - Julia
 authors:
   - name: Benjamin M. Kent
     orcid: 0000-0003-4968-7993
     equal-contrib: true
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    affiliation: "1" # (Multiple affiliations must be quoted)
     corresponding: true # (This is how to denote the corresponding author)
 affiliations:
  - name: CNR-IMATI, Pavia, Italy

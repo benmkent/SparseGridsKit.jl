@@ -12,6 +12,7 @@ makedocs(
                     "Sparse Grid Integration"=>"sparsegridintegration.md",
                     "Adaptive Sparse Grids"=>"adaptivesparsegrids.md",
                     "Spectral Sparse Grids"=>"spectralsparsegrids.md",
+                    "Multi-Fidelity Sparse Grid Approximation"=>"multifidelity.md"
                     ],
     "Plotting" => "plots.md",
     "Extensions" => ["Interpolation of PDE solutions"=>"functioninterpolation.md",

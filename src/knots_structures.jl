@@ -246,7 +246,7 @@ struct CustomLevel <: Level
     f::Function
 end
 """
-    (level::CustomLevel)(l, function)
+    (level::CustomLevel)(l)
 Custom rule
 # Arguments
 - `l` : Level number

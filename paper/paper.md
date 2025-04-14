@@ -22,27 +22,79 @@ bibliography: paper.bib
 
 # Summary
 Approximation of functions with high dimensional domains is an important tool for modern scientific and engineering modelling.
-Global polynomial approximation is often justifiable and a common approach is the use of *sparse grid* approximation techniques.
-In particular, sparse grid polynomial interpolation techniques allow a practitioner to use existing numerical solvers and approximate solutions to parametric formulations of such problems in a non-intrusive way.
-In the context of uncertainty quantification, postprocessing of such an approximation allows a user to easily and cheaply extract expected values, variances, Sobel indices and may other useful descriptive properties. 
+Surrogate models are often constructed to give computationally cheap yet accurate approximations that can be used in applications such as uncertainty quantification, optimisation, parameter estimation.
+Surrogates may use global polynomial approximation and a common approach is the use of *sparse grid* approximation techniques.
+In particular, sparse grid polynomial interpolation techniques allow a practitioner to approximate solutions to parametric formulations of such problems in a non-intrusive way using existing numerical solvers.
+
+`SparseGridsKit.jl` provides tools to manually and adaptively construct sparse grid polynomial approximations.
+Interpolation and quadrature routines allow evaluation and integration of the surrogate models.
+Multi-fidelity approximation via the multi-index stochastic collocation algorithm is also possible.
+Approximations can be represented either in a basis of Lagrange interpolation polynomials or in a basis of spectral-type polynomials.
 
 # Statement of need
+Surrogate modelling is an important theme in many science and engineering applications.
+In particular, sparse grid approximation is a well developed methodology and is featured in many survey articles and textbook chapters, e.g. [@Bungartz2004,LeMaitre2010,@Schwab2011,@Cohen2015,Sullivan2015].
+The need for sparse grid surrogate modelling is demonstrated by its use in many applications, from simpler elliptic and parabolic PDEs [] to complex practical engineering problems [@Piazzola2021,@Li2024,@Piazzola2022].
+The `SparseGridsKit.jl` implementation offers a rich set of features to enable this.
 
-`SparseGridsKit.jl` offers a Julia language implementation of sparse grid approximation methods.
-A user can construct grids offering refinement in different domain dimensions by hand crafting the underlying *multi-index set* structure or using the Gerstner--Griebel [@Gerstner2001] style adaptive construction `adaptive_sparsegrid`.
-The package is designed with a focus on uncertainty quantification.
-For a grid and corresponding set of function evaluations a user can interpolate the approximation to points in the function domain, compute weighted integrals of the approximation over thh function domain, and compute weighted integrals of the square of the approximation over the function domain.
+Specifically, a Julia implementation of sparse grid approximation methods is offered by `SparseGridsKit.jl`.
+This uniquely offers
+  - native algorithm implementation in Julia to give high performance and simple programming,
+  - dynamical typing, allowing surrogate models mapping parameters $\vec{y}$ to any type offering vector space operations.
 
-This package is strongly related to the `Sparse Grids MATLAB Kit` [@Piazzola2024].
-It is hoped that `SparseGridsKit.jl` can exploit the improved efficiency of a Julia implementation, and also exploit the code flexibility encouraged by Julia.
-For example, for interpolation and integration the function evaluations must simply return objects that satisfy vector space operations.
-An example is given in the documentation using `ApproxFun` objects.
-Computation of weighted $L^2$ type integrals is also possible if the user provides an implmentation of a norm for the vector space objects.
+# `SparseGridsKit.jl`
+## Knots, Quadrature and Interpolation
+Interpolation and quadrature methods are built out of one-dimensional knot functions which return knots $x$ and corresponding quadrature weights $w$.
+Sparse grid constructions require sequences of approximation operators.
+In this interpolation setting, we consider a sequence of interpolation operators $I^{\alpha}$ indexed by $\alpha\in\mathbb{N}$ which use sequentially growing sets of interpolation points.
+This is achieved using the abstract `Points` and `Level` types in `SparseGridsKit.jl`.
 
-# Related Software
+Sparse grid methods extend one dimensional rules to many dimensions.
+This originates in the work of Smolyak [@Smolyak1963] and developed for interpolation, quadrature and parametric PDEs [@Gerstner1998],[@Novak1999],[@Barthelmann2000],[@Babuska2004],[@Xiu2005],[@Nobile2008a].
+In particular, we use the combination technique formulation in which the approximation is a cleverly chosen linear combination of tensor product interpolation operators.
+The sparse grid interpolation operator is
+$$
+  I = \sum_{\underline{\alpha}\in A} c_{\alpha} \bigotimes_{i=1}^n I^{\alpha_i}
+$$
+where $c_{\underline{\alpha}}$ is the combination technique coefficient and $A$ is a set of multi-indices defining the approximation..
+For further details we refer to the vast literature, e.g. [@Piazzola2021].
+Construction of an approximation using the sparse grid interpolation operator requires evaluation of the target function at a set of collocation points $Z$ which is implicitly defined.
+Nesting of the underlying one-dimensional interpolation rules means that many grid points are coincident hence the *sparse* nature of the grid.
 
-# Sparse Grid Approximation
+[Example figure]()
 
-# Benchmarks
+## Surrogate Models
+For a sparse grid approximation with corresponding function evaluations $\{f(z)\}_{z\in Z}$, we can apply interpolation to approximate the function values at non-interpolation points.
+This is implemented by the `interpolate_on_sparsegrid` function.
+A `SparseGridApproximation` structure wraps the sparse grid approximation operator and a set of function evaluations which can be treated as a function to evaluate the approximation.
+Similarly, the surrogate model can be integrated using the `integrate_on_sparsegrid` function.
+
+## Adaptive Sparse Grids
+A sparse grid can be constructed by using a user specified multi-index set.
+Generally, the underlying function is unknown and we wish to adaptively construct the approximation space to capture the target function behaviour.
+This is often achieved in a greedy iterative manner.
+Adaptive sparse grid approximation is implemented as `adaptive_sparsegrid`.
+This is based on the ubiquitous Gerstner-Griebel dimensional adaptive algorithm [@Gerstner2003].
+
+# Comparison of Features with Related Software
+This package is strongly related to the `Sparse Grids MATLAB Kit` (SGMK) [@Piazzola2024].
+The functionality of `SparseGridsKit.jl` is compared to the SGMK.
+This is formally done in the automated testing.
+This is not a complete comparison as we do not provide a complete reimplementation of the features in SGMK.
+
+| Features                           | Common                                                                                                 | Differences                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Quadrature and Interpolation Rules | Equispaced<br>Gauss-Hermite<br>Gauss-Legendre<br>Weighted Leja<br>Clenshaw-Curtis                      | \`SparseGridsKit.jl\`<br>\- \`CustomPoints\` structure that allow user to supply a knots-weights function.<br>\- Leja points are computed online allowing custom weight functions.<br><br>\`SGMK\`<br>\- In built implementation of further knots-weights rules.                                                        |
+| Adaptive Algorithm                 | Dimension-adaptive sparse grid algorithm.<br>Supports non-nested knots.                                | \`SparseGridsKit.jl\`<br>\- User input profit definitions.<br>\- Common single and multi-fidelity adaptive algorithm.<br>\- Support for any type implementation vector space operations.<br><br>\`SGMK\`<br>\- Provides multiple profit definitions<br>\- Implements a buffering strategy for high-dimensional problems |
+| Parallelism                        |                                                                                                        | \`SparseGridsKit.jl\`<br>\- None built in<br><br>\`SGMK\`<br>\- Evaluations can use MATLAB Parallel Toolbox<br>\- Function evaluation recycling.                                                                                                                                                                        |
+| Polynomial Chaos Expansion         | Convert polynomial approximations from Lagrange interpolation type basis to spectral polynomial basis. | \`SparseGridsKit.jl\`<br>\-<br><br>\`SGMK\`<br>\- Supports Legendre, Chebyshev, Hermite, Laguerre, Gen. Laguerre, Jacobi                                                                                                                                                                                                |
+| Derivatives                        |                                                                                                        | \`SparseGridsKit.jl\`<br>\- No implementation of gradients.<br><br>\`SGMK\`<br>\- Finite difference computation of gradient and Hessian.<br>\- Global and local sensitivity via Sobol Indices.                                                                                                                          |
+| Data Export and Visualization      | Plotting of sparse grids and sparse grid approximations.                                               | \`SparseGridsKit.jl\`<br>\- Plots are implemented as \`Recipies\` for use with \`Plots.jl\`.<br><br>\`SGMK\`<br>\- Export sparse grid points and corresponding weights to ASCII files.                                                                                                                                  |
+
+Other software packages implementing sparse grid approximation include:
+- `PyApprox` A Python package for high-dimensional approximation [@PyApprox].
+- `spinterp` A MATLAB toolbox for sparse grid interpolation .
+- `Dakota`
+For further details, comparison of high dimensional approximation software packages is included in [@Piazzola2024].
 
 # Acknowledgements

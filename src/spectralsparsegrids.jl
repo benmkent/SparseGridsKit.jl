@@ -63,15 +63,15 @@ Evaluate the spectral sparse grid approximation at the given point `x`.
 function (s::SpectralSparseGridApproximation)(x)
     @assert length(x) == s.dims
     # Evaluate
-        evaluation = nothing
+        evaluation = 0.0*s.coefficients[s.coefficients.nzind[1]]
         for (i,idx) in enumerate(s.coefficients.nzind)
             c = s.coefficients[idx]
             # Product of polynomials
-            if isnothing(evaluation)
-                evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
-            else
+            # if isnothing(evaluation)
+                # evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
+            # else
                 evaluation = evaluation + c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
-            end
+            # end
         end
     return evaluation
 end

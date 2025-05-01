@@ -15,6 +15,7 @@ Key papers defining the model formulation include [Barthelmann2000](@cite), [Ger
 This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) [Piazzola2024](@cite).
 
 The package is still under development and by no means complete.
+Issues, forks and pull requests are welcome!
 
 # Example
 In the simplest case one often wants to create a sparse grid using a sequence of nested sets Clenshaw--Curtis points and a Smolyak type multi-index set.

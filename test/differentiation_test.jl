@@ -1,6 +1,5 @@
 @testset "Differentiation" begin
-    # Test derivative function
-    
+    # Test derivative function   
     # Create a sparse grid approximation of a polynomial
     n = 1
     p(x) = 5*x[1].^5 + x[1].^3 + 2*x[1].^2 + x[1] + 1
@@ -29,7 +28,7 @@
     f_sg_diff = derivative(f_sga)
 
     # Create test points
-    test_points = [[x,y] for x in range(-1, stop=1, length=10), for y in range(-1, stop=1, length=10)]
+    test_points = [[x,y] for x in range(-1, stop=1, length=10) for y in range(-1, stop=1, length=10)]
     # Evaluate the original function and its derivative at the test points
     f_test = p_prime.(test_points)
     f_test_diff = f_sg_diff.(test_points)

@@ -33,6 +33,6 @@
     f_test = p_prime.(test_points)
     f_test_diff = f_sg_diff.(test_points)
 
-    @test all(isapprox(f_test[i], f_test_diff[i][1]) for i in 1:length(test_points))
+    @test all(isapprox(f_test[i], f_test_diff[i]) for i in 1:length(test_points))
 end
 

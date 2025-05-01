@@ -213,3 +213,64 @@ function create_rule_miset(n, k, rule)
 
     return MISet(mi)
 end
+
+"""
+    check_admissibility(miset)
+Checks the admissibility of a multi-index set `miset`.
+# Arguments
+- `miset`: An instance of `MISet`.
+# Returns
+- `admissibile`: True or false
+- `mi_missing`: Missing multi-indices
+"""
+function check_admissibility(miset::MISet)
+    admissibile, mi_missing = check_index_admissibility(miset, get_mi(miset))   
+    return admissibile, mi_missing
+end
+
+"""
+    check_index_admissibility(miset, mi)
+Checks the admissibility of a single multi-index `mi` in a multi-index set `miset`.
+# Arguments
+- `miset`: Multi-index set.
+- `mi`: Multi-index to check or vector of multi-indices to check.
+# Returns
+- `admissibile`: True or false
+- `mi_missing`: Missing multi-indices
+"""
+function check_index_admissibility(miset::MISet, mi)
+    admissibile = true
+    mi_missing = []
+    I = copy(get_mi(miset))
+    mi = copy(mi)
+    if isa(mi, Vector{Int})
+        mi_queue = [mi] 
+    else
+        mi_queue = mi
+    end
+    n_mi = length(mi_queue)
+    ii = 1
+    n = length(mi_queue[1])
+    unitvectors = zeros(Integer,n,n)
+    for ii in 1:n
+        unitvectors[ii,ii] = 1
+    end
+    while ii <= n_mi
+        mi = mi_queue[ii]
+        for i in 1:length(mi)
+            mi_test = mi - unitvectors[:,i]
+            if !(mi_test ∈ I) && all(mi_test .> 0)
+                admissibile = false
+                if !(mi_test ∈ mi_missing)
+                    push!(mi_missing, mi_test)
+                end
+                if !(mi_test ∈ mi_queue)
+                    push!(mi_queue, mi_test)
+                    n_mi += 1
+                end
+            end
+        end
+        ii += 1
+    end
+    return admissibile, MISet(mi_missing)
+end

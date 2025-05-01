@@ -12,6 +12,7 @@ using Test, SparseGridsKit, Documenter, LinearAlgebra
     include("sgmk_test.jl")
     include("aqua_test.jl")
     include("plots_test.jl")
+    include("differentiation_test.jl")
 end
 
 @testset "doctest" begin

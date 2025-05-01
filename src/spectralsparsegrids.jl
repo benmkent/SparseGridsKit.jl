@@ -11,14 +11,14 @@ A spectral sparse grid approximation.
 - `dims::Int`: Dimension of the domain.
 - `expansiondimensions::Vector{Int}`: Vector of maximum polynomial degree in each dimension.
 - `polytypes::Vector{Any}`: Vector of polynomial spaces.
-- `coefficients::SparseVector{Any}`: Sparse ector of polynomial coefficients
+- `coefficients::SparseVector{Any}`: SparseVector of polynomial coefficients
 - `polydegrees::SparseVector{Vector}`: SparseVector of polynomial degrees for each non zero coefficient.
 """
 mutable struct SpectralSparseGridApproximation
     dims::Int
     expansiondimensions::Vector{Int}
     polytypes::Vector{Any}
-    coefficients::SparseVector{Any}
+    coefficients::SparseVector
     polydegrees
     domain
 end
@@ -63,15 +63,15 @@ Evaluate the spectral sparse grid approximation at the given point `x`.
 function (s::SpectralSparseGridApproximation)(x)
     @assert length(x) == s.dims
     # Evaluate
-        evaluation = nothing
+        evaluation = 0.0*s.coefficients[s.coefficients.nzind[1]]
         for (i,idx) in enumerate(s.coefficients.nzind)
             c = s.coefficients[idx]
             # Product of polynomials
-            if isnothing(evaluation)
-                evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
-            else
+            # if isnothing(evaluation)
+                # evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
+            # else
                 evaluation = evaluation + c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
-            end
+            # end
         end
     return evaluation
 end
@@ -109,8 +109,8 @@ function +(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridAppr
     coeffs2 = grid2.coefficients
 
     # Create sparse zero vectors of the product of the max dimensions
-    coeffs1_padded = spzeros(Float64, prod(max_dims))
-    coeffs2_padded = spzeros(Float64, prod(max_dims))
+    coeffs1_padded = spzeros(eltype(coeffs1), prod(max_dims))
+    coeffs2_padded = spzeros(eltype(coeffs2), prod(max_dims))
 
 
     # Map original coefficients to the new padded vector for grid1 (sparse array handling)
@@ -146,7 +146,16 @@ function +(grid1::SpectralSparseGridApproximation, grid2::SpectralSparseGridAppr
     end
 
     # Return the sum of the two sparse vectors
-    return SpectralSparseGridApproximation(grid1.dims, max_dims, grid1.polytypes, coeffs1_padded + coeffs2_padded)
+    # Avoid having to create zeros.
+    coeffs_combined = coeffs1_padded
+    for idx in coeffs2_padded.nzind
+        if idx ∈ coeffs1_padded.nzind
+            coeffs_combined[idx] = coeffs1_padded[idx] + coeffs2_padded[idx]
+        else
+            coeffs_combined[idx] = coeffs2_padded[idx]
+        end
+    end
+    return SpectralSparseGridApproximation(grid1.dims, max_dims, grid1.polytypes, coeffs_combined)
 end
 
 """
@@ -183,8 +192,7 @@ function get_spectral_poly_representation(expansiondimensions, coefficients)
             poly[i] = multi_dim_index .- 1
         end
 
-        poly = sparse(coefficients.nzind, ones(length(coefficients.nzind)), poly, length(coefficients), 1)
-    
+        poly = SparseVector(length(coefficients), coefficients.nzind, poly)    
         return poly, coefficients
 end
 
@@ -289,20 +297,83 @@ function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
         polytypes[ii] = poly[ii][1][1].space
     end
 
-    SSG_total = SpectralSparseGridApproximation(ndims, zeros(Int,ndims), polytypes, [])
+    SSG_total = nothing
     for (i, row) = enumerate(eachrow(terms))
         if cterms[i] == 0
             continue
         end
         vectors  = [poly[j][row[1][j][1]][row[1][j][2]].coefficients for j = 1:ndims]
         f_Fun_i, dims = truncated_kron(vectors)
-        SSG_i = SpectralSparseGridApproximation(ndims, dims, polytypes, fongrid[maprowtouniquept[i]] * cterms[i] * f_Fun_i)
-        SSG_total = SSG_i + SSG_total
+        sp_data = SparseVector(f_Fun_i.n,f_Fun_i.nzind, [cterms[i] * fongrid[maprowtouniquept[i]] * f_Fun_i[j] for j in f_Fun_i.nzind])
+        SSG_i = SpectralSparseGridApproximation(ndims, dims, polytypes, sp_data)
+        if isnothing(SSG_total)
+            SSG_total = SSG_i
+        else
+            # Add to the existing SSG_total
+            SSG_total = SSG_total + SSG_i
+        end
     end
 
     return SSG_total
 end
 
+"""
+    convert_to_sg_approximation(ssg::SpectralSparseGridApproximation)
+    Convert a `SpectralSparseGridApproximation` object to a SparseGridApproximation representation.
+
+# Arguments
+- `ssg::SpectralSparseGridApproximation`: Spectral sparse grid approximation.
+# Returns
+- `SparseGridApproximation`: Sparse grid approximation representation of `ssg`.
+"""
+function convert_to_sg_approximation(ssg::SpectralSparseGridApproximation, knots, rules)
+    # First identify the necessary polynomial spaces
+    polydegrees = ssg.polydegrees
+
+    # Create inverse maps
+    inverse_maps = [inverse_level_map(rules[i], ssg.expansiondimensions[i]) for i in 1:ssg.dims]
+
+    # Next identify the required multi-index set
+    multi_indices = Vector{Vector{Int}}(undef, length(ssg.polydegrees.nzind))
+    for (i, idx) in enumerate(ssg.polydegrees.nzind)
+        pd = polydegrees[idx]
+        # Convert to multi-index
+        multi_indices[i] = [inverse_maps[i][pd[i]+1] for i in 1:ssg.dims]
+    end
+    miset = MISet(multi_indices)
+    adm, miss = check_admissibility(miset)
+    miset_admissible = add_mi(miset,miss)
+
+    # Evaluate the SpectralSparseGridApproximation at the knots of the sparse grid
+    sg = create_sparsegrid(miset_admissible, rule=rules, knots=knots)
+
+    # Create the SparseGridApproximation object
+    eval_on_grid = ssg.(get_grid_points(sg))
+    
+    return SparseGridApproximation(sg, eval_on_grid)
+end
+"""
+    inverse_level_map(levelfunction, maxlevel)
+    Inverse level map for a given level2knots type function.
+
+# Arguments
+- `levelfunction`: Level function.
+- `maxlevel`: Maximum level.
+# Returns
+- `Vector{Int}`: Inverse level map.
+"""
+function inverse_level_map(levelfunction, maxlevel)
+    # Create a vector to store the inverse level map
+    inverse_map = Vector{Int}(undef, levelfunction(maxlevel))
+    # Iterate over the levels and fill the inverse map
+    for ii = maxlevel:-1:1
+        nknots = levelfunction(ii)
+        for jj = 0:(nknots-1)
+            inverse_map[jj+1] = ii
+        end
+    end
+    return inverse_map
+end
 """
     truncated_kron(vectors; tol=1e-10)
 
@@ -379,7 +450,7 @@ end
 """
     getdomain(polytype)
 
-    Takes am ApproxFun polynomial space a returns a vector [a,b] of the domain endpoints.
+    Takes an ApproxFun polynomial space a returns a vector [a,b] of the domain endpoints.
 
 # Arguments
 - `polytype` : ApproxFun Space

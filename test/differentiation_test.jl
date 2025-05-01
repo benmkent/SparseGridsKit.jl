@@ -18,6 +18,12 @@
 
     @test all(isapprox(f_test[i], f_test_diff[i][1]) for i in 1:length(test_points))
 
+    sga = convert_to_spectral_approximation(f_sga)
+    sga_diff = differentiate(sga)
+    f_test_diff = sga_diff.(test_points)
+
+    @test all(isapprox(f_test[i], f_test_diff[i][1]) for i in 1:length(test_points))
+
     n = 2
     p(x) = [3*x[1]^3*x[2]^2]
     p_prime(x) = [9*x[1]^2*x[2]^2, 6*x[1]^3*x[2]]

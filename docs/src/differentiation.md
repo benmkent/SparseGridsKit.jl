@@ -1,4 +1,4 @@
-# Multi-fidelity Modelling
+# Differentiation
 Differentiation is supported for scalar valued functions currently.
 This is achieved using automatic differentiation from the package `ReverseDiff.jl`.
 

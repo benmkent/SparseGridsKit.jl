@@ -12,6 +12,7 @@ makedocs(
                     "Sparse Grid Integration"=>"sparsegridintegration.md",
                     "Adaptive Sparse Grids"=>"adaptivesparsegrids.md",
                     "Spectral Sparse Grids"=>"spectralsparsegrids.md",
+                    "Approximation Differentiation"=>"differentiation.md",
                     "Multi-Fidelity Sparse Grid Approximation"=>"multifidelity.md"
                     ],
     "Plotting" => "plots.md",

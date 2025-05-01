@@ -29,7 +29,7 @@ Computes the derivative of a function defined on a sparse grid.
 """
 function derivative(sg::SparseGrid, f_on_z::Vector)
     sga = SparseGridApproximation(sg,f_on_z)
-    ssg_diff = derivative(ssg; sparsegrid=sg)
+    ssg_diff = derivative(sga; sparsegrid=sg)
     # Convert back to sparse grid approximation
     grid = get_grid_points(sg)
     f_diff_on_grid = ssg_diff.(grid)

@@ -18,9 +18,9 @@
 
     @test all(isapprox(f_test[i], f_test_diff[i][1]) for i in 1:length(test_points))
 
-    # Test alternative dispathc
+    # Test alternative dispatch
     sg, f_sg_diff = derivative(sg, f_on_Z)
-    f_test_diff = f_sg_diff.(test_points)
+    f_test_diff = interpolate_on_sparsegrid(sg,f_sg_diff,test_points)
     @test all(isapprox(f_test[i], f_test_diff[i][1]) for i in 1:length(test_points))    
     
     # Test Spectral dispatch

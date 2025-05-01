@@ -192,8 +192,7 @@ function get_spectral_poly_representation(expansiondimensions, coefficients)
             poly[i] = multi_dim_index .- 1
         end
 
-        poly = sparse(coefficients.nzind, ones(length(coefficients.nzind)), poly, length(coefficients), 1)
-    
+        poly = SparseVector(length(coefficients), coefficients.nzind, poly)    
         return poly, coefficients
 end
 

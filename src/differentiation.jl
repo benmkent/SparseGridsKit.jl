@@ -29,11 +29,8 @@ Computes the derivative of a function defined on a sparse grid.
 """
 function derivative(sg::SparseGrid, f_on_z::Vector)
     sga = SparseGridApproximation(sg,f_on_z)
-    ssg_diff = derivative(sga; sparsegrid=sg)
-    # Convert back to sparse grid approximation
-    grid = get_grid_points(sg)
-    f_diff_on_grid = ssg_diff.(grid)
-    return sg, f_diff_on_grid
+    ssg_diff = derivative(sga)
+    return ssg_diff.sg, ssg_diff.fongrid
 end
 """
     derivative(ssg::SpectralSparseGridApproximation; sparsegrid=nothing)
@@ -50,7 +47,7 @@ function derivative(ssg::SpectralSparseGridApproximation; sparsegrid=nothing)
         knots = Vector(undef, length(ssg.polytypes))
         rules = Vector(undef, length(ssg.polytypes))
         # Decide on knots and rules
-        for pt in ssg.polytypes
+        for (ii,pt) in enumerate(ssg.polytypes)
             if isa(pt,Chebyshev)
                 knots[ii] = CCPoints(getdomain(pt))
                 rules[ii] = Doubling()
@@ -63,7 +60,7 @@ function derivative(ssg::SpectralSparseGridApproximation; sparsegrid=nothing)
             end
         end
         # Convert spectral approximation basis to sparse grid
-        sga = convert_to_sg_approximation(ssg, knots=knots, rules=rules)
+        sga = convert_to_sg_approximation(ssg, knots, rules)
         sparsegrid = sga.sg
     end
     Z = get_grid_points(sparsegrid)

@@ -101,8 +101,8 @@ a Creative Commons Attribution 4.0 International License (CC BY
   and textbook chapters, e.g. Cohen &amp; DeVore
   (<xref alt="2015" rid="ref-Cohen2015" ref-type="bibr">2015</xref>).
   The need for sparse grid surrogate modelling is demonstrated by its
-  use in many applications, from simpler elliptic and parabolic PDEs []
-  to complex practical engineering problems Piazzola et al.
+  use in many applications, from simpler elliptic and parabolic PDEs to
+  complex practical engineering problems e.g. Piazzola et al.
   (<xref alt="2022" rid="ref-Piazzola2022" ref-type="bibr">2022</xref>).
   The <monospace>SparseGridsKit.jl</monospace> implementation offers a
   rich set of features to enable this.</p>
@@ -113,7 +113,38 @@ a Creative Commons Attribution 4.0 International License (CC BY
   surrogate models mapping parameters <inline-formula><alternatives>
   <tex-math><![CDATA[\vec{y}]]></tex-math>
   <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mover><mml:mi>y</mml:mi><mml:mo accent="true">→</mml:mo></mml:mover></mml:math></alternatives></inline-formula>
-  to any type offering vector space operations.</p>
+  to any type offering vector space operations. Existing sparse grid
+  approximation packages in Julia include
+  <ext-link ext-link-type="uri" xlink:href="https://github.com/floswald/Tasmanian.jl"><monospace>Tasmanian.jl</monospace></ext-link>,
+  wrapping the
+  <ext-link ext-link-type="uri" xlink:href="https://github.com/ORNL/Tasmanian">Tasmanian
+  library</ext-link>,
+  <ext-link ext-link-type="uri" xlink:href="https://github.com/jacobadenbaum/AdaptiveSparseGrids.jl"><monospace>AdaptiveSparseGrids.jl</monospace></ext-link>
+  and
+  <ext-link ext-link-type="uri" xlink:href="https://github.com/baxmittens/DistributedSparseGrids.jl"><monospace>DistributedSparseGrids.jl</monospace></ext-link>.
+  <monospace>SparseGridsKit.jl</monospace> offers a more complete set of
+  functionality, with close resemblance to the popular
+  <monospace>Sparse Grids MATLAB Kit</monospace>
+  (<xref alt="Piazzola &amp; Tamellini, 2024" rid="ref-Piazzola2024" ref-type="bibr">Piazzola
+  &amp; Tamellini, 2024</xref>).</p>
+  <p>Other software packages implementing sparse grid approximation
+  include: - <monospace>Sparse Grids MATLAB Kit</monospace> A MATLAB
+  package on which the <monospace>SparseGridsKit.jl</monospace> is
+  loosely based
+  (<xref alt="Piazzola &amp; Tamellini, 2024" rid="ref-Piazzola2024" ref-type="bibr">Piazzola
+  &amp; Tamellini, 2024</xref>), - <monospace>spinterp</monospace> A
+  MATLAB toolbox for sparse grid interpolation
+  (<xref alt="Klimke &amp; Wohlmuth, 2005" rid="ref-spinterp" ref-type="bibr">Klimke
+  &amp; Wohlmuth, 2005</xref>), - <monospace>Dakota</monospace> A C++
+  library for optimisation and surrogate modelling
+  (<xref alt="B. M. Adams &amp; Winokur, 2024" rid="ref-Dakota" ref-type="bibr">B.
+  M. Adams &amp; Winokur, 2024</xref>). -
+  <monospace>PyApprox</monospace> A Python package for high-dimensional
+  approximation
+  (<xref alt="Jakeman, 2023" rid="ref-PyApprox" ref-type="bibr">Jakeman,
+  2023</xref>), <monospace>SparseGridsKit.jl</monospace> offers specific
+  toolkit with minimal complexity for fast algorithm development in
+  Julia.</p>
 </sec>
 <sec id="sparsegridskit.jl">
   <title><monospace>SparseGridsKit.jl</monospace></title>
@@ -141,8 +172,9 @@ a Creative Commons Attribution 4.0 International License (CC BY
     <monospace>SparseGridsKit.jl</monospace>.</p>
     <p>Sparse grid methods extend one dimensional rules to many
     dimensions. This originates in the work of Smolyak
-    (<xref alt="Smolyak1963?" rid="ref-Smolyak1963" ref-type="bibr"><bold>Smolyak1963?</bold></xref>)
-    and developed for interpolation, quadrature and parametric PDEs
+    (<xref alt="Smolyak, 1963" rid="ref-Smolyak1963" ref-type="bibr">Smolyak,
+    1963</xref>) and developed for interpolation, quadrature and
+    parametric PDEs
     (<xref alt="Thomas Gerstner &amp; Griebel, 1998" rid="ref-Gerstner1998" ref-type="bibr">Thomas
     Gerstner &amp; Griebel,
     1998</xref>),(<xref alt="Novak &amp; Ritter, 1999" rid="ref-Novak1999" ref-type="bibr">Novak
@@ -174,7 +206,7 @@ a Creative Commons Attribution 4.0 International License (CC BY
     details we refer to the vast literature, e.g.
     (<xref alt="Piazzola et al., 2021" rid="ref-Piazzola2021" ref-type="bibr">Piazzola
     et al., 2021</xref>). Construction of an approximation using the
-    sparse grid interpolation opertaor requires evaluation of the target
+    sparse grid interpolation operator requires evaluation of the target
     function at a set of collocation points
     <inline-formula><alternatives>
     <tex-math><![CDATA[Z]]></tex-math>
@@ -182,8 +214,6 @@ a Creative Commons Attribution 4.0 International License (CC BY
     which is implicitly defined. Nesting of the underlying
     one-dimensional interpolation rules means that many grid points are
     coincident hence the <italic>sparse</italic> nature of the grid.</p>
-    <p><ext-link ext-link-type="uri" xlink:href="">Example
-    figure</ext-link></p>
   </sec>
   <sec id="surrogate-models">
     <title>Surrogate Models</title>
@@ -202,96 +232,25 @@ a Creative Commons Attribution 4.0 International License (CC BY
   </sec>
   <sec id="adaptive-sparse-grids">
     <title>Adaptive Sparse Grids</title>
-    <p>A sparse grid can be constructed by a user selected the
+    <p>A sparse grid can be constructed by using a user specified
     multi-index set. Generally, the underlying function is unknown and
     we wish to adaptively construct the approximation space to capture
     the target function behaviour. This is often achieved in a greedy
     iterative manner. Adaptive sparse grid approximation is implemented
-    as <monospace>adapt_sparsegrid</monospace>. This is based on the
+    as <monospace>adaptive_sparsegrid</monospace>. This is based on the
     ubiquitous Gerstner-Griebel dimensional adaptive algorithm
     (<xref alt="T. Gerstner &amp; Griebel, 2003" rid="ref-Gerstner2003" ref-type="bibr">T.
     Gerstner &amp; Griebel, 2003</xref>).</p>
   </sec>
-</sec>
-<sec id="comparison-of-features-with-related-software">
-  <title>Comparison of Features with Related Software</title>
-  <p>This package is strongly related to the
-  <monospace>Sparse Grids MATLAB Kit</monospace> (SGMK)
-  (<xref alt="Piazzola2024?" rid="ref-Piazzola2024" ref-type="bibr"><bold>Piazzola2024?</bold></xref>).
-  A comparison of the SGMK to other high dimensional approximation
-  software packages is included in
-  (<xref alt="Piazzola2024?" rid="ref-Piazzola2024" ref-type="bibr"><bold>Piazzola2024?</bold></xref>).</p>
-  <p>The functionality of <monospace>SparseGridsKit.jl</monospace> is
-  compared to the SGMK. This formally done in the automated testing.
-  This is not a complete comparison as we do not provide a complete
-  reimplementation of the features in SGMK.</p>
-  <table-wrap>
-    <table>
-      <colgroup>
-        <col width="8%" />
-        <col width="23%" />
-        <col width="70%" />
-      </colgroup>
-      <thead>
-        <tr>
-          <th>Features</th>
-          <th>Common</th>
-          <th>Differences</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Quadrature and Interpolation Rules</td>
-          <td>EquispacedGauss-HermiteGauss-LegendreWeighted
-          LejaClenshaw-Curtis</td>
-          <td>`SparseGridsKit.jl`- `CustomPoints` structure that allow
-          user to supply a knots-weights function.- Leja points are
-          computed online allowing custom weight functions.`SGMK`- In
-          built implementation of further knots-weights rules.</td>
-        </tr>
-        <tr>
-          <td>Adaptive Algorithm</td>
-          <td>Dimension-adaptive sparse grid algorithm.Supports
-          non-nested knots.</td>
-          <td>`SparseGridsKit.jl`- User input profit definitions.-
-          Common single and multi-fidelity adaptive algorithm.- Support
-          for any type implementation vector space operations.`SGMK`-
-          Provides multiple profit definitions- Implements a buffering
-          strategy for high-dimensional problems</td>
-        </tr>
-        <tr>
-          <td>Parallelism</td>
-          <td></td>
-          <td>`SparseGridsKit.jl`- None built in`SGMK`- Evaluations can
-          use MATLAB Parallel Toolbox- Function evaluation
-          recycling.</td>
-        </tr>
-        <tr>
-          <td>Polynomial Chaos Expansion</td>
-          <td>Convert polynomial approximations from Lagrange
-          interpolation type basis to spectral polynomial basis.</td>
-          <td>`SparseGridsKit.jl`-`SGMK`- Supports Legendre, Chebyshev,
-          Hermite, Laguerre, Gen. Laguerre, Jacobi</td>
-        </tr>
-        <tr>
-          <td>Derivatives</td>
-          <td></td>
-          <td>`SparseGridsKit.jl`- No implementation of
-          gradients.`SGMK`- Finite difference computation of gradient
-          and Hessian.- Global and local sensitivity via Sobol
-          Indices.</td>
-        </tr>
-        <tr>
-          <td>Data Export and Visualization</td>
-          <td>Plotting of sparse grids and sparse grid
-          approximations.</td>
-          <td>`SparseGridsKit.jl`- Plots are implemented as `Recipies`
-          for use with `Plots.jl`.`SGMK`- Export sparse grid points and
-          corresponding weights to ASCII files.</td>
-        </tr>
-      </tbody>
-    </table>
-  </table-wrap>
+  <sec id="other-functionality">
+    <title>Other functionality</title>
+    <p><monospace>SparseGridsKit.jl</monospace> includes functionality
+    for multi-fidelity approximation via the multi-index stochastic
+    collocation algorithm and limited support for differentiation via
+    automatic differentiation.</p>
+    <p>The functionality described above is all tested and documented
+    with examples.</p>
+  </sec>
 </sec>
 </body>
 <back>
@@ -331,6 +290,25 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <pub-id pub-id-type="doi">10.1017/s0962492911000055</pub-id>
       <fpage>291</fpage>
       <lpage>467</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Piazzola2024">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Piazzola</surname><given-names>Chiara</given-names></name>
+        <name><surname>Tamellini</surname><given-names>Lorenzo</given-names></name>
+      </person-group>
+      <article-title>Algorithm 1040: The sparse grids matlab kit - a matlab implementation of sparse grids for high-dimensional function approximation and uncertainty quantification</article-title>
+      <source>ACM Transactions on Mathematical Software</source>
+      <publisher-name>Association for Computing Machinery (ACM)</publisher-name>
+      <year iso-8601-date="2024-03">2024</year><month>03</month>
+      <volume>50</volume>
+      <issue>1</issue>
+      <issn>1557-7295</issn>
+      <uri>http://dx.doi.org/10.1145/3630023</uri>
+      <pub-id pub-id-type="doi">10.1145/3630023</pub-id>
+      <fpage>1</fpage>
+      <lpage>22</lpage>
     </element-citation>
   </ref>
   <ref id="ref-Cohen2015">
@@ -491,6 +469,20 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <lpage>825</lpage>
     </element-citation>
   </ref>
+  <ref id="ref-Smolyak1963">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Smolyak</surname><given-names>S A</given-names></name>
+      </person-group>
+      <article-title>Quadrature and interpolation formulae on tensor products of certain function classes</article-title>
+      <source>Soviet Math. Dokl.</source>
+      <year iso-8601-date="1963">1963</year>
+      <volume>4</volume>
+      <issue>5</issue>
+      <fpage>240</fpage>
+      <lpage>243</lpage>
+    </element-citation>
+  </ref>
   <ref id="ref-Gerstner2003">
     <element-citation publication-type="article-journal">
       <person-group person-group-type="author">
@@ -529,6 +521,51 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <pub-id pub-id-type="doi">10.1007/s00366-021-01588-0</pub-id>
       <fpage>2209</fpage>
       <lpage>2237</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-PyApprox">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Jakeman</surname><given-names>J. D.</given-names></name>
+      </person-group>
+      <article-title>PyApprox: A software package for sensitivity analysis, bayesian inference, optimal experimental design, and multi-fidelity uncertainty quantification and surrogate modeling</article-title>
+      <source>Environmental Modelling &amp; Software</source>
+      <year iso-8601-date="2023">2023</year>
+      <volume>170</volume>
+      <uri>https://doi.org/10.1016/j.envsoft.2023.105825</uri>
+      <fpage>105825</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Dakota">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>B. M. Adams</surname><given-names>K. R. Dalbey</given-names><suffix>W. J. Bohnhoff</suffix></name>
+        <name><surname>Winokur</surname><given-names>J. G.</given-names></name>
+      </person-group>
+      <article-title>Dakota 6.21.0 documentation. Technical report SAND2024-15492O.</article-title>
+      <publisher-name>Sandia National Laboratories, Albuquerque, NM</publisher-name>
+      <year iso-8601-date="2024-11">2024</year><month>11</month>
+      <uri>http://snl-dakota.github.io</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-spinterp">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Klimke</surname><given-names>Andreas</given-names></name>
+        <name><surname>Wohlmuth</surname><given-names>Barbara</given-names></name>
+      </person-group>
+      <article-title>Algorithm 847: Spinterp: Piecewise multilinear hierarchical sparse grid interpolation in MATLAB</article-title>
+      <source>ACM Transactions on Mathematical Software</source>
+      <publisher-name>Association for Computing Machinery (ACM)</publisher-name>
+      <year iso-8601-date="2005-12">2005</year><month>12</month>
+      <volume>31</volume>
+      <issue>4</issue>
+      <issn>1557-7295</issn>
+      <uri>http://dx.doi.org/10.1145/1114268.1114275</uri>
+      <pub-id pub-id-type="doi">10.1145/1114268.1114275</pub-id>
+      <fpage>561</fpage>
+      <lpage>579</lpage>
     </element-citation>
   </ref>
 </ref-list>

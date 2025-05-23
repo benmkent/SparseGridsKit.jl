@@ -20,6 +20,8 @@ export Doubling, Linear, Tripling, TwoStep, CustomLevel
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
+export project_onto_sparsegrid
+
 export genz
 
 ## Use functionality defined in import file
@@ -33,6 +35,7 @@ include("spectralsparsegrids.jl")
 include("verifyinputs.jl")
 include("multifidelity.jl")
 include("differentiation.jl")
+include("projection.jl")
 # Include plots last
 include("sparsegridplots.jl")
 

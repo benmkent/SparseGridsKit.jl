@@ -1,6 +1,11 @@
 # SparseGridsKit.jl
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
 
+To add the package use the following command:
+```
+] add https://github.com/benmkent/SparseGridsKit.jl
+```
+
 The construction is based upon the sparse operators introduced by Smolyak [Smolyak1963](@cite).
 Key papers defining the model formulation include [Barthelmann2000](@cite), [Gerstner1998](@cite) and [Gerstner2003](@cite).
 This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) [Piazzola2024](@cite).
@@ -9,6 +14,8 @@ This documentation is example driven, with full documentation for each subset of
 This is not a thorough mathematical description of sparse grid approximation, but a practical guide to using the software.
 
 The package is still under development and by no means complete.
+
+
 
 An example sparse grid construction is illustrated below. 
 ```@example mixed

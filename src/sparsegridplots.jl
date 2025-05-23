@@ -100,30 +100,55 @@ Recipe for plotting approximations based on sparse grids. For more than two dime
 
 """
 @recipe function f(sga::Union{SparseGridApproximation,SpectralSparseGridApproximation}; targetdims=[1,2])
-    midpoint = mean.(sga.domain)
+    if sga.sg.dims == 1
+        title --> "Sparse Grid Approximation"
+        xlabel --> "Parameter "*string(targetdims[1])
 
-    subdomain1 = sga.domain[targetdims[1]]
-    subdomain2 = sga.domain[targetdims[2]]
+        subdomain1 = sga.domain[targetdims[1]]
 
-    function  modifiedmidpoint(x,i,y,j)
-        value = copy(midpoint)
-        value[i] = x
-        value[j] = y
-        return value        
+        n = 100
+        infreplacement = 10
+        a1 = isinf(subdomain1[1]) ? -infreplacement : subdomain1[1]
+        b1 = isinf(subdomain1[2]) ? infreplacement : subdomain1[2]
+        x = range(a1, stop=b1, length=n)
+        y = sga.(x)
+        
+        x,y
+    else
+        midpoint = mean.(sga.domain)
+
+        subdomain1 = sga.domain[targetdims[1]]
+        subdomain2 = sga.domain[targetdims[2]]
+
+        function  modifiedmidpoint(x,i,y,j)
+            value = copy(midpoint)
+            value[i] = x
+            value[j] = y
+            return value        
+        end
+
+        n = 2
+        infreplacement = 10
+        a1 = isinf(subdomain1[1]) ? -infreplacement : subdomain1[1]
+        b1 = isinf(subdomain1[2]) ? infreplacement : subdomain1[2]
+        a2 = isinf(subdomain2[1]) ? -infreplacement : subdomain2[1]
+        b2 = isinf(subdomain2[2]) ? infreplacement : subdomain2[2]
+        x = range(a1, stop=b1, length=n)
+        y = range(a2, stop=b2, length=n)
+        xy = [modifiedmidpoint(xi,targetdims[1],yi,targetdims[2]) for yi in y for xi in x]
+
+        print(collect(xy))
+
+        z = sga.(xy)
+
+        print(z)
+
+        seriestype  -->  :contour
+        title --> "Sparse Grid Approximation"
+        xlabel --> "Parameter "*string(targetdims[1])
+        ylabel --> "Parameter "*string(targetdims[2])
+
+        x,y,z
     end
-
-    n = 100
-    x =  range(subdomain1[1], stop=subdomain1[2], length=n)
-    y =  range(subdomain2[1], stop=subdomain2[2], length=n)
-    xy = [modifiedmidpoint(xi,targetdims[1],yi,targetdims[2]) for xi in x for yi in y]
-
-    z = sga.(xy)
-
-    seriestype  -->  :contour
-    title --> "Sparse Grid Approximation"
-    xlabel --> "Parameter "*string(targetdims[1])
-    ylabel --> "Parameter "*string(targetdims[2])
-
-    x,y,z
 end
 

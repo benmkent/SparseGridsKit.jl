@@ -53,7 +53,7 @@ Other popular software packages implementing sparse grid approximation include:
 - `UQLab`: A broad MATLAB uncertainty quantification toolkit [@Marelli2014].
 - `PyApprox`: A Python package for high-dimensional approximation [@PyApprox].
 - `Dakota`: A C++ library for optimisation and surrogate modelling [@Dakota].
-- `UQTk`: A collection of C++/Python uncertianty quantification tools including sparse grid quadrature [@DebusschereUQTk:2017].
+- `UQTk`: A collection of C++/Python uncertianty quantification tools including sparse grid quadrature [@Debusschere2015].
 - `Tasmanian`,`SG++`,: C++ sparse grid approximation implementations with wrappers for many popular software languages [@stoyanov2015tasmanian] [@pflueger10spatially].
 
 `SparseGridsKit.jl` offers specific Julia toolkit with minimal complexity for fast algorithm development and prototyping.

@@ -23,7 +23,7 @@ bibliography: paper.bib
 # Summary
 Approximation of functions with high dimensional domains is important for modern scientific and engineering problems.
 An example of this is constructing surrogate models for quantities of interest for high dimensional parametrised PDE problems.
-These surrogate models are constructed to give computationally cheap yet accurate approximations that can be used in applications such as uncertainty quantification, optimisation, parameter estimation [@UQHandbook2017].
+These surrogate models are constructed to give computationally cheap yet accurate approximations that can be used in applications such as uncertainty quantification, optimisation and parameter estimation [@UQHandbook2017].
 Surrogates may be constructed with global polynomial approximation on the parameter space and a common approach is the use of *sparse grid* approximation techniques.
 In particular, sparse grid polynomial interpolation techniques allow a practitioner to approximate solutions to parametric problems in a non-intrusive way using existing numerical solvers.
 

@@ -6,7 +6,7 @@
 
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
 It can be added to your environment through
-```
+```julia
 ] add https://github.com/benmkent/SparseGridsKit.jl
 ```
 
@@ -21,7 +21,7 @@ Issues, forks and pull requests are welcome!
 In the simplest case one often wants to create a sparse grid using a sequence of nested sets Clenshaw--Curtis points and a Smolyak type multi-index set.
 To this end, one uses `create_sparsegrid` with the desired Smolyak multi-index set.
 In this case we choose a grid with dimension `n=3` and Smolyak level `w=3`.
-```
+```julia
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
 n,k =3,3

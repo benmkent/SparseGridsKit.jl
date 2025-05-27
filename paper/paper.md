@@ -27,7 +27,7 @@ These surrogate models are constructed to give computationally cheap yet accurat
 Surrogates may be constructed with global polynomial approximation on the parameter space and a common approach is the use of *sparse grid* approximation techniques.
 In particular, sparse grid polynomial interpolation techniques allow a practitioner to approximate solutions to parametric problems in a non-intrusive way using existing numerical solvers.
 
-`SparseGridsKit.jl` provides tools to manually and adaptively construct sparse grid polynomial approximations.
+`SparseGridsKit.jl` provides a Julia toolbox to manually and adaptively construct sparse grid polynomial approximations [@julia].
 Interpolation and quadrature routines allow evaluation and integration of the surrogate models.
 Multi-fidelity approximation via the multi-index stochastic collocation algorithm is also possible [@HajiAli2016] [@Jakeman2019] [@Piazzola2022].
 Approximations can be represented either in a basis of Lagrange interpolation polynomials or in a basis of spectral-type polynomials.

@@ -2,7 +2,7 @@
     # Test derivative function   
     # Create a sparse grid approximation of a polynomial
     n = 1
-    p(x) = 5*x[1].^5 + x[1].^3 + 2*x[1].^2 + x[1] + 1
+    p(x) = [5*x[1].^5 + x[1].^3 + 2*x[1].^2 + x[1] + 1]
     p_prime(x) = 25*x[1].^4 + 3*x[1].^2 + 4*x[1] + 1
 
     sg = create_sparsegrid(create_smolyak_miset(n, 4))
@@ -32,7 +32,7 @@
     # Test multi-variate
     n = 2
     p(x) = [3*x[1]^3*x[2]^2]
-    p_prime(x) = [9*x[1]^2*x[2]^2, 6*x[1]^3*x[2]]
+    p_prime(x) = [9*x[1]^2*x[2]^2 6*x[1]^3*x[2]]
 
     sg = create_sparsegrid(create_smolyak_miset(n, 4))
     f_on_Z = p.(get_grid_points(sg))

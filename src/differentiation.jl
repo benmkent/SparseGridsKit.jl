@@ -1,4 +1,7 @@
-using ForwardDiff, ReverseDiff
+using DifferentiationInterface
+import ForwardDiff
+
+backend = AutoForwardDiff()
 
 """
     derivative(sga::SparseGridApproximation)
@@ -66,7 +69,8 @@ function derivative(ssg::SpectralSparseGridApproximation; sparsegrid=nothing)
     Z = get_grid_points(sparsegrid)
     grad_on_Z = Vector(undef, length(Z))
     for (ii,z) in enumerate(Z)
-        grad_on_Z[ii] = ReverseDiff.gradient(y->ssg(y),z)
+
+        grad_on_Z[ii] = jacobian(y->ssg(y), backend, z)
     end
     sga_diff = SparseGridApproximation(sparsegrid,grad_on_Z)
     ssg_diff = convert_to_spectral_approximation(sga_diff)

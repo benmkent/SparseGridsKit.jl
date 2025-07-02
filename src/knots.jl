@@ -1,7 +1,7 @@
 import PolyChaos: clenshaw_curtis
 import FastGaussQuadrature: gausslegendre, gausshermite
 
-using Optim
+
 
 """
     transformdomain(xw, a, b)
@@ -67,8 +67,6 @@ Use twostep level to points
 """
 twostep(n) = 2*(n-1)+1
 
-
-
 """
     uniformpoints(n)
 
@@ -81,6 +79,7 @@ Uniformly spaced quadrature points on interval [-1,1]
 - Points and weights in `[-1, 1]`.
 """
 uniformpoints(n) = n == 1 ? ([0.0], [1.0]) : (range(-1, stop=1, length=n), 1/n .* ones(n))
+
 
 """
     ccpoints(n)
@@ -126,6 +125,7 @@ function gausslegendrepoints(n)
     return x, w
 end
 
+
 """
     gausshermitepoints(n)
 
@@ -138,12 +138,6 @@ Generate Gauss-Hermite quadrature points and weights on domain `[-∞, ∞]`.
 - Points and weights in `[-∞, ∞]`.
 """
 function gausshermitepoints(n)
-    x,w = gausshermite(n);
-    x=x*sqrt(2)
-    w = w/sqrt(π)
-    return x, w
-end
-function gausshermitepoints(n,a,b)
     x,w = gausshermite(n);
     x=x*sqrt(2)
     w = w/sqrt(π)
@@ -164,7 +158,7 @@ Generate Leja quadrature points and weights on domain `[-1, 1]` using a search o
 """
 function lejapointsdiscretesearch(n; type=nothing)
     # Use Chebyshev candidates
-    M = 1e4+1 # Number of candidates
+    M = 1e3+1 # Number of candidates
     X = cos.((0:(M-1)) .* π / (M-1))
     
     leja = Vector{Float64}(undef,n)
@@ -191,9 +185,9 @@ function lejapointsdiscretesearch(n; type=nothing)
 end
 
 """
-    lejapoints(n; v=z->sqrt(0.5), method=GradientDescent())
-    
-Generate Leja quadrature points and weights on domain `[-1, 1]` using an optimisation method.
+    lejapoints(n; v=z->sqrt(0.5), method=GradientDescent(), symmetric=false)
+
+Generate Leja quadrature points and weights on domain [-1,1].
 
 # Arguments
 - `n`: Number of points.

@@ -1,5 +1,6 @@
 using LinearAlgebra
 using StaticArrays
+using Polynomials
 
 import Base.:+
 import Base.:-
@@ -242,11 +243,11 @@ function createsparsegrid(MI; rule=Doubling(), knots=CCPoints())
     catch e
         DimensionMismatch("If specified, rule and knots must be the same length as the number of dimensions")
     end
-    ptsunique = Vector{Any}(undef,dims)
-    ptsperlevel = Vector{Any}(undef,dims)
-    polyperlevel = Vector{Any}(undef,dims)
+    ptsunique = Vector{Vector{Float64}}(undef,dims)
+    ptsperlevel = Vector{Vector{Vector{Float64}}}(undef,dims)
+    polyperlevel = Vector{Vector{Vector{Fun}}}(undef,dims)
     pintsmap = Vector{Any}(undef,dims)
-    domain = Vector{Any}(undef,dims)
+    domain = Vector{Vector{Float64}}(undef,dims)
     for ii = eachindex(knots)
         domain[ii]=knots[ii].domain
         (ptsunique[ii], ptsperlevel[ii], polyperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
@@ -413,16 +414,33 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         poly = sparsegrid.polyperlevel 
     end
 
-
+    ntarget = length(targetpoints)
+    targetpoints_matrix = copy(reduce(hcat, targetpoints)')
+    acc = Vector{Float64}(undef,ntarget)
+    f_placeholder = Vector{Float64}(undef,ntarget)
     cweightedpolyprod = zeros(length(feval),size(terms,1))
-    for k = 1:length(feval), (i, row) = enumerate(eachrow(terms))
-        targetpt = targetpoints[k]
+    #for k = 1:length(feval)
+        for i in eachindex(terms)
+        #targetpt = targetpoints[k]
         #for (i, row) = enumerate(eachrow(terms))
             #val = c[i]*prod([polyperlevel[row[1][j][1]][row[1][j][2]](newpt[1][j]) for j in eachindex(row[1])])
-            @inbounds  cweightedpolyprod[k,i] = cterms[i] * prod(poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1]))
+            # @inbounds  cweightedpolyprod[k,i] = cterms[i] * prod(poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1]))
+            row = @view terms[i,:]
+            @inbounds begin
+                acc .= 1.0
+                for j in eachindex(row[1])
+                    # f = poly[j][row[1][j][1]][row[1][j][2]]
+                    # f_placeholder = f.([targetpoints[k][j] for k = 1:ntarget])
+                    # targetpoints_j = [targetpoints[k][j] for k = 1:ntarget]
+                    @inbounds targetpoints_j = @view targetpoints_matrix[:,j]
+                    lagrange_evaluation!(f_placeholder,sparsegrid.ptsperlevel[j][row[1][j][1]],row[1][j][2], targetpoints_j)
+                    acc .= acc .* f_placeholder
+                end
+                cweightedpolyprod[:,i] = cterms[i] * acc
+            end
             #feval[k] = feval[k] .+ cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]]
-        #end
-    end
+        end
+    #end
     @inbounds @fastmath feval = [sum(cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]] for i in 1:size(terms,1)) for k=1:length(feval)]
 
     return feval
@@ -574,33 +592,6 @@ function createlagrangepolys(pts, space=Chebyshev(-1.0..1.0))
     return p
 end
 
-function stablepoly(knots, ind)
-    n = length(knots)
-    if n == 1
-        function Lone(x)
-            return 1.0
-        end
-        return Lone
-    else
-        l(z) = prod(z .- knots)
-
-        f_knots = zeros(eltype(knots), length(knots))
-        f_knots[ind] = 1
-
-        function L(x)
-            y = zero(eltype(knots))
-            if any(x .== knots)
-                jj = findfirst(x .== knots)
-                y = f_knots[jj]
-            else
-                y = l(x) * 1 / prod(knots[ind] .- knots[ii] for ii in Iterators.filter(jj -> jj != ind, 1:n)) / (x .- knots[ind])
-            end
-            return y
-        end
-        return L
-    end
-end
-
 function createsmolyakmiset(n, k)
     iteratorI = fastvectorgenerator(k, n)
     I = Matrix{Int64}(undef, n, 0)
@@ -669,4 +660,27 @@ function spaceselector(domain)
         space = Chebyshev(domain)
     end
     return space
+end
+
+function lagrange_evaluation!(y, pts,ii, targetpoints)
+    n = length(pts)
+    # Denominator
+    denom = one(eltype(pts))
+    @inbounds for j in 1:n
+        if j != ii
+            denom *= pts[ii] - pts[j]
+        end
+    end
+    # Numerator
+    @inbounds for k in eachindex(targetpoints)
+        x = targetpoints[k]
+        numer = one(eltype(x))
+        @inbounds for j in 1:n
+            if j != ii
+                numer *= x - pts[j]
+            end
+        end
+        y[k] = numer / denom
+    end
+    return y
 end

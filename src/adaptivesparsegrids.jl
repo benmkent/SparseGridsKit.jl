@@ -94,7 +94,7 @@ function adaptive_solve!(f, datastore, sg)
 
     # Fill new evaluations
     for (ii,z) in enumerate(get_grid_points(sg))
-        if isnothing(f_on_z[ii])
+        if ismissing(f_on_z[ii])
             f_on_z[ii] = f(z)
             add_evaluation!(datastore, z, f_on_z[ii])
         end
@@ -252,8 +252,8 @@ end
 """
     evaluations_database
 """
-mutable struct EvaluationDictionary
-    dictionary
+mutable struct EvaluationDictionary{T} 
+    dictionary::Dict{Vector{Float64}, T}
 end
 
 
@@ -265,8 +265,8 @@ Creates an empty EvaluationDictionary
 # Returns
 - `evaluations`: EvaluationDictionary
 """
-function EvaluationDictionary()
-    return EvaluationDictionary(Dict())
+function EvaluationDictionary{T}() where T
+    return EvaluationDictionary{T}(Dict{Vector{Float64}, T}())
 end
 
 """
@@ -282,7 +282,7 @@ Creates an EvaluationDictionary from a sparse grid and function evaluations
 - `evaluations`: EvaluationDictionary
 """
 function EvaluationDictionary(sg,f_on_z)
-    evaluations = EvaluationDictionary()
+    evaluations = EvaluationDictionary{eltype(f_on_z)}()
     add_evaluations!(evaluations, sg, f_on_z)
     return evaluations
 end
@@ -342,12 +342,12 @@ Retrieves the evaluations from the evaluations_database
 - `f_on_z`: Function evaluations on the sparse grid
 """
 function retrieve_evaluations(evaluations, sg)
-    f_on_z = Vector(undef, get_n_grid_points(sg))
+    f_on_z = Vector{Union{eltype(evaluations.dictionary.vals), Missing}}(undef, get_n_grid_points(sg))
     for (i, z) in enumerate(get_grid_points(sg))
         if haskey(evaluations.dictionary, z)
             f_on_z[i] = evaluations.dictionary[z]
         else
-            f_on_z[i] = nothing
+            f_on_z[i] = missing
         end
     end
     return f_on_z

@@ -14,7 +14,7 @@ Functions are specified a $f(\vec{\alpha},\vec{y})$ where the vector $\vec{\alph
 f(y) = y[1]^2 + sin(y[2]) + y[3]
 
 nfid = 1
-ndims = 3
+nparams = 3
 f_fidelities(alpha,y) = f(y) + 10^(-alpha[1])
 ```
 
@@ -24,8 +24,8 @@ The knots are [`FidelityPoints`](@ref), which returns the input value plus a wei
 The knot function is treated as a special case in the sparse grid construction.
 ```@example mf
 maxfidelity = 5
-rule = [fill(Fidelity(),nfid)..., fill(Doubling(),ndims)...]
-knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),ndims)...]
+rule = [fill(Fidelity(),nfid)..., fill(Doubling(),nparams)...]
+knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),nparams)...]
 ```
 
 We wrap the function $f$ using [`multifidelityfunctionwrapper`](@ref).
@@ -33,7 +33,7 @@ This allows the user to use the single fidelity sparse grid construction, with f
 ```@example mf
 f_wrapped = multifidelityfunctionwrapper(f_fidelities,knots)
 
-MI = create_smolyak_miset(nfid+ndims,2)
+MI = create_smolyak_miset(nfid+nparams,2)
 
 sg = create_sparsegrid(MI; knots=knots, rule=rule)
 @show get_grid_points(sg)
@@ -43,7 +43,7 @@ Finally, interpolation and integration are possible on the sparse grid.
 Interpolation currently requires dummy values to give a complete parameter vector $[\vec{alpha} \vec{y}]$.
 In the future this may be simplified.
 ```@example mf
-interpolate_on_sparsegrid(sg, f_eval, [[fill(1,nfid)..., fill(0.0,ndims)...]])
+interpolate_on_sparsegrid(sg, f_eval, [[fill(1,nfid)..., fill(0.0,nparams)...]])
 
 pcl = precompute_lagrange_integrals(5, knots, rule)
 
@@ -59,9 +59,9 @@ This acts on a vector $\vec{α}$ of the fidelities.
 We must supply `knots` and `rules` explictly so that the algorithm can distinguish between model and input dimensions.
 
 ```@example mf
-knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),ndims)...]
-rule = [fill(Fidelity(),nfid)..., fill(Doubling(),ndims)...]
-(sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, nfid + ndims; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
+knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),nparams)...]
+rule = [fill(Fidelity(),nfid)..., fill(Doubling(),nparams)...]
+(sg, f_on_Z) = adaptive_sparsegrid(f_wrapped, nfid + nparams; maxpts = 100, proftol=1e-4, rule = rule, knots = knots, θ=1e-4, type=:deltaint, costfunction=α->10^prod(α))
 ```
 
 ## Function Reference

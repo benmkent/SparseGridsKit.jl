@@ -80,19 +80,19 @@ using MAT, Downloads, FastGaussQuadrature
     # [x_norm_Leja,w_norm_Leja]           = knots_normal_leja(n,mu,sigma,'line');
     # [x_norm_sym_Leja,w_norm_sym_Leja]   = knots_normal_leja(n,mu,sigma,'sym_line');
 
-    @info "Skipping exponential PDF"
+    @verbose "Skipping exponential PDF"
     # exponential pdf
     # n = 12; lambda = 1; 
     # [x_exp, w_exp]           = gausslaguerre(n,lambda);
     # # [x_exp_leja, w_exp_leja] = knots_exponential(n,lambda);
 
-    @info "Skipping gamma PDF"
+    @verbose "Skipping gamma PDF"
     # # gamma pdf
     # n = 12; alpha = 1; beta = 2;
     # [x_gamma, w_gamma]           = knots_gamma(n,alpha,beta);
     # [x_gamma_leja, w_gamma_leja] = knots_gamma(n,alpha,beta);
 
-    @info "Skipping beta PDF"
+    @verbose "Skipping beta PDF"
     # beta pdf
     # n = 12; a = 1; b = 3; 
     # alpha = -0.5; beta = 0.5; 
@@ -101,7 +101,7 @@ using MAT, Downloads, FastGaussQuadrature
     # alpha = 1.5; beta = 1.5; % alpha = beta for symmetric points 
     # [x_beta_sym_leja,w_beta_sym_leja] = knots_beta_leja(n,alpha,beta,a,b,'sym_line');
 
-    @info "Skipping triangular PDF"
+    @verbose "Skipping triangular PDF"
     # triangular pdf
     # n = 12; a = 0; b = 2;
     # [x_triang,w_triang] = knots_triangular_leja(n,a,b);
@@ -345,7 +345,7 @@ using MAT, Downloads, FastGaussQuadrature
         f_values = interpolate_on_sparsegrid(S,f_on_grid,non_grid_points);
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_interpolate.mat")
-        @test f_values ≈ vec(S["f_values"])
+        @test vec(f_values) ≈ vec(S["f_values"])
     end
 
     @testset "Polynomial Chaos Expansions" begin
@@ -365,7 +365,7 @@ using MAT, Downloads, FastGaussQuadrature
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_gPCE.mat")
         
-        @info "Skipping PCE comparison, we only use Chebyshev polynomials at the moment not Legendre"
+        @verbose "Skipping PCE comparison, we only use Chebyshev polynomials at the moment not Legendre"
         # @test sg ≈ S["PCE_coeffs"]
     end
 

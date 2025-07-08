@@ -17,7 +17,6 @@ mutable struct SparseGrid
     ptsperlevel
     ptsunique
     sparsegridpts
-    polyperlevel
     domain
 end
 
@@ -40,8 +39,8 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
     dims = sg1.dims
     @assert dims == sg2.dims
 
-    sg1maxmi = length(sg1.polyperlevel)
-    sg2maxmi = length(sg2.polyperlevel)
+    sg1maxmi = length(sg1.ptsperlevel)
+    sg2maxmi = length(sg2.ptsperlevel)
 
     if sg1maxmi >= sg2maxmi
         sg = copy(sg1)
@@ -74,7 +73,7 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
 
     (sparsegridptids, sparsegridpts, maptermstosparsegrid) = sparsegridpoints(terms, sg.pintsmap, sg.ptsunique, size(sg.MI, 1))
 
-    sparsegrid = SparseGrid(dims, MI, terms, sparsegridptids, maptermstosparsegrid, cterms, cmi, sg.pintsmap, sg.ptsperlevel, sg.ptsunique, sparsegridpts, sg.polyperlevel, sg.domain)
+    sparsegrid = SparseGrid(dims, MI, terms, sparsegridptids, maptermstosparsegrid, cterms, cmi, sg.pintsmap, sg.ptsperlevel, sg.ptsunique, sparsegridpts, sg.domain)
 
     return sparsegrid
 end
@@ -94,34 +93,38 @@ end
 
 function sparsegridprecompute(maxmi, knots=CCPoints(), rule=Doubling())
     if isa(knots, Points)
-        ndims=1
-        knots = fill(knots, ndims)
+        nparams=1
+        knots = fill(knots, nparams)
     end
     if isa(rule, Level)
-        rule = fill(rule, ndims)
+        rule = fill(rule, nparams)
     end
     productintegrals = Vector{Any}(undef, length(knots))
     for ii = eachindex(knots)
-        (ptsunique, ptsperlevel, polyperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], knots[ii].domain)
-        productintegrals[ii] = sparsegridproductintegrals(polyperlevel, maxmi, knots[ii], rule[ii])
+        (ptsunique, ptsperlevel, pintsmap) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], knots[ii].domain)
+        productintegrals[ii] = sparsegridproductintegrals(ptsperlevel, maxmi, knots[ii], rule[ii])
     end
     @debug "Computed weighted L^2 product integrals in each dimension"
     return (; productintegrals)
 end
 
-function sparsegridproductintegrals(polyperlevel, maxmi, knots, rule)
+function sparsegridproductintegrals(ptsperlevel, maxmi, knots, rule)
     @debug "Computing product integrals"
     # Allocate arrays
-    productintegrals = zeros(Float64, maxmi, maxmi, length(polyperlevel[end]), length(polyperlevel[end]))
+    productintegrals = zeros(Float64, maxmi, maxmi, length(ptsperlevel[end]), length(ptsperlevel[end]))
 
     #x, w = gausslegendre(2 * rule(maxmi))
     x,w = knots(2*rule(maxmi))
     wp1x = similar(x)
 
-    pevalx = zeros(Float64, maxmi, length(polyperlevel[end]), length(x))
+    pevalx = zeros(Float64, maxmi, length(ptsperlevel[end]), length(x))
     for ii = 1:maxmi
-        for jj = 1:length(polyperlevel[ii])
-            pevalx[ii, jj, :] .= polyperlevel[ii][jj].(x)
+        # for jj = 1:length(ptsperlevel[ii])
+        for jj = 1:length(ptsperlevel[ii])
+            # pevalx[ii, jj, :] .= polyperlevel[ii][jj].(x)
+            write_location = @view pevalx[ii, jj, :]
+            pts_input = ptsperlevel[ii]
+            lagrange_evaluation!(write_location, pts_input, jj, x)
         end
     end
 
@@ -132,11 +135,11 @@ function sparsegridproductintegrals(polyperlevel, maxmi, knots, rule)
         #pii = view(polyperlevel,ii);
         for ll = 1:maxmi
             #pll = view(polyperlevel,ll);s
-            @inbounds for p1 in eachindex(polyperlevel[ii])
+            @inbounds for p1 in eachindex(ptsperlevel[ii])
                 #p1x .= pii[1][p1].(x)
                 #p1x .= w.* p1x
                 wp1x .= w .* pevalx[ii, p1, :]
-                @inbounds for p2 in eachindex(polyperlevel[ll])
+                @inbounds for p2 in eachindex(ptsperlevel[ll])
                     #productintegralsmatrix[p1, p2] = sum(w .* polyperlevel[ii][p1].(x) .* polyperlevel[ll][p2].(x))
                     @inbounds productintegrals[ii, ll, p1, p2] = dot(wp1x, pevalx[ll, p2, :]) #p1x .* pll[1][p2].(x)
                     #display([ii,ll,p1,p2,sum(w .* polyperlevel[ii][p1].(x) .* polyperlevel[ll][p2].(x))])
@@ -200,14 +203,15 @@ function reducedmargin(MI)
     mgn = margin(MI)
     ndim = size(mgn, 1)
     rm = Matrix{Int64}(undef,ndim,0)
-
+    I_ndim = I(ndim)
     for mi in eachcol(mgn)
         in_rm = true
 
-        for ei in eachcol(I(ndim))
+        for ei in eachcol(I_ndim)
             miminus = mi .- ei
             
-            test = any(v -> v == miminus, eachcol(MI)) || any(miminus .== 0)
+            # test = any(v -> v == miminus, eachcol(MI)) || any(miminus .== 0)
+            test = in(miminus, eachcol(MI)) || any(==(0), miminus)
 
             if test == false
                 in_rm = false;
@@ -245,12 +249,11 @@ function createsparsegrid(MI; rule=Doubling(), knots=CCPoints())
     end
     ptsunique = Vector{Vector{Float64}}(undef,dims)
     ptsperlevel = Vector{Vector{Vector{Float64}}}(undef,dims)
-    polyperlevel = Vector{Vector{Vector{Fun}}}(undef,dims)
-    pintsmap = Vector{Any}(undef,dims)
+    pintsmap = Vector{Dict{Vector{Int},Int}}(undef,dims)
     domain = Vector{Vector{Float64}}(undef,dims)
     for ii = eachindex(knots)
         domain[ii]=knots[ii].domain
-        (ptsunique[ii], ptsperlevel[ii], polyperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
+        (ptsunique[ii], ptsperlevel[ii], pintsmap[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
     end
     @debug "Constructed one dimensional grid data"
 
@@ -264,7 +267,7 @@ function createsparsegrid(MI; rule=Doubling(), knots=CCPoints())
     (sparsegridptids, sparsegridpts, maptermstosparsegrid) = sparsegridpoints(grid, pintsmap, ptsunique, dims)
     @debug "Created sparse grid term to sparse grid points mappings"
 
-    sparsegrid = SparseGrid(dims, MI, grid, sparsegridptids, maptermstosparsegrid, cterms, cmi, pintsmap, ptsperlevel, ptsunique, sparsegridpts, polyperlevel, domain)
+    sparsegrid = SparseGrid(dims, MI, grid, sparsegridptids, maptermstosparsegrid, cterms, cmi, pintsmap, ptsperlevel, ptsunique, sparsegridpts, domain)
     @debug "Created sparse grid"
     return sparsegrid
 end
@@ -293,7 +296,8 @@ function sparsegridpoints(grid, pintsmap, ptsunique, dims)
 
     maptermstosparsegrid = Vector{Integer}(undef, size(gridasptsindices, 1))
     for ii in 1:size(gridasptsindices, 1)
-        maptermstosparsegrid[ii] = findfirst(gridasptsindices[ii, :] == uniquerow for uniquerow in eachrow(sparsegridptids))
+        # maptermstosparsegrid[ii] = findfirst(gridasptsindices[ii, :] == uniquerow for uniquerow in eachrow(sparsegridptids))
+        maptermstosparsegrid[ii] = findfirst(row -> gridasptsindices[ii, :] == row, eachrow(sparsegridptids))
     end
 
     sparsegridpts = similar(sparsegridptids, Float64)
@@ -318,9 +322,9 @@ function sparsegridterms(MI, ptsperlevel; cmi=nothing)
     cterms = []
     for (miind, mi) in enumerate(eachcol(MI))
         if true #cmi[miind] != 0
-            indexarray = []
+            indexarray = Vector{Vector{Vector{Int}}}(undef, 0)
             for (ind,i) in enumerate(mi)
-                indexarrayi = []
+                indexarrayi = Vector{Vector{Int}}(undef, 0)
                 if isa(ptsperlevel[1][1],Number)
                     for j = eachindex(ptsperlevel[i])
                         push!(indexarrayi, [i, j])
@@ -348,15 +352,14 @@ function sparsegridterms(MI, ptsperlevel; cmi=nothing)
     return (terms, cterms, cmi, MI)
 end
 
-function sparsegridonedimdata(maxmi, knots, rule, domain)
+@noinline function sparsegridonedimdata(maxmi, knots, rule, domain)
     ptsunique = Vector{Real}(undef, 0)
     ptsperlevel = Vector{Vector{Real}}(undef, maxmi)
     #poly = Vector{Vector{Polynomial{Float64,:x}}}(undef, maxmi)
-    polyperlevel = Vector{Any}(undef, maxmi)
-    pintsmap = Dict{}()
+    pintsmap = Dict{Vector{Int},Int}()
 
     # Based on knots define appropriate ApproxFun space for underlying polynomials
-    space = spaceselector(domain)
+    # space = spaceselector(domain)
 
     for ii = 1:maxmi
         # Detect special case of fidelity
@@ -365,14 +368,14 @@ function sparsegridonedimdata(maxmi, knots, rule, domain)
         else
             ptsperlevel[ii], w = knots(rule(ii))
         end
-        polyperlevel[ii] = createlagrangepolys(ptsperlevel[ii], space)
 
         # Build points map
         for (jj, p) in enumerate(ptsperlevel[ii])
             if length(ptsunique) == 0
                 ind = nothing
             else
-                ind = findfirst(isapprox(p, ptsunique[i]) for i in eachindex(ptsunique))
+                # ind = findfirst(isapprox(p, ptsunique[i]) for i in eachindex(ptsunique))
+                ind = findfirst(x -> isapprox(p, x), ptsunique)
             end
 
             if !isnothing(ind)
@@ -383,7 +386,7 @@ function sparsegridonedimdata(maxmi, knots, rule, domain)
             end
         end
     end
-    return (ptsunique, ptsperlevel, polyperlevel, pintsmap)
+    return (ptsunique, ptsperlevel, pintsmap)
 end
 
 function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing)
@@ -391,34 +394,26 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         if isnothing(evaltype)
             error("Must input evaltype if using zero operator")
         end
-        feval = Vector{evaltype}(undef,length(targetpoints))
-        for k in eachindex(feval)
-            feval[k] .= zero(evaltype)
-        end
+        feval = [0.0*fongrid[1] for _ in 1:length(targetpoints)]
         return feval
     else
         evaltype = typeof(fongrid[1])
-        feval = Vector{evaltype}(undef,length(targetpoints))
+        feval = [0.0*fongrid[1] for _ in 1:length(targetpoints)]
     end
     terms = sparsegrid.terms
     cterms = sparsegrid.cterms
     maprowtouniquept = sparsegrid.maptermstosparsegrid
-    # poly = sparsegrid.polyperlevel
-    ndims = sparsegrid.dims
-    if isa(sparsegrid.polyperlevel[1][1],Function)
-        poly = Vector{Any}(undef,ndims) 
-        for ii = 1:ndims
-            poly[ii] = sparsegrid.polyperlevel
-        end
-    else
-        poly = sparsegrid.polyperlevel 
-    end
+    nparams = sparsegrid.dims
 
     ntarget = length(targetpoints)
     targetpoints_matrix = copy(reduce(hcat, targetpoints)')
     acc = Vector{Float64}(undef,ntarget)
     f_placeholder = Vector{Float64}(undef,ntarget)
-    cweightedpolyprod = zeros(length(feval),size(terms,1))
+    # cweightedpolyprod = zeros(length(feval),size(terms,1))
+    cweightedpolyprod_i = zeros(length(feval),1)
+    temp_mul = Ref(copy(fongrid[1]))
+    temp_mul[] = 0.0* fongrid[1]
+    using_floats = typeof(fongrid[1]) <: Number
     #for k = 1:length(feval)
         for i in eachindex(terms)
         #targetpt = targetpoints[k]
@@ -436,12 +431,36 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
                     lagrange_evaluation!(f_placeholder,sparsegrid.ptsperlevel[j][row[1][j][1]],row[1][j][2], targetpoints_j)
                     acc .= acc .* f_placeholder
                 end
-                cweightedpolyprod[:,i] = cterms[i] * acc
+                # cweightedpolyprod[:,i] = cterms[i] * acc
+                cweightedpolyprod_i .= cterms[i] * acc
             end
-            #feval[k] = feval[k] .+ cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]]
+            # feval += cweightedpolyprod[:,i] * fongrid[maprowtouniquept[i]]
+            # if using_floats
+                # for kk = eachindex(feval)
+                #     temp_mul[] = fongrid[maprowtouniquept[i]]
+                #     temp_mul[] = temp_mul[] * cweightedpolyprod_i[kk]
+                #     @inbounds feval[kk] = feval[kk] + temp_mul[]
+                # end
+                for kk = eachindex(feval)
+                    @inbounds copyto!(temp_mul[], fongrid[maprowtouniquept[i]])
+                    @inbounds for j in eachindex(temp_mul[])
+                        temp_mul[][j] *= cweightedpolyprod_i[kk]
+                    end
+                    @inbounds feval[kk] .+= temp_mul[]
+                end
+            # else
+            #     for kk = eachindex(feval)
+            #         temp_mul[] = fongrid[maprowtouniquept[i]]
+            #         temp_mul[] *= cweightedpolyprod_i[kk]
+            #         @inbounds feval[kk] += temp_mul[]
+            #     end
+            # end
+                # feval += cweightedpolyprod_i .* fongrid[maprowtouniquept[i]]
         end
     #end
-    @inbounds @fastmath feval = [sum(cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]] for i in 1:size(terms,1)) for k=1:length(feval)]
+    # @inbounds @fastmath feval = [sum(cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]] for i in 1:size(terms,1)) for k=1:length(feval)]
+
+    # mul!(feval, cweightedpolyprod, fongrid[maprowtouniquept])
 
     return feval
 end
@@ -459,10 +478,10 @@ function integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing
     cterms = sparsegrid.cterms
     maprowtouniquept = sparsegrid.maptermstosparsegrid
     nterms = size(terms,1)
-    ndims = sparsegrid.dims
+    nparams = sparsegrid.dims
     if length(precompute.productintegrals) == 1
-        productintegrals = Vector{Any}(undef,ndims) 
-        for ii = 1:ndims
+        productintegrals = Vector{Any}(undef,nparams) 
+        for ii = 1:nparams
             productintegrals[ii] = precompute.productintegrals[1]
         end
     else
@@ -507,10 +526,10 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
     terms = sparsegrid.terms
     cterms = sparsegrid.cterms
     maprowtouniquept = sparsegrid.maptermstosparsegrid
-    ndims = sparsegrid.dims
+    nparams = sparsegrid.dims
     if length(precompute.productintegrals) == 1
-        productintegrals = Vector{Any}(undef,ndims) 
-        for ii = 1:ndims
+        productintegrals = Vector{Any}(undef,nparams) 
+        for ii = 1:nparams
             productintegrals[ii] = precompute.productintegrals[1]
         end
     else
@@ -539,12 +558,12 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
             # valstomultiply[1] = 1.0
             rowi1 = rowi[1]
             rowj1 = rowj[1]
-            for k in eachindex(rowi1)
-                @inbounds a .= rowi1[k]
-                @inbounds b .= rowj1[k]
-                @inbounds @fastmath valstomultiply[i,j] *= productintegrals[k][a[1],b[1],a[2],b[2]]
+            @inbounds for k in eachindex(rowi1)
+                a .= rowi1[k]
+                b .= rowj1[k]
+                @fastmath valstomultiply[i,j] *= productintegrals[k][a[1],b[1],a[2],b[2]]
             end
-            feval .= feval .+ cterms[i] * cterms[j] * valstomultiply[i,j] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]]
+            @inbounds feval .= feval .+ cterms[i] * cterms[j] * valstomultiply[i,j] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]]
         #end
     end
     #@inbounds feval .= sum(sum(cterms[i] * cterms[j] * valstomultiply[i,j] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]] for j=1:size(terms,1)) for i = 1:size(terms,1))
@@ -662,8 +681,9 @@ function spaceselector(domain)
     return space
 end
 
-function lagrange_evaluation!(y, pts,ii, targetpoints)
+function lagrange_evaluation!(y, pts::Vector{<:Real}, ii, targetpoints)
     n = length(pts)
+    pts = Float64.(pts)
     # Denominator
     denom = one(eltype(pts))
     @inbounds for j in 1:n
@@ -672,15 +692,19 @@ function lagrange_evaluation!(y, pts,ii, targetpoints)
         end
     end
     # Numerator
+    numer = Ref{Float64}(0.0)
+    difference = Ref{Float64}(0.0)
     @inbounds for k in eachindex(targetpoints)
+        numer[] = 1.0
         x = targetpoints[k]
-        numer = one(eltype(x))
         @inbounds for j in 1:n
             if j != ii
-                numer *= x - pts[j]
+                difference[] = pts[j]
+                difference[] *= -1.0
+                difference[] += x
+                numer[] *= difference[]
             end
         end
-        y[k] = numer / denom
+        y[k] = numer[] / denom
     end
-    return y
 end

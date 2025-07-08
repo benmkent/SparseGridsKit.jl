@@ -1,3 +1,4 @@
+using LinearAlgebra
 @testset "Sparse Grid Integration Tests" begin
     f(x) = @. 3.0*x^2 + 2.0*x + 1.0
 

@@ -1,5 +1,6 @@
 using ApproxFun
 using SparseArrays
+using Polynomials
 import Base.+
 
 """
@@ -24,7 +25,7 @@ mutable struct SpectralSparseGridApproximation
 end
 
 """
-    SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
+    SpectralSparseGridApproximation(dims, expansionparams, polytypes, coefficients)
 
 Constructs a spectral sparse grid approximation.
 
@@ -38,14 +39,14 @@ Constructs a spectral sparse grid approximation.
 # Returns
 - `SpectralSparseGridApproximation`: An instance of `SpectralSparseGridApproximation`.
 """
-function SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
+function SpectralSparseGridApproximation(dims, expansionparams, polytypes, coefficients)
     coefficients = sparse(coefficients)
-    polydegrees, coefficients = get_spectral_poly_representation(expansiondims, coefficients)
+    polydegrees, coefficients = get_spectral_poly_representation(expansionparams, coefficients)
     domain = Vector{Vector{Real}}(undef, dims)
     for i in 1:length(polytypes)
         domain[i] = getdomain(polytypes[i])
     end
-    return SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients, polydegrees,domain)
+    return SpectralSparseGridApproximation(dims, expansionparams, polytypes, coefficients, polydegrees,domain)
 end
 
 """
@@ -280,32 +281,49 @@ function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
     maprowtouniquept = sparsegrid.maptermstosparsegrid
     domain = sparsegrid.domain
 
-    ndims = sparsegrid.dims
+    nparams = sparsegrid.dims
     
-    if isa(sparsegrid.polyperlevel[1][1],Function)
-        poly = Vector{Any}(undef,ndims) 
-        for ii = 1:ndims
-            poly[ii] = sparsegrid.polyperlevel
+    if isa(sparsegrid.ptsperlevel, Vector{AbstractVector{<:Real}})
+        ptsperlevel = Vector{Vector{Vector{<:Real}}}(undef,nparams) 
+        for ii = 1:nparams
+            ptsperlevel[ii] = sparsegrid.ptsperlevel
         end
     else
-        poly = sparsegrid.polyperlevel
+        ptsperlevel = sparsegrid.ptsperlevel
     end
 
-
-    polytypes = Vector(undef,ndims)
-    for ii = 1:ndims
-        polytypes[ii] = poly[ii][1][1].space
+    polytypes = Vector{Space}(undef,nparams)
+    for ii = 1:nparams
+        # polytypes[ii] = poly[ii][1][1].space
+        polytypes[ii] = Space(Interval(domain[ii]...))
     end
 
     SSG_total = nothing
+    coeff_ij = Vector{Vector{Float64}}(undef, nparams)
     for (i, row) = enumerate(eachrow(terms))
         if cterms[i] == 0
             continue
         end
-        vectors  = [poly[j][row[1][j][1]][row[1][j][2]].coefficients for j = 1:ndims]
-        f_Fun_i, dims = truncated_kron(vectors)
-        sp_data = SparseVector(f_Fun_i.n,f_Fun_i.nzind, [cterms[i] * fongrid[maprowtouniquept[i]] * f_Fun_i[j] for j in f_Fun_i.nzind])
-        SSG_i = SpectralSparseGridApproximation(ndims, dims, polytypes, sp_data)
+        for j = 1:nparams
+            S = polytypes[j]
+            p = points(S,length(ptsperlevel[j][end]))
+            v = Vector{Float64}(undef, length(p))
+            lagrange_evaluation!(v, ptsperlevel[j][row[1][j][1]],row[1][j][2],p);  # values at the default grid
+            f = Fun(S,ApproxFun.transform(S,v));
+            coeff_ij[j] = f.coefficients
+        end
+        # vectors  = [poly[j][row[1][j][1]][row[1][j][2]].coefficients for j = 1:nparams]
+        f_Fun_i, dims = truncated_kron(coeff_ij; tol=1e-10)
+        # vector_data = Vector{eltype(fongrid)}(undef, length(f_Fun_i.nzind))
+
+        # for j in eachindex(f_Fun_i.nzind)
+        #     # Get the multi-index for the current non-zero coefficient
+        #     vector_data[j] = cterms[i] * fongrid[maprowtouniquept[i]] * f_Fun_i[j]
+        # end
+
+        sp_data = cterms[i] * fongrid[maprowtouniquept[i]] * f_Fun_i;
+        # SparseVector(f_Fun_i.n,f_Fun_i.nzind, cterms[i] * fongrid[maprowtouniquept[i]] * f_Fun_i)
+        SSG_i = SpectralSparseGridApproximation(nparams, dims, polytypes, sp_data)
         if isnothing(SSG_total)
             SSG_total = SSG_i
         else

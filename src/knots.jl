@@ -1,7 +1,7 @@
 import PolyChaos: clenshaw_curtis
 import FastGaussQuadrature: gausslegendre, gausshermite
 
-
+using Optim
 
 """
     transformdomain(xw, a, b)
@@ -68,6 +68,20 @@ Use twostep level to points
 twostep(n) = 2*(n-1)+1
 
 """
+    uniformpoints(n, a, b)
+
+Uniformly spaced quadrature points on interval [a,b]
+
+# Arguments
+- `n`: Number of points.
+- `a`, `b`: Interval bounds.
+
+# Returns
+- Points and weights in `[a, b]`.
+"""
+uniformpoints(n, a, b) = transformdomain(uniformpoints(n), a, b)
+
+"""
     uniformpoints(n)
 
 Uniformly spaced quadrature points on interval [-1,1]
@@ -80,6 +94,19 @@ Uniformly spaced quadrature points on interval [-1,1]
 """
 uniformpoints(n) = n == 1 ? ([0.0], [1.0]) : (range(-1, stop=1, length=n), 1/n .* ones(n))
 
+"""
+    ccpoints(n, a, b)
+
+Generate Clenshaw-Curtis quadrature points and weights on domain [a,b].
+
+# Arguments
+- `n`: Number of points.
+- `a`, `b`: Interval bounds.
+
+# Returns
+- Points and weights in `[a, b]`.
+"""
+ccpoints(n, a, b) = transformdomain(ccpoints(n), a, b)
 
 """
     ccpoints(n)
@@ -125,6 +152,19 @@ function gausslegendrepoints(n)
     return x, w
 end
 
+"""
+    gausslegendrepoints(n, a, b)
+    
+Generate Gauss-Legendre quadrature points and weights on domain [a,b].
+
+# Arguments
+- `n`: Number of points.
+- `a`, `b`: Interval bounds.
+
+# Returns
+- Points and weights in `[a, b]`.
+"""
+gausslegendrepoints(n, a, b) = transformdomain(gausslegendre(n), a, b)
 
 """
     gausshermitepoints(n)
@@ -147,7 +187,7 @@ end
 """
     lejapointsdiscretesearch(n)
 
-Generate Leja quadrature points and weights on domain `[-1, 1]` using a search over Chebyshev candidates.
+Generate Leja quadrature points and weights on domain `[-1, 1]`.
 
 # Arguments
 - `n`: Number of points.
@@ -187,7 +227,7 @@ end
 """
     lejapoints(n; v=z->sqrt(0.5), method=GradientDescent(), symmetric=false)
 
-Generate Leja quadrature points and weights on domain [-1,1].
+Generate Leja quadrature points and weights on domain [a,b].
 
 # Arguments
 - `n`: Number of points.
@@ -236,9 +276,12 @@ function lejapoints(n; v=z->sqrt(0.5), method=GradientDescent(), symmetric=false
 
     # Compute weights
     p = Vector{Fun}(undef,1)
+    p_eval = Vector{Float64}(undef, n)
+    (x_cc,w_cc) = CCPoints()(n)
     for ii in eachindex(leja)
         p[1] = poly_Fun(leja, ii)
-        w[ii] = sum(p[1])*0.5
+        lagrange_evaluation!(p_eval,leja,ii,x_cc)
+        w[ii] = w_cc' * p_eval
     end
     
     return leja, w

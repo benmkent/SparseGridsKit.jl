@@ -11,12 +11,12 @@ f(x) = 3x^2 + 2x +1.
 ```
 ```@example 1d
     using SparseGridsKit
-    ndims = 1
+    nparams = 1
     f(x) = @. 3.0*x[1]^2 + 2.0*x[1] + 1.0
 ```
-The [`adaptive_sparsegrid`](@ref) function can be called with a function $f$ and the dimension of the function domain `ndims`.
+The [`adaptive_sparsegrid`](@ref) function can be called with a function $f$ and the dimension of the function domain `nparams`.
 ```@example 1d
-(sg, f_on_Z) = adaptive_sparsegrid(f, ndims)
+(sg, f_on_Z) = adaptive_sparsegrid(f, nparams)
 ```
 The function `f` can be exactly represented by a three point interpolant, which is identified in the adaptive algorithm.
 ```@example 1d
@@ -27,14 +27,14 @@ Taking powers $k$ of the polynomial $f$ gives a polynomial $f^k$ of polynomial d
 The adaptive algorithm identifies this.
 ```@example 1d
         f2(x) = f(x).^2
-        (sg, f2_on_Z) = adaptive_sparsegrid(f2, ndims)
+        (sg, f2_on_Z) = adaptive_sparsegrid(f2, nparams)
         # Expect three point approx cubic (1 iteration to suffice)
         all([f2(x)] ≈ interpolate_on_sparsegrid(sg,f2_on_Z,x) for x in test_points), 
         get_n_grid_points(sg) == 5
 ```
 ```@example 1d
         f3(x) = f(x).^3
-        (sg, f3_on_Z) = adaptive_sparsegrid(f3, ndims)
+        (sg, f3_on_Z) = adaptive_sparsegrid(f3, nparams)
         # Expect three point approx cubic (1 iteration to suffice)
         all([f3(x)] ≈ interpolate_on_sparsegrid(sg,f3_on_Z,x) for x in test_points)
         get_n_grid_points(sg)

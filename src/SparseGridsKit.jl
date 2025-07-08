@@ -20,6 +20,15 @@ export Doubling, Linear, Tripling, TwoStep, CustomLevel
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
+export VERBOSE, @verbose
+using Logging
+
+const VERBOSE = Logging.LogLevel(-1)
+
+macro verbose(msg, args...)
+    return esc(:(@logmsg VERBOSE $msg $(args...)))
+end
+
 export genz
 
 ## Use functionality defined in import file
@@ -163,10 +172,40 @@ Interpolates a function (`f_on_grid`) defined on a sparse grid (`sg`) to a set o
 function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     #target_points_matrix = hcat(target_points...)'
 
+    flagmatrix=false
+
+    if !(target_points isa AbstractVector{<:AbstractVector{<:Real}})
+        if target_points isa AbstractVector{<:Real}
+            target_points = [target_points]
+        elseif target_points isa Real
+            target_points = [[target_points]]
+        elseif target_points isa AbstractMatrix{<:AbstractVector{<:Real}}
+            flagmatrix = true
+            matrix_shape = size(target_points)
+            target_points = vec(target_points)
+        else
+            error("target_points must be a vector of vectors, a vector of reals, or a matrix of vectors.")
+        end
+    end
+
+    data_converted = false
+    if f_on_grid isa AbstractVector{<:Real} && length(f_on_grid) == get_n_grid_points(sg)
+        # Data converted to vector of vectors
+        data_converted = true
+        f_on_grid = [[fx] for fx in f_on_grid]
+    end
+
     verifyinputs(sg.domain, target_points)
 
     @debug "Interpolating onto "*string(length(target_points))*" target points"
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
+
+    if flagmatrix
+        f_on_target_points = reshape(f_on_target_points, matrix_shape)
+    end
+    if data_converted
+        f_on_target_points = [fx[1] for fx in f_on_target_points]
+    end
     return f_on_target_points
 end
 """

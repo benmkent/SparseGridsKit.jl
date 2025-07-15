@@ -35,7 +35,7 @@ function adaptive_sparsegrid(f, nparams; maxpts = 100, proftol=1e-4, rule = Doub
 
     while true
         if get_n_grid_points(sg) > maxpts
-            @verbose "Max grid points reached"
+            @debug "Max grid points reached"
             break
         end
         kk+=1
@@ -67,10 +67,10 @@ function adaptive_sparsegrid(f, nparams; maxpts = 100, proftol=1e-4, rule = Doub
         # REFINE
         sg, f_on_z = adaptive_refine(sg, datastore, α_marked, rule, knots)
 
-        @verbose "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
+        @debug "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
     end
 
-    @verbose "Finished in "*string(kk)*" iterations"
+    @debug "Finished in "*string(kk)*" iterations"
 
     return (sg, f_on_z)
 end
@@ -217,10 +217,10 @@ Test profits and sparse grid to determine loop termination
 function adaptive_terminate(sg, p_α, maxpts, proftol)
     retval = false
     if get_n_grid_points(sg) >= maxpts
-        @verbose "Reached max points: "*string(maxpts)
+        @debug "Reached max points: "*string(maxpts)
         retval = true
     elseif all(proftol .> p_α)
-        @verbose "Profits below proftol: "*string(proftol)
+        @debug "Profits below proftol: "*string(proftol)
         retval= true
     end
     return retval

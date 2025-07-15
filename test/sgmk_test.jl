@@ -80,19 +80,19 @@ using MAT, Downloads, FastGaussQuadrature
     # [x_norm_Leja,w_norm_Leja]           = knots_normal_leja(n,mu,sigma,'line');
     # [x_norm_sym_Leja,w_norm_sym_Leja]   = knots_normal_leja(n,mu,sigma,'sym_line');
 
-    @verbose "Skipping exponential PDF"
+    @debug "Skipping exponential PDF"
     # exponential pdf
     # n = 12; lambda = 1; 
     # [x_exp, w_exp]           = gausslaguerre(n,lambda);
     # # [x_exp_leja, w_exp_leja] = knots_exponential(n,lambda);
 
-    @verbose "Skipping gamma PDF"
+    @debug "Skipping gamma PDF"
     # # gamma pdf
     # n = 12; alpha = 1; beta = 2;
     # [x_gamma, w_gamma]           = knots_gamma(n,alpha,beta);
     # [x_gamma_leja, w_gamma_leja] = knots_gamma(n,alpha,beta);
 
-    @verbose "Skipping beta PDF"
+    @debug "Skipping beta PDF"
     # beta pdf
     # n = 12; a = 1; b = 3; 
     # alpha = -0.5; beta = 0.5; 
@@ -101,7 +101,7 @@ using MAT, Downloads, FastGaussQuadrature
     # alpha = 1.5; beta = 1.5; % alpha = beta for symmetric points 
     # [x_beta_sym_leja,w_beta_sym_leja] = knots_beta_leja(n,alpha,beta,a,b,'sym_line');
 
-    @verbose "Skipping triangular PDF"
+    @debug "Skipping triangular PDF"
     # triangular pdf
     # n = 12; a = 0; b = 2;
     # [x_triang,w_triang] = knots_triangular_leja(n,a,b);
@@ -365,7 +365,7 @@ using MAT, Downloads, FastGaussQuadrature
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_gPCE.mat")
         
-        @verbose "Skipping PCE comparison, we only use Chebyshev polynomials at the moment not Legendre"
+        # @debug "Skipping PCE comparison, we only use Chebyshev polynomials at the moment not Legendre"
         # @test sg ≈ S["PCE_coeffs"]
     end
 
@@ -476,5 +476,4 @@ using MAT, Downloads, FastGaussQuadrature
         @test all(isapprox(f_test[i], f_deltaint[i]; atol=tol) for i in 1:length(f_test))
         @test all(isapprox(f_test[i], f_deltaintcost[i]; atol=tol) for i in 1:length(f_test))
     end
-
 end

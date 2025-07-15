@@ -20,15 +20,6 @@ export Doubling, Linear, Tripling, TwoStep, CustomLevel
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
-export VERBOSE, @verbose
-using Logging
-
-const VERBOSE = Logging.LogLevel(-1)
-
-macro verbose(msg, args...)
-    return esc(:(@logmsg VERBOSE $msg $(args...)))
-end
-
 export genz
 
 ## Use functionality defined in import file
@@ -112,7 +103,7 @@ Retrieves the grid points from a sparse grid (`sg`).
 - A vector of vectors, where each inner vector represents a grid point.
 """
 function get_grid_points(sg)
-    matrix_points = sg.sparsegridpts
+    matrix_points = sg.grid_points
     grid_point_vector = [Vector(v) for v in eachrow(matrix_points)]
     @debug "Returned "*string(length(grid_point_vector))*" sparse grid points"
     return grid_point_vector
@@ -130,7 +121,7 @@ Returns the number of grid points in the sparse grid (`sg`).
 - The number of grid points in the sparse grid.
 """
 function get_n_grid_points(sg)
-    n = size(sg.sparsegridpts, 1)
+    n = size(sg.grid_points, 1)
     @debug "Number of grid points "*string(n)
     return n
 end
@@ -147,7 +138,7 @@ Generates a downwards-closed set of multi-indices from a sparse grid (`sg`).
 - An `MISet` containing the downwards-closed set of multi-indices.
 """
 function get_mi_set(sg)
-    mi = sg.MI
+    mi = sg.multi_index_set
     mi_matrix = mi
     @debug "Getting MI set, currently has "*string(size(mi_matrix),1)*" terms"
     mi_matrix_dc = downwards_closed_set(mi_matrix)

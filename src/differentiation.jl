@@ -1,6 +1,4 @@
 using DifferentiationInterface
-import ForwardDiff
-
 backend = AutoForwardDiff()
 
 """

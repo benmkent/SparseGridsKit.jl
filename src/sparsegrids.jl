@@ -298,14 +298,30 @@ function sparsegridpoints(grid, terms_to_unique_points_per_dimension, unique_poi
         end
     end
 
+    N = size(gridasptsindices,2)
+
     # Find unique points
     uniquerows = unique(i -> gridasptsindices[i, :], 1:size(gridasptsindices, 1))
     points_to_unique_indices = gridasptsindices[uniquerows, :]
 
-    terms_to_grid_points = Vector{Integer}(undef, size(gridasptsindices, 1))
+    # terms_to_grid_points = Vector{Integer}(undef, size(gridasptsindices, 1))
+    # for ii in 1:size(gridasptsindices, 1)
+    #     # terms_to_grid_points[ii] = findfirst(gridasptsindices[ii, :] == uniquerow for uniquerow in eachrow(points_to_unique_indices))
+    #     terms_to_grid_points[ii] = findfirst(row -> gridasptsindices[ii, :] == row, eachrow(points_to_unique_indices))
+    # end
+
+
+    # Build dictionary mapping each unique row (as Tuple) to its index
+    row_dict = Dict{NTuple{N, Int}, Int}()
+
+    for (idx, row) in enumerate(eachrow(points_to_unique_indices))
+        row_dict[Tuple(row)] = idx
+    end
+
+    # Lookup the index for each row in gridasptsindices
+    terms_to_grid_points = Vector{Int}(undef, size(gridasptsindices, 1))
     for ii in 1:size(gridasptsindices, 1)
-        # terms_to_grid_points[ii] = findfirst(gridasptsindices[ii, :] == uniquerow for uniquerow in eachrow(points_to_unique_indices))
-        terms_to_grid_points[ii] = findfirst(row -> gridasptsindices[ii, :] == row, eachrow(points_to_unique_indices))
+        terms_to_grid_points[ii] = row_dict[Tuple(gridasptsindices[ii, :])]
     end
 
     grid_points = similar(points_to_unique_indices, Float64)
@@ -585,7 +601,7 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
     end
 end
 
-function computesparsegridc(I)
+function computesparsegridc_old(I)
     jjs = generatebinaryvectors(size(I, 1))
     combination_coeff = Vector{Integer}(undef, size(I, 2))
     combination_coeff .= 0
@@ -599,6 +615,26 @@ function computesparsegridc(I)
         end
     end
     return combination_coeff
+end
+
+function computesparsegridc(I)
+    # Based upon SGMK
+    nn = size(I, 2)
+    coeff = ones(Int, nn)
+
+    bookmarks = unique(i -> I[1,i], 1:size(I,2))
+    bk = [bookmarks[3:end]'.-1 nn nn];
+    for i in 1:nn
+        cc = I[:, i]
+        range = bk[cc[1]]
+        for j in (i+1):range
+            d = I[:, j] .- cc
+            if maximum(d) <= 1 && minimum(d) >= 0
+                coeff[i] += (-1)^sum(d)
+            end
+        end
+    end
+    return coeff
 end
 
 function generatebinaryvectors(n)
@@ -619,14 +655,19 @@ function createlagrangepolys(pts, space=Chebyshev(-1.0..1.0))
     return p
 end
 
+fastvectorgenerator(k, n) = Iterators.product(repeat([1:(k+1)], n)...)
+
 function createsmolyakmiset(n, k)
     iteratorI = fastvectorgenerator(k, n)
-    I = Matrix{Int64}(undef, n, 0)
+    accepted = Vector{NTuple{n,Int64}}()
+    l = n + k
     for vector in iteratorI
-        if norm(vector, 1) <= n + k
-            I = hcat(I, collect(Int64,vector))
+        if sum(vector) <= l
+            push!(accepted, vector)
         end
     end
+
+    I = hcat(collect.(accepted)...)
     I = sortmi(I)
     return I
 end
@@ -642,8 +683,6 @@ function createtensormiset(n, k)
     I = sortmi(I)
     return I
 end
-
-fastvectorgenerator(k, n) = Iterators.product(repeat([1:(k+1)], n)...)
 
 function is_leq(α::Vector, β::Vector)
     # Check if β ≤ α element-wise

@@ -10,7 +10,7 @@ using LinearAlgebra
     sg = create_sparsegrid(mi_set)
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid
-    integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
+    integral_result = integrate_on_sparsegrid(sg, f_on_grid)
     @test integral_result ≈ [1.0,1.0]
 
     n,k = 2,4
@@ -18,7 +18,7 @@ using LinearAlgebra
     sg = create_sparsegrid(mi_set)
     f_on_grid = [[f(x[1]), f(x[2])^2] for x in get_grid_points(sg)]
     # Test integrate_on_sparsegrid
-    integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
+    integral_result = integrate_on_sparsegrid(sg, f_on_grid)
 
     @test integral_result ≈ [2.0,92/15]
 

@@ -21,7 +21,15 @@ mutable struct SparseGrid
     multi_index_set::Matrix{Int} # Matrix of multi-index columns [β_1 β_2 ...]
     combination_coeff::Vector{Int} # Combination technique coefficients
     grid_points::Matrix{Real} # Sparse grid
+    quadrature_weights::Vector{Float64} # Quadrature weights
+    knots::Vector{Any}
+    rules::Vector{Any}
     data::sparse_grid_data # Structure for underlying construction data
+end
+
+function SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, knots, rules, data)
+    sg = SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, [], knots, rules, data)
+    return sg
 end
 
 mutable struct SparseGridApproximation
@@ -79,7 +87,7 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
 
     data = sparse_grid_data(terms, points_to_unique_indices, terms_to_grid_points, coeff_per_term, terms_to_unique_points_per_dimension, sg.data.point_sequences_per_dimension, sg.data.unique_points_per_dimension)
 
-    sparsegrid = SparseGrid(dims, sg.domain, multi_index_set, combination_coeff, grid_points, data)
+    sparsegrid = SparseGrid(dims, sg.domain, multi_index_set, combination_coeff, grid_points, sg.knots, sg.rules, data)
     return sparsegrid
 end
 
@@ -115,6 +123,12 @@ end
 
 function sparsegridproductintegrals(point_sequences_per_dimension, maxmi, knots, rule)
     @debug "Computing product integrals"
+
+    # Check uniqueness of points
+    for pts in point_sequences_per_dimension
+        check_unique_pts(pts)
+    end
+
     # Allocate arrays
     productintegrals = zeros(Float64, maxmi, maxmi, length(point_sequences_per_dimension[end]), length(point_sequences_per_dimension[end]))
 
@@ -274,7 +288,7 @@ function createsparsegrid(multi_index_set; rule=Doubling(), knots=CCPoints())
 
     data = sparse_grid_data(grid, points_to_unique_indices, terms_to_grid_points, coeff_per_term, terms_to_unique_points_per_dimension, point_sequences_per_dimension, unique_points_per_dimension)
 
-    sparsegrid = SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, data)
+    sparsegrid = SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, knots, rule, data)
 
     @debug "Created sparse grid"
     return sparsegrid
@@ -413,7 +427,7 @@ end
     return (unique_points_per_dimension, point_sequences_per_dimension, terms_to_unique_points_per_dimension)
 end
 
-function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing)
+function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing)  
     if isempty(fongrid)
         if isnothing(evaltype)
             error("Must input evaltype if using zero operator")
@@ -672,14 +686,47 @@ function createsmolyakmiset(n, k)
     return I
 end
 
+# function createsmolyakmiset(n,k)
+#     vector = ones(n)
+#     finished = false
+#     accepted = Vector{Vector{Int}}()
+#     l = n + k
+#     mi_norm = n
+#     while !finished
+#         if mi_norm <= l
+#             push!(accepted, vector)
+#         end
+
+#         vector[end] +=1
+#         mi_norm = mi_norm + 1
+#         if mi_norm >= l
+#             for ii = n:-1:2
+#                 if vector[ii] > l
+#                     vector[ii] = 1
+#                     vector[ii-1] += 1
+#                     mi_norm = mi_norm - l + 1
+#                 end
+#             end
+#         end
+#         if vector[1] > l
+#             finished = true
+#         end
+#     end
+#     # return accepted = sortmi(hcat(collect.(accepted)...))
+#     return accepted = hcat(accepted...)
+# end
+
 function createtensormiset(n, k)
     iteratorI = fastvectorgenerator(k, n)
-    I = Matrix{Int64}(undef, n, 0)
+    accepted = Vector{NTuple{n,Int64}}()
+    l = n + k
     for vector in iteratorI
-        if maximum(vector) <= n + k
-            I = hcat(I, collect(Int64,vector))
+        if maximum(vector) <= l
+            push!(accepted, vector)
         end
     end
+
+    I = hcat(collect.(accepted)...)
     I = sortmi(I)
     return I
 end
@@ -728,7 +775,20 @@ function spaceselector(domain)
     return space
 end
 
+function check_unique_pts(pts)
+    @inbounds for i in 1:length(pts)-1
+        pi = pts[i]
+        @inbounds for j in i+1:length(pts)
+            if pi == pts[j]
+                error("Duplicate points detected: pts[$i] == pts[$j] == $(pts[j])")
+            end
+        end
+    end
+    return nothing
+end
+
 function lagrange_evaluation!(y, pts::Vector{<:Real}, ii, targetpoints)
+    # Check uniqueness of points
     n = length(pts)
     pts = Float64.(pts)
     # Denominator

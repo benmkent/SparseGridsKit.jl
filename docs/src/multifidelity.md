@@ -50,7 +50,7 @@ pcl = precompute_lagrange_integrals(5, knots, rule)
 f_on_grid = f_wrapped.(get_grid_points(sg))
 
 # Test integrate_on_sparsegrid
-integral_result = integrate_on_sparsegrid(sg, f_on_grid, pcl)
+integral_result = integrate_on_sparsegrid(sg, f_on_grid)
 ```
 
 It is also possible to use the adaptive sparse grid construction.

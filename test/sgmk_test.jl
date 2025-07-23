@@ -322,8 +322,7 @@ using MAT, Downloads, FastGaussQuadrature
 
         S = create_sparsegrid(miset,knots=knots,rule=rule);
 
-        pcl = precompute_lagrange_integrals(w+3, knots, rule)
-        f_quad = integrate_on_sparsegrid(S,f.(get_grid_points(S)),pcl);
+        f_quad = integrate_on_sparsegrid(S,f.(get_grid_points(S)));
 
         S = read_sgmk_mat("https://raw.githubusercontent.com/lorenzo-tamellini/sparse-grids-matlab-kit/main/docs-examples/testing_unit/test_unit_quadrature.mat")
         @test f_quad ≈ S["f_quad"]

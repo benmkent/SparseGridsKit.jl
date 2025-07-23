@@ -1,9 +1,9 @@
 # Differentiation
 Differentiation is supported for scalar valued functions currently.
-This is achieved using automatic differentiation from the package `ReverseDiff.jl`.
+This is achieved using `DifferentiationInterface.jl`.
 
 ```@example diff
-using SparseGridsKit
+using SparseGridsKit, ForwardDiff
 n = 2
 p(x) = [3*x[1]^3*x[2]^2]
 p_prime(x) = [9*x[1]^2*x[2]^2, 6*x[1]^3*x[2]]

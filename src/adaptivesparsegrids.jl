@@ -136,7 +136,7 @@ function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint, cost
             cost = cost*costpersolve
         end
 
-        p_α[i] = compute_profit(sg_α, sg, f_on_z_α, f_on_z, cost, pcl, type=type)
+        p_α[i] = compute_profit(sg_α, sg, f_on_z_α, f_on_z, cost, type=type)
     end
     return p_α
 end
@@ -158,11 +158,11 @@ Computes the "profit" of a sparse grid supplemented by a multi-index α
 # Returns
 - Computed profit as Expected change in approximation.
 """
-function compute_profit(sg_α, sg, f_α, f, cost, pcl; type=:deltaint)
+function compute_profit(sg_α, sg, f_α, f, cost; type=:deltaint)
     if type == :deltaint
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     elseif type == :deltaintcost
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))/cost
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))/cost
     elseif type == :Linf
         f_interp = interpolate_on_sparsegrid(sg, f, get_grid_points(sg_α))
         profit = maximum(abs.(f_α - f_interp))
@@ -171,7 +171,7 @@ function compute_profit(sg_α, sg, f_α, f, cost, pcl; type=:deltaint)
         profit = maximum(abs.(f_α - f_interp))/cost
     else
         @warn "Invalid profit type " * string(type) * ". Using :deltaint"
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     end
     return profit
 end

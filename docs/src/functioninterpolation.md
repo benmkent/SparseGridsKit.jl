@@ -26,8 +26,7 @@ plot(interpolation_result,
 ```
 Integration is also possible using the sparse grid formulation.
 ```@example approxfun
-pcl = precompute_lagrange_integrals(4)
-expectedvalue = integrate_on_sparsegrid(sg,f_on_grid,pcl)
+expectedvalue = integrate_on_sparsegrid(sg,f_on_grid)
 #plot(expectedvalue)
 ```
 ### Two dimensional Elliptic PDE
@@ -102,9 +101,7 @@ The sparse grid has been constructed using Clenshaw--Curtis points.
 The quadrature rules can be applied assuming an underlying weight function $\rho(y)=0.5^2$.
 If this is interpreted as a probabiliy then integration gives the expected value of the PDE solution.
 ```@example approxfun
-pcl = precompute_lagrange_integrals(k+1)
-
-expectedvalue = ProductFun(integrate_on_sparsegrid(sg,f_on_grid, pcl),d)
+expectedvalue = ProductFun(integrate_on_sparsegrid(sg,f_on_grid),d)
 plot(expectedvalue)
 plot!(title="Approximation of Expected Value",
         xlabel=L"x_1",
@@ -114,7 +111,7 @@ plot!(title="Approximation of Expected Value",
 Similarly an approximation of the variance can be computed and interpolated.
 ```@example approxfun
 square = PF -> ProductFun(PF*PF,d)
-variance = ProductFun(integrate_on_sparsegrid(sg,[square(f_on_grid[i]-expectedvalue) for i in eachindex(f_on_grid)], pcl),d)
+variance = ProductFun(integrate_on_sparsegrid(sg,[square(f_on_grid[i]-expectedvalue) for i in eachindex(f_on_grid)]),d)
 plot(variance)
 plot!(title="Approximation of Variance",
         xlabel=L"x_1",

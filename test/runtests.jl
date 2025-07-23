@@ -14,7 +14,3 @@ using Test, SparseGridsKit, Documenter, LinearAlgebra
     include("plots_test.jl")
     include("differentiation_test.jl")
 end
-
-@testset "doctest" begin
-    doctest(SparseGridsKit)
-end

@@ -370,7 +370,7 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
                 else
                     for j = eachindex(point_sequences_per_dimension[ind][i])
                         push!(indexarrayi, [i, j])
-                    end   
+                    end
                 end
                 push!(indexarray, collect(indexarrayi))
             end

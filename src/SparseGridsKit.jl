@@ -243,19 +243,15 @@ Computes the quadrature weights for a sparse grid (`sg`).
 - Updates the `quadrature_weights` field of the sparse grid with computed weights.
 """
 function compute_quadrature_weights!(sg)
-    n_points = get_n_grid_points(sg)
-    weights = Vector{Float64}(undef, n_points)
-    max_mi = maximum(maximum.(get_mi(get_mi_set(sg))))
-    pcl = precompute_lagrange_integrals(max_mi, sg.knots, sg.rules)
-    precompute = (;productintegrals= pcl);
-    f_vec = fill(0.0, n_points)
-    f_vec[1] = 1.0
-    # weights[1] = integrate_on_sparsegrid(sg, f_vec, pcl)
-    weights[1] = integrateonsparsegrid(sg, f_vec, precompute)
-    for i in 2:n_points
-        f_vec[i-1] = 0.0
-        f_vec[i] = 1.0
-        weights[i] = integrateonsparsegrid(sg, f_vec, precompute)
+    # Compute quadrature weight for each term
+    q = ones(length(sg.data.terms))
+    weights = zeros(get_n_grid_points(sg))
+    for (ii,t) in enumerate(sg.data.terms)
+        for (jj,tii) in enumerate(t)
+            _,w = sg.knots[jj](sg.rules[jj](tii[1]))
+            q[ii] *= w[tii[2]]
+        end
+        weights[sg.data.terms_to_grid_points[ii]] += q[ii] * sg.data.coeff_per_term[ii]
     end
     sg.quadrature_weights = weights
 end

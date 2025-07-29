@@ -23,7 +23,7 @@ bibliography: paper.bib
 # Summary
 Approximation of functions with high dimensional domains is important for modern scientific and engineering problems.
 An example of this is constructing surrogate models for quantities of interest for high dimensional parametrised PDE problems.
-These surrogate models are constructed to give computationally cheap yet accurate approximations that can be used in applications such as uncertainty quantification, optimisation, parameter estimation [@UQHandbook2017].
+These surrogate models are constructed to give computationally cheap yet accurate approximations that can be used in applications such as uncertainty quantification, optimisation and parameter estimation [@UQHandbook2017].
 Surrogates may be constructed with global polynomial approximation on the parameter space and a common approach is the use of *sparse grid* approximation techniques.
 In particular, sparse grid polynomial interpolation techniques allow a practitioner to approximate solutions to parametric problems in a non-intrusive way using existing numerical solvers.
 
@@ -53,7 +53,7 @@ Other popular software packages implementing sparse grid approximation include:
 - `UQLab`: A broad MATLAB uncertainty quantification toolkit [@Marelli2014].
 - `PyApprox`: A Python package for high-dimensional approximation [@PyApprox].
 - `Dakota`: A C++ library for optimisation and surrogate modelling [@Dakota].
-- `UQTk`: A collection of C++/Python uncertianty quantification tools including sparse grid quadrature [@DebusschereUQTk:2017].
+- `UQTk`: A collection of C++/Python uncertianty quantification tools including sparse grid quadrature [@Debusschere2015].
 - `Tasmanian`,`SG++`,: C++ sparse grid approximation implementations with wrappers for many popular software languages [@stoyanov2015tasmanian] [@pflueger10spatially].
 
 `SparseGridsKit.jl` offers specific Julia toolkit with minimal complexity for fast algorithm development and prototyping.

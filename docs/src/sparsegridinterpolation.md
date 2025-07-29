@@ -64,8 +64,8 @@ mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 
 # Define a complicated function
-ndims=100
-f(x) = [genz(n, 1.0, w, "quadraticdecay", "gaussianpeak")(x) for (i,w) = enumerate(range(-1,stop=1,length=ndims))]
+nparams=100
+f(x) = [genz(n, 1.0, w, "quadraticdecay", "gaussianpeak")(x) for (i,w) = enumerate(range(-1,stop=1,length=nparams))]
 f_on_grid = [f(x) for x in get_grid_points(sg)]
 
 xplot = range(-1,stop=1,length=100)

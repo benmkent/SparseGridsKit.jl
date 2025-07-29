@@ -1,5 +1,6 @@
 using ApproxFun
 using SparseArrays
+using Polynomials
 import Base.+
 
 """
@@ -24,7 +25,7 @@ mutable struct SpectralSparseGridApproximation
 end
 
 """
-    SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
+    SpectralSparseGridApproximation(dims, expansionparams, polytypes, coefficients)
 
 Constructs a spectral sparse grid approximation.
 
@@ -38,14 +39,14 @@ Constructs a spectral sparse grid approximation.
 # Returns
 - `SpectralSparseGridApproximation`: An instance of `SpectralSparseGridApproximation`.
 """
-function SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients)
+function SpectralSparseGridApproximation(dims, expansionparams, polytypes, coefficients)
     coefficients = sparse(coefficients)
-    polydegrees, coefficients = get_spectral_poly_representation(expansiondims, coefficients)
+    polydegrees, coefficients = get_spectral_poly_representation(expansionparams, coefficients)
     domain = Vector{Vector{Real}}(undef, dims)
     for i in 1:length(polytypes)
         domain[i] = getdomain(polytypes[i])
     end
-    return SpectralSparseGridApproximation(dims, expansiondims, polytypes, coefficients, polydegrees,domain)
+    return SpectralSparseGridApproximation(dims, expansionparams, polytypes, coefficients, polydegrees,domain)
 end
 
 """
@@ -70,7 +71,9 @@ function (s::SpectralSparseGridApproximation)(x)
             # if isnothing(evaluation)
                 # evaluation = c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
             # else
+                # evaluation = evaluation + c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
                 evaluation = evaluation + c .* prod(Fun(s.polytypes[k],[zeros(s.polydegrees[idx][k]);1])(x[k]) for k = 1:s.dims)
+
             # end
         end
     return evaluation
@@ -275,37 +278,58 @@ Converts a `sparse grid` and corresponding evaluations `fongrid` to a SpectralSp
 - `SpectralSparseGridApproximation` represntation of `sparsegrid` with evaluations `fongrid`.
 """
 function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
-    terms = sparsegrid.terms
-    cterms = sparsegrid.cterms
-    maprowtouniquept = sparsegrid.maptermstosparsegrid
+    terms = sparsegrid.data.terms
+    coeff_per_term = sparsegrid.data.coeff_per_term
+    maprowtouniquept = sparsegrid.data.terms_to_grid_points
     domain = sparsegrid.domain
 
-    ndims = sparsegrid.dims
+    nparams = sparsegrid.dims
     
-    if isa(sparsegrid.polyperlevel[1][1],Function)
-        poly = Vector{Any}(undef,ndims) 
-        for ii = 1:ndims
-            poly[ii] = sparsegrid.polyperlevel
+    if isa(sparsegrid.data.point_sequences_per_dimension, Vector{AbstractVector{<:Real}})
+        point_sequences_per_dimension = Vector{Vector{Vector{<:Real}}}(undef,nparams) 
+        for ii = 1:nparams
+            point_sequences_per_dimension[ii] = sparsegrid.data.point_sequences_per_dimension
         end
     else
-        poly = sparsegrid.polyperlevel
+        point_sequences_per_dimension = sparsegrid.data.point_sequences_per_dimension
     end
 
-
-    polytypes = Vector(undef,ndims)
-    for ii = 1:ndims
-        polytypes[ii] = poly[ii][1][1].space
+    polytypes = Vector{Space}(undef,nparams)
+    for ii = 1:nparams
+        # polytypes[ii] = poly[ii][1][1].space
+        polytypes[ii] = Space(Interval(domain[ii]...))
     end
 
     SSG_total = nothing
+    coeff_ij = Vector{Vector{Float64}}(undef, nparams)
     for (i, row) = enumerate(eachrow(terms))
-        if cterms[i] == 0
+        if coeff_per_term[i] == 0
             continue
         end
-        vectors  = [poly[j][row[1][j][1]][row[1][j][2]].coefficients for j = 1:ndims]
-        f_Fun_i, dims = truncated_kron(vectors)
-        sp_data = SparseVector(f_Fun_i.n,f_Fun_i.nzind, [cterms[i] * fongrid[maprowtouniquept[i]] * f_Fun_i[j] for j in f_Fun_i.nzind])
-        SSG_i = SpectralSparseGridApproximation(ndims, dims, polytypes, sp_data)
+        for j = 1:nparams
+            S = polytypes[j]
+            p = points(S,length(point_sequences_per_dimension[j][end]))
+            v = Vector{Float64}(undef, length(p))
+            lagrange_evaluation!(v, point_sequences_per_dimension[j][row[1][j][1]],row[1][j][2],p);  # values at the default grid
+            f = Fun(S,ApproxFun.transform(S,v));
+            coeff_ij[j] = f.coefficients
+        end
+        # vectors  = [poly[j][row[1][j][1]][row[1][j][2]].coefficients for j = 1:nparams]
+        f_Fun_i, dims = truncated_kron(coeff_ij; tol=1e-15)
+        # vector_data = Vector{eltype(fongrid)}(undef, length(f_Fun_i.nzind))
+
+        # for j in eachindex(f_Fun_i.nzind)
+        #     # Get the multi-index for the current non-zero coefficient
+        #     vector_data[j] = coeff_per_term[i] * fongrid[maprowtouniquept[i]] * f_Fun_i[j]
+        # end
+        sp_data = Vector{eltype(fongrid)}(undef,length(f_Fun_i.nzind))
+        for (ii, sparse_ii) in enumerate(f_Fun_i.nzind)
+            # Get the multi-index for the current non-zero coefficient
+            sp_data[ii] = coeff_per_term[i] * fongrid[maprowtouniquept[i]] * f_Fun_i[sparse_ii]
+        end
+        # sp_data = coeff_per_term[i] * fongrid[maprowtouniquept[i]] * f_Fun_i;
+        # SparseVector(f_Fun_i.n,f_Fun_i.nzind, coeff_per_term[i] * fongrid[maprowtouniquept[i]] * f_Fun_i)
+        SSG_i = SpectralSparseGridApproximation(nparams, dims, polytypes, sparsevec(f_Fun_i.nzind,sp_data))
         if isnothing(SSG_total)
             SSG_total = SSG_i
         else
@@ -381,13 +405,13 @@ Compute the Kronecker product of a list of vectors with truncation.
 
 # Arguments
 - `vectors::Vector{Vector}`: Vector of vectors to compute the Kronecker product.
-- `tol::Float64`: Tolerance value for coefficienet truncation to promote sparsity. Elements with absolute values less than `tol` are set to zero. Default is `1e-10`.
+- `tol::Float64`: Tolerance value for coefficienet truncation to promote sparsity. Elements with absolute values less than `tol` are set to zero. Default is `1e-15` to remove coefficients at machine precision.
 
 # Returns
 - `result`: SparseVector representation of truncated Kronecker product of the input vectors.
 - `tensor_dims::Vector{Int}`: Dimensions of the resulting tensor.
 """
-function truncated_kron(vectors; tol=1e-10)
+function truncated_kron(vectors; tol=1e-15)
     result = sparse(vectors[1])
     for v in vectors[2:end]
         result = kron(result, sparse(v))

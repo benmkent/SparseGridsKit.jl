@@ -104,8 +104,8 @@ end
 
 """
     LejaPoints([a,b],type,v,symmetric)
-    LejaPoints() = LejaPoints([-1,1], :optim, z->sqrt(0.5), false)
-    LejaPoints(domain) = LejaPoints(domain, :optim, z->sqrt(0.5), false)
+    LejaPoints() = LejaPoints([-1,1], :precomputed, z->sqrt(0.5), false)
+    LejaPoints(domain) = LejaPoints(domain, :precomputed, z->sqrt(0.5), false)
     LejaPoints(domain,type) = LejaPoints(domain,type, z->sqrt(0.5), false)
 
 
@@ -113,7 +113,7 @@ Generate Leja points on interval [domain[1],domain[2].
 # Arguments
 - `domain` : Domain
 - `symmetric` : Boolean indicating if the points are symmetric (default is false).
-- `type` : Type of Leja points (:optim or :classic), to use optimisation based or discrete search minimisation.
+- `type` : Type of Leja points (:precomputed or :classic), to use optimisation based or discrete search minimisation.
 - `v` : Function to compute the weight function (default is sqrt(0.5)).
 # Returns
 - `LejaPoints` struct
@@ -124,9 +124,9 @@ struct LejaPoints{T<:Real} <: Points
     type::Symbol
     v::Function
 end
-LejaPoints() = LejaPoints([-1.0, 1.0], false, :optim, z->sqrt(0.5))
-LejaPoints(domain) = LejaPoints(domain, false, :optim, z->sqrt(0.5))
-LejaPoints(domain,symmetric) = LejaPoints(domain, symmetric, :optim, z->sqrt(0.5))
+LejaPoints() = LejaPoints([-1.0, 1.0], false, :precomputed, z->sqrt(0.5))
+LejaPoints(domain) = LejaPoints(domain, false, :precomputed, z->sqrt(0.5))
+LejaPoints(domain,symmetric) = LejaPoints(domain, symmetric, :precomputed, z->sqrt(0.5))
 
 """
     (p::LejaPoints)(n)
@@ -135,8 +135,8 @@ Generate Leja points on interval [a,b].
 - `n` : Number of points
 """
 function (p::LejaPoints)(n)
-    if p.type == :optim
-        xw = lejapoints(n; v=p.v, symmetric=p.symmetric)
+    if p.type == :precomputed
+        xw = lejapoints_precomputed(n;symmetric=p.symmetric)
     elseif p.type == :classic
         xw = lejapointsdiscretesearch(n, type=p.symmetric)
     else

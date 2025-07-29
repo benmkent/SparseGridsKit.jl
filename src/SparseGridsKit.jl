@@ -8,15 +8,15 @@ export SpectralSparseGridApproximation
 export create_sparsegrid, get_grid_points, get_n_grid_points, map_from_to, get_mi_set
 export add_mi, get_mi, get_n_mi, get_margin, get_reduced_margin, create_tensor_miset, create_smolyak_miset, create_box_miset, create_totaldegree_miset, create_rule_miset
 export check_admissibility, check_index_admissibility
-export interpolate_on_sparsegrid, integrate_on_sparsegrid, integrate_L2_on_sparsegrid
+export interpolate_on_sparsegrid, integrate_on_sparsegrid, integrate_L2_on_sparsegrid, compute_quadrature_weights!
 export precompute_lagrange_integrals, precompute_pairwise_norms
 export adaptive_sparsegrid
 export convert_to_spectral_approximation
 export derivative
 
 #export ccpoints, uniformpoints, lejapoints, transformdomain, gausshermitepoints, gausslegendrepoints, lejapoints
-export CCPoints, UniformPoints, GaussLegendrePoints, GaussHermitePoints, LejaPoints, CustomPoints
-export Doubling, Linear, Tripling, TwoStep, CustomLevel
+export CCPoints, UniformPoints, GaussLegendrePoints, GaussHermitePoints, LejaPoints, CustomPoints, Points
+export Doubling, Linear, Tripling, TwoStep, CustomLevel, Level
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
@@ -103,7 +103,7 @@ Retrieves the grid points from a sparse grid (`sg`).
 - A vector of vectors, where each inner vector represents a grid point.
 """
 function get_grid_points(sg)
-    matrix_points = sg.sparsegridpts
+    matrix_points = sg.grid_points
     grid_point_vector = [Vector(v) for v in eachrow(matrix_points)]
     @debug "Returned "*string(length(grid_point_vector))*" sparse grid points"
     return grid_point_vector
@@ -121,7 +121,7 @@ Returns the number of grid points in the sparse grid (`sg`).
 - The number of grid points in the sparse grid.
 """
 function get_n_grid_points(sg)
-    n = size(sg.sparsegridpts, 1)
+    n = size(sg.grid_points, 1)
     @debug "Number of grid points "*string(n)
     return n
 end
@@ -138,7 +138,7 @@ Generates a downwards-closed set of multi-indices from a sparse grid (`sg`).
 - An `MISet` containing the downwards-closed set of multi-indices.
 """
 function get_mi_set(sg)
-    mi = sg.MI
+    mi = sg.multi_index_set
     mi_matrix = mi
     @debug "Getting MI set, currently has "*string(size(mi_matrix),1)*" terms"
     mi_matrix_dc = downwards_closed_set(mi_matrix)
@@ -163,10 +163,40 @@ Interpolates a function (`f_on_grid`) defined on a sparse grid (`sg`) to a set o
 function interpolate_on_sparsegrid(sg, f_on_grid, target_points)
     #target_points_matrix = hcat(target_points...)'
 
+    flagmatrix=false
+
+    if !(target_points isa AbstractVector{<:AbstractVector{<:Real}})
+        if target_points isa AbstractVector{<:Real}
+            target_points = [target_points]
+        elseif target_points isa Real
+            target_points = [[target_points]]
+        elseif target_points isa AbstractMatrix{<:AbstractVector{<:Real}}
+            flagmatrix = true
+            matrix_shape = size(target_points)
+            target_points = vec(target_points)
+        else
+            error("target_points must be a vector of vectors, a vector of reals, or a matrix of vectors.")
+        end
+    end
+
+    data_converted = false
+    if f_on_grid isa AbstractVector{<:Real} && length(f_on_grid) == get_n_grid_points(sg)
+        # Data converted to vector of vectors
+        data_converted = true
+        f_on_grid = [[fx] for fx in f_on_grid]
+    end
+
     verifyinputs(sg.domain, target_points)
 
     @debug "Interpolating onto "*string(length(target_points))*" target points"
     f_on_target_points = interpolateonsparsegrid(sg, f_on_grid, target_points)
+
+    if flagmatrix
+        f_on_target_points = reshape(f_on_target_points, matrix_shape)
+    end
+    if data_converted
+        f_on_target_points = [fx[1] for fx in f_on_target_points]
+    end
     return f_on_target_points
 end
 """
@@ -193,15 +223,41 @@ Integrates a function (`f_on_grid`) over a sparse grid (`sg`) using precomputed 
 # Arguments
 - `sg`: The sparse grid for integration.
 - `f_on_grid`: A vector of function values on the sparse grid.
-- `precomputed_lagrange_integrals`: A vector of precomputed Lagrange integrals.
 
 # Returns
 - The integral of the function over the sparse grid.
 """
-function integrate_on_sparsegrid(sg, f_on_grid, precomputed_lagrange_integrals)
-    precompute = (;productintegrals=precomputed_lagrange_integrals)
-    integral = integrateonsparsegrid(sg, f_on_grid, precompute; evaltype=nothing)
+function integrate_on_sparsegrid(sg, f_on_grid)
+    if isempty(sg.quadrature_weights)
+        compute_quadrature_weights!(sg)
+    end
+    integral = sum(sg.quadrature_weights .* f_on_grid)
     return integral
+end
+
+""" compute_quadrature_weights(sg)
+Computes the quadrature weights for a sparse grid (`sg`).
+# Arguments
+- `sg`: The sparse grid for which to compute the quadrature weights.
+# Returns
+- Updates the `quadrature_weights` field of the sparse grid with computed weights.
+"""
+function compute_quadrature_weights!(sg)
+    n_points = get_n_grid_points(sg)
+    weights = Vector{Float64}(undef, n_points)
+    max_mi = maximum(maximum.(get_mi(get_mi_set(sg))))
+    pcl = precompute_lagrange_integrals(max_mi, sg.knots, sg.rules)
+    precompute = (;productintegrals= pcl);
+    f_vec = fill(0.0, n_points)
+    f_vec[1] = 1.0
+    # weights[1] = integrate_on_sparsegrid(sg, f_vec, pcl)
+    weights[1] = integrateonsparsegrid(sg, f_vec, precompute)
+    for i in 2:n_points
+        f_vec[i-1] = 0.0
+        f_vec[i] = 1.0
+        weights[i] = integrateonsparsegrid(sg, f_vec, precompute)
+    end
+    sg.quadrature_weights = weights
 end
 
 """

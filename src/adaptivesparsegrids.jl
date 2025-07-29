@@ -1,11 +1,11 @@
 """
-    adaptive_sparsegrid(f, ndims; maxpts = 100, proftol = 1e-4, rule=Doubling(), knots=CCPoints(), θ=1e-4, type=:deltaint)
+    adaptive_sparsegrid(f, nparams; maxpts = 100, proftol = 1e-4, rule=Doubling(), knots=CCPoints(), θ=1e-4, type=:deltaint)
 
-Constructs an adaptive sparse grid for approximating the function `f` in `ndims` dimensions.
+Constructs an adaptive sparse grid for approximating the function `f` in `nparams` dimensions.
 
 # Arguments
-- `f`: Function to be approximated taking arguments x with length(x)=ndims.
-- `ndims`: Dimension of domain.
+- `f`: Function to be approximated taking arguments x with length(x)=nparams.
+- `nparams`: Dimension of domain.
 - `maxpts`: (Optional) Maximum number of points to include in the sparse grid. Default is `100`.
 - `proftol`: (Optional) Tolerance for profits. Default is `1e-4`.
 - `rule`: (Optional) Level function(s) for sparse grid. Default is `Doubling()`.
@@ -18,8 +18,8 @@ Constructs an adaptive sparse grid for approximating the function `f` in `ndims`
 - `sg`: Final sparse grid used to approximate `f`
 - `f_on_z`: Evaluations of `f` on grid points in sparse grid `sg`
 """
-function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = Doubling(), knots = CCPoints(), θ=1e-4, type=:deltaint, costfunction=nothing)
-    MI = create_smolyak_miset(ndims,0)
+function adaptive_sparsegrid(f, nparams; maxpts = 100, proftol=1e-4, rule = Doubling(), knots = CCPoints(), θ=1e-4, type=:deltaint, costfunction=nothing)
+    MI = create_smolyak_miset(nparams,0)
     sg = create_sparsegrid(MI; rule=rule, knots=knots)
 
     Z = get_grid_points(sg)
@@ -35,7 +35,7 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = Doubli
 
     while true
         if get_n_grid_points(sg) > maxpts
-            @info "Max grid points reached"
+            @debug "Max grid points reached"
             break
         end
         kk+=1
@@ -67,10 +67,10 @@ function adaptive_sparsegrid(f, ndims; maxpts = 100, proftol=1e-4, rule = Doubli
         # REFINE
         sg, f_on_z = adaptive_refine(sg, datastore, α_marked, rule, knots)
 
-        @info "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
+        @debug "Iteration: "*string(kk)*"    Number of points: "*string(get_n_grid_points(sg))*"    Max profit: "*string(maximum(p_α))
     end
 
-    @info "Finished in "*string(kk)*" iterations"
+    @debug "Finished in "*string(kk)*" iterations"
 
     return (sg, f_on_z)
 end
@@ -94,7 +94,7 @@ function adaptive_solve!(f, datastore, sg)
 
     # Fill new evaluations
     for (ii,z) in enumerate(get_grid_points(sg))
-        if isnothing(f_on_z[ii])
+        if ismissing(f_on_z[ii])
             f_on_z[ii] = f(z)
             add_evaluation!(datastore, z, f_on_z[ii])
         end
@@ -136,7 +136,7 @@ function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint, cost
             cost = cost*costpersolve
         end
 
-        p_α[i] = compute_profit(sg_α, sg, f_on_z_α, f_on_z, cost, pcl, type=type)
+        p_α[i] = compute_profit(sg_α, sg, f_on_z_α, f_on_z, cost, type=type)
     end
     return p_α
 end
@@ -158,11 +158,11 @@ Computes the "profit" of a sparse grid supplemented by a multi-index α
 # Returns
 - Computed profit as Expected change in approximation.
 """
-function compute_profit(sg_α, sg, f_α, f, cost, pcl; type=:deltaint)
+function compute_profit(sg_α, sg, f_α, f, cost; type=:deltaint)
     if type == :deltaint
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     elseif type == :deltaintcost
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))/cost
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))/cost
     elseif type == :Linf
         f_interp = interpolate_on_sparsegrid(sg, f, get_grid_points(sg_α))
         profit = maximum(abs.(f_α - f_interp))
@@ -171,7 +171,7 @@ function compute_profit(sg_α, sg, f_α, f, cost, pcl; type=:deltaint)
         profit = maximum(abs.(f_α - f_interp))/cost
     else
         @warn "Invalid profit type " * string(type) * ". Using :deltaint"
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α, pcl) - integrate_on_sparsegrid(sg, f, pcl))
+        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     end
     return profit
 end
@@ -217,10 +217,10 @@ Test profits and sparse grid to determine loop termination
 function adaptive_terminate(sg, p_α, maxpts, proftol)
     retval = false
     if get_n_grid_points(sg) >= maxpts
-        @info "Reached max points: "*string(maxpts)
+        @debug "Reached max points: "*string(maxpts)
         retval = true
     elseif all(proftol .> p_α)
-        @info "Profits below proftol: "*string(proftol)
+        @debug "Profits below proftol: "*string(proftol)
         retval= true
     end
     return retval
@@ -252,8 +252,8 @@ end
 """
     evaluations_database
 """
-mutable struct EvaluationDictionary
-    dictionary
+mutable struct EvaluationDictionary{T} 
+    dictionary::Dict{Vector{Float64}, T}
 end
 
 
@@ -265,8 +265,8 @@ Creates an empty EvaluationDictionary
 # Returns
 - `evaluations`: EvaluationDictionary
 """
-function EvaluationDictionary()
-    return EvaluationDictionary(Dict())
+function EvaluationDictionary{T}() where T
+    return EvaluationDictionary{T}(Dict{Vector{Float64}, T}())
 end
 
 """
@@ -282,7 +282,7 @@ Creates an EvaluationDictionary from a sparse grid and function evaluations
 - `evaluations`: EvaluationDictionary
 """
 function EvaluationDictionary(sg,f_on_z)
-    evaluations = EvaluationDictionary()
+    evaluations = EvaluationDictionary{eltype(f_on_z)}()
     add_evaluations!(evaluations, sg, f_on_z)
     return evaluations
 end
@@ -342,13 +342,23 @@ Retrieves the evaluations from the evaluations_database
 - `f_on_z`: Function evaluations on the sparse grid
 """
 function retrieve_evaluations(evaluations, sg)
-    f_on_z = Vector(undef, get_n_grid_points(sg))
+    T = eltype(evaluations.dictionary.vals)
+    N = get_n_grid_points(sg)
+    f_on_z = Vector{Union{T, Missing}}(undef, N)
+    all_found = true
+
     for (i, z) in enumerate(get_grid_points(sg))
-        if haskey(evaluations.dictionary, z)
-            f_on_z[i] = evaluations.dictionary[z]
-        else
-            f_on_z[i] = nothing
+        val = get(evaluations.dictionary, z, missing)
+        if val === missing
+            all_found = false
         end
+        f_on_z[i] = val
     end
-    return f_on_z
+
+    if all_found
+        # Convert to Vector{T} with no missing
+        return convert(Vector{T}, f_on_z)
+    else
+        return f_on_z
+    end
 end

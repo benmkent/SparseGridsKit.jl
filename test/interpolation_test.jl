@@ -22,14 +22,14 @@
     mi_set = create_smolyak_miset(n,k)
     sg = create_sparsegrid(mi_set)
     # Define a complicated function
-    ndims = 400
-    f(x) = real.([(2.0 .+ (cos(2*i/ndims*prod(1.0.+x)))) for i=1:ndims])
-    f_on_grid = [f(x) for x in get_grid_points(sg)]
+    nparams = 400
+    f43(x) = real.([(2.0 .+ (cos(2*i/nparams*prod(1.0.+x)))) for i=1:nparams])
+    f_on_grid = [f43(x) for x in get_grid_points(sg)]
     mi_enriched = add_mi(mi_set, get_reduced_margin(mi_set))
     sg_enriched = create_sparsegrid(mi_enriched)
     f_on_grid_2 = interpolate_on_sparsegrid(sg,f_on_grid,get_grid_points(sg_enriched))
     # Both should represent the same polynomial
-    nmc = Integer(1e2);
+    nmc = Integer(1e4);
     v = [2*(rand(n).-1) for ii=1:nmc]
     f_on_v = interpolate_on_sparsegrid(sg,f_on_grid,v)
     f2_on_v = interpolate_on_sparsegrid(sg_enriched,f_on_grid_2,v)

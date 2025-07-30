@@ -6,13 +6,14 @@ import Base.:+
 import Base.:-
 
 mutable struct sparse_grid_data
-    terms::Vector{Any} # Terms in the sparse grid
+    terms::Vector{Tuple}
     points_to_unique_indices::Matrix{Int} # Mapping from terms to unique points
     terms_to_grid_points::Vector{Int} # Mapping from terms to grid points
     coeff_per_term::Vector{Int} # Combination coefficient per term
     terms_to_unique_points_per_dimension::Vector{Dict{Vector{Int},Int}} # Mapping from terms to unique points per dimension
     point_sequences_per_dimension::Vector{Vector{Vector{Float64}}}
     unique_points_per_dimension::Vector{Vector{Float64}} # Unique points per dimension
+    weight_sequences_per_dimension::Vector{Vector{Vector{Float64}}}
 end
 
 mutable struct SparseGrid
@@ -29,6 +30,7 @@ end
 
 function SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, knots, rules, data)
     sg = SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, [], knots, rules, data)
+    compute_quadrature_weights!(sg)
     return sg
 end
 
@@ -85,7 +87,7 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
 
     (points_to_unique_indices, grid_points, terms_to_grid_points) = sparsegridpoints(terms, sg.data.terms_to_unique_points_per_dimension, sg.data.unique_points_per_dimension, size(sg.multi_index_set, 1))
 
-    data = sparse_grid_data(terms, points_to_unique_indices, terms_to_grid_points, coeff_per_term, terms_to_unique_points_per_dimension, sg.data.point_sequences_per_dimension, sg.data.unique_points_per_dimension)
+    data = sparse_grid_data(terms, points_to_unique_indices, terms_to_grid_points, coeff_per_term, terms_to_unique_points_per_dimension, sg.data.point_sequences_per_dimension, sg.data.unique_points_per_dimension, weight_sequences_per_dimension)
 
     sparsegrid = SparseGrid(dims, sg.domain, multi_index_set, combination_coeff, grid_points, sg.knots, sg.rules, data)
     return sparsegrid
@@ -114,7 +116,7 @@ function sparsegridprecompute(maxmi, knots=CCPoints(), rule=Doubling())
     end
     productintegrals = Vector{Any}(undef, length(knots))
     for ii = eachindex(knots)
-        (unique_points_per_dimension, point_sequences_per_dimension, terms_to_unique_points_per_dimension) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], knots[ii].domain)
+        (unique_points_per_dimension, point_sequences_per_dimension, terms_to_unique_points_per_dimension, weight_sequences_per_dimension) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], knots[ii].domain)
         productintegrals[ii] = sparsegridproductintegrals(point_sequences_per_dimension, maxmi, knots[ii], rule[ii])
     end
     @debug "Computed weighted L^2 product integrals in each dimension"
@@ -268,11 +270,12 @@ function createsparsegrid(multi_index_set; rule=Doubling(), knots=CCPoints())
     end
     unique_points_per_dimension = Vector{Vector{Float64}}(undef,dims)
     point_sequences_per_dimension = Vector{Vector{Vector{Float64}}}(undef,dims)
+    weight_sequences_per_dimension = Vector{Vector{Vector{Float64}}}(undef,dims)
     terms_to_unique_points_per_dimension = Vector{Dict{Vector{Int},Int}}(undef,dims)
     domain = Vector{Vector{Float64}}(undef,dims)
     for ii = eachindex(knots)
         domain[ii]=knots[ii].domain
-        (unique_points_per_dimension[ii], point_sequences_per_dimension[ii], terms_to_unique_points_per_dimension[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
+        (unique_points_per_dimension[ii], point_sequences_per_dimension[ii], terms_to_unique_points_per_dimension[ii], weight_sequences_per_dimension[ii]) = sparsegridonedimdata(maxmi, knots[ii], rule[ii], domain[ii])
     end
     @debug "Constructed one dimensional grid data"
 
@@ -286,7 +289,7 @@ function createsparsegrid(multi_index_set; rule=Doubling(), knots=CCPoints())
     (points_to_unique_indices, grid_points, terms_to_grid_points) = sparsegridpoints(grid, terms_to_unique_points_per_dimension, unique_points_per_dimension, dims)
     @debug "Created sparse grid term to sparse grid points mappings"
 
-    data = sparse_grid_data(grid, points_to_unique_indices, terms_to_grid_points, coeff_per_term, terms_to_unique_points_per_dimension, point_sequences_per_dimension, unique_points_per_dimension)
+    data = sparse_grid_data(grid, points_to_unique_indices, terms_to_grid_points, coeff_per_term, terms_to_unique_points_per_dimension, point_sequences_per_dimension, unique_points_per_dimension, weight_sequences_per_dimension)
 
     sparsegrid = SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, knots, rule, data)
 
@@ -315,8 +318,22 @@ function sparsegridpoints(grid, terms_to_unique_points_per_dimension, unique_poi
     N = size(gridasptsindices,2)
 
     # Find unique points
-    uniquerows = unique(i -> gridasptsindices[i, :], 1:size(gridasptsindices, 1))
-    points_to_unique_indices = gridasptsindices[uniquerows, :]
+    # uniquerows = unique(i -> gridasptsindices[i, :], 1:size(gridasptsindices, 1))
+    # points_to_unique_indices = gridasptsindices[uniquerows, :]
+
+    row_dict = Dict{NTuple{N, Int}, Int}()
+    points_to_unique_indices = NTuple{N, Int}[]
+
+    for (ii, row) in enumerate(eachrow(gridasptsindices))
+        tup = Tuple(row)
+        if !haskey(row_dict, tup)
+            row_dict[tup] = length(points_to_unique_indices) + 1
+            push!(points_to_unique_indices, tup)
+        end
+    end
+
+    # Convert back to matrix
+    points_to_unique_indices = reduce(vcat, [collect(t)' for t in points_to_unique_indices])
 
     # terms_to_grid_points = Vector{Integer}(undef, size(gridasptsindices, 1))
     # for ii in 1:size(gridasptsindices, 1)
@@ -356,8 +373,9 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
         combination_coeff = computesparsegridc(multi_index_set)
     end
     n = size(multi_index_set,1)
-    terms = []
-    coeff_per_term = []
+    # terms = Vector{SVector{n,Int}}(undef, 0)
+    terms = Vector{NTuple{n,Vector{Int}}}(undef, 0)
+    coeff_per_term = Vector{Int}(undef, 0)
     for (miind, mi) in enumerate(eachcol(multi_index_set))
         if true #combination_coeff[miind] != 0
             indexarray = Vector{Vector{Vector{Int}}}(undef, 0)
@@ -376,7 +394,7 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
             end
 
             for row in collect(Iterators.product((indexarray[i] for i in eachindex(indexarray))...))
-                push!(terms,SVector{n}(row))
+                push!(terms, NTuple{n, Vector{Int}}(Tuple(row)))
                 push!(coeff_per_term, combination_coeff[miind])
             end
         end
@@ -391,8 +409,9 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
 end
 
 @noinline function sparsegridonedimdata(maxmi, knots, rule, domain)
-    unique_points_per_dimension = Vector{Real}(undef, 0)
-    point_sequences_per_dimension = Vector{Vector{Real}}(undef, maxmi)
+    unique_points_per_dimension = Vector{Float64}(undef, 0)
+    point_sequences_per_dimension = Vector{Vector{Float64}}(undef, maxmi)
+    weight_sequences_per_dimension = Vector{Vector{Float64}}(undef, maxmi)
     #poly = Vector{Vector{Polynomial{Float64,:x}}}(undef, maxmi)
     terms_to_unique_points_per_dimension = Dict{Vector{Int},Int}()
 
@@ -402,9 +421,9 @@ end
     for ii = 1:maxmi
         # Detect special case of fidelity
         if isa(knots, FidelityPoints)
-            point_sequences_per_dimension[ii], w = knots(ii)
+            point_sequences_per_dimension[ii], weight_sequences_per_dimension[ii] = knots(ii)
         else
-            point_sequences_per_dimension[ii], w = knots(rule(ii))
+            point_sequences_per_dimension[ii], weight_sequences_per_dimension[ii] = knots(rule(ii))
         end
 
         # Build points map
@@ -424,7 +443,7 @@ end
             end
         end
     end
-    return (unique_points_per_dimension, point_sequences_per_dimension, terms_to_unique_points_per_dimension)
+    return (unique_points_per_dimension, point_sequences_per_dimension, terms_to_unique_points_per_dimension, weight_sequences_per_dimension)
 end
 
 function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing)  

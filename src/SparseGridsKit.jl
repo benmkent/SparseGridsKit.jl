@@ -242,19 +242,35 @@ Computes the quadrature weights for a sparse grid (`sg`).
 # Returns
 - Updates the `quadrature_weights` field of the sparse grid with computed weights.
 """
+# function compute_quadrature_weights!(sg)
+#     # Compute quadrature weight for each term
+#     q = ones(length(sg.data.terms))
+#     weights = zeros(get_n_grid_points(sg))
+#     for (ii,t) in enumerate(sg.data.terms)
+#         for (jj,tii) in enumerate(t)
+#             q[ii] *= sg.data.weight_sequences_per_dimension[jj][tii[1]][tii[2]]
+#         end
+#         weights[sg.data.terms_to_grid_points[ii]] += q[ii] * sg.data.coeff_per_term[ii]
+#     end
+#     sg.quadrature_weights = weights
+# end
+
 function compute_quadrature_weights!(sg)
-    # Compute quadrature weight for each term
-    q = ones(length(sg.data.terms))
     weights = zeros(get_n_grid_points(sg))
-    for (ii,t) in enumerate(sg.data.terms)
-        for (jj,tii) in enumerate(t)
-            _,w = sg.knots[jj](sg.rules[jj](tii[1]))
-            q[ii] *= w[tii[2]]
+
+    @inbounds for ii in 1:length(sg.data.terms)
+        t = sg.data.terms[ii]
+        qi = 1.0
+        for jj in 1:length(t)
+            wi = sg.data.weight_sequences_per_dimension[jj]
+            qi *= wi[t[jj][1]][t[jj][2]]
         end
-        weights[sg.data.terms_to_grid_points[ii]] += q[ii] * sg.data.coeff_per_term[ii]
+        weights[sg.data.terms_to_grid_points[ii]] += qi * sg.data.coeff_per_term[ii]
     end
+
     sg.quadrature_weights = weights
 end
+
 
 """
     integrate_L2_on_sparsegrid(sg, f_on_grid, precomputed_lagrange_integrals; product=dot, precomputed_pairwise_norms=nothing)

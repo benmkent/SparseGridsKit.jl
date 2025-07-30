@@ -27,9 +27,6 @@ function adaptive_sparsegrid(f, nparams; maxpts = 100, proftol=1e-4, rule = Doub
     f_on_z = [f(z) for z in Z]
     kk=0
 
-    maxmi = 5
-    pcl = precompute_lagrange_integrals(maxmi, knots, rule)
-
     # Set up data store for evaluation recycling
     datastore = EvaluationDictionary(sg, f_on_z)
 
@@ -47,14 +44,8 @@ function adaptive_sparsegrid(f, nparams; maxpts = 100, proftol=1e-4, rule = Doub
         # SOLVE
         adaptive_solve!(f, datastore, sg_enhanced)
 
-        # Update precompute_lagrange_integrals if necessary
-        if maximum([maximum(α) for α in get_mi(get_mi_set(sg_enhanced))])  > maxmi
-            maxmi += 3
-            pcl = precompute_lagrange_integrals(maxmi, knots, rule)
-        end
-
         # ESTIMATE
-        p_α = adaptive_estimate(sg, datastore, pcl, rule, knots, type=type, costfunction=costfunction)
+        p_α = adaptive_estimate(sg, datastore, rule, knots, type=type, costfunction=costfunction)
 
         # MARK
         α_marked = adaptive_mark(RM, p_α, θ)
@@ -109,7 +100,6 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 # Arguments
 - `sg`: Sparse grid.
 - `datastore`: EvaluationDictionary.
-- `pcl`: Precomputed Lagrange integrals.
 - `rule`: Level function(s) for sparse grid.
 - `knots`: Knot function(s) for sparse grid.
 - `type`: Type of profit computation. Default is `:deltaint`.
@@ -117,7 +107,7 @@ Estimates the profit of adding multi-indices {α} in reduced margin to the spars
 # Returns
 - Vector of profits for each multi-index α.
 """
-function adaptive_estimate(sg, datastore, pcl, rule, knots; type=:deltaint, costfunction=nothing)
+function adaptive_estimate(sg, datastore, rule, knots; type=:deltaint, costfunction=nothing)
     f_on_z = retrieve_evaluations(datastore, sg)
 
     MI = get_mi_set(sg)
@@ -152,7 +142,6 @@ Computes the "profit" of a sparse grid supplemented by a multi-index α
 - `f_α`: Function evaluations at grid points in α
 - `f`: Function evaluations on the sparse grid.
 - `cost`: Cost of adding α to the sparse grid.
-- `pcl`: Precomputed Lagrange integrals
 - `type`: Type of profit computation. Default is `:deltaint`. Options are `:deltaint`, `:deltaintcost`, `:Linf`, `:Linfcost`.
 
 # Returns

@@ -231,26 +231,6 @@ function poly_Fun(knots, ind; space=Chebyshev(-1.0..1.0))
 end
 
 """
-    createlagrangepolys_approxfun(pts)
-
-Create a vector of Lagrange polynomial approximation functions for a given set of knots.
-
-# Arguments
-- `pts`: Vector of knots.
-
-# Returns
-- `Vector{Any}`: Vector containing the Lagrange polynomial approximation `Fun`s for each point in `pts`.
-
-"""
-function createlagrangepolys_approxfun(pts, space=Chebyshev(-1.0..1.0))
-    p = Vector{Any}(undef, length(pts))
-    for ii in eachindex(pts)
-        p[ii] = poly_Fun(pts, ii, space)
-    end
-    return p
-end
-
-"""
     convert_to_spectral_approximation(sga::SparseGridApproximation)
 
 Convert a `SparseGridApproximation` object to its spectral approximation.

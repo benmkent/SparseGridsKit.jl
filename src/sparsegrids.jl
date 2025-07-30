@@ -679,15 +679,6 @@ function generatebinaryvectors(n)
     return vectors
 end
 
-function createlagrangepolys(pts, space=Chebyshev(-1.0..1.0))
-    p = Vector{Any}(undef, length(pts))
-    for ii in eachindex(pts)
-        # p[ii] = stablepoly(pts, ii)
-        p[ii] = poly_Fun(pts, ii, space=space)
-    end
-    return p
-end
-
 fastvectorgenerator(k, n) = Iterators.product(repeat([1:(k+1)], n)...)
 
 function createsmolyakmiset(n, k)

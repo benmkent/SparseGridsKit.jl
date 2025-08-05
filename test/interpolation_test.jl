@@ -30,7 +30,7 @@
     f_on_grid_2 = interpolate_on_sparsegrid(sg,f_on_grid,get_grid_points(sg_enriched))
     # Both should represent the same polynomial
     nmc = Integer(1e4);
-    v = [2*(rand(n).-1) for ii=1:nmc]
+    v = [2*rand(n).-1 for ii=1:nmc]
     f_on_v = interpolate_on_sparsegrid(sg,f_on_grid,v)
     f2_on_v = interpolate_on_sparsegrid(sg_enriched,f_on_grid_2,v)
     @test all(isapprox(f_on_v[ii],f2_on_v[ii],rtol=1e-6) for ii in eachindex(v))

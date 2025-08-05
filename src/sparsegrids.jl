@@ -5,8 +5,12 @@ using Polynomials
 import Base.:+
 import Base.:-
 
+mutable struct SparseTerm
+    data::Vector{SVector{2, Int}}
+end
+
 mutable struct sparse_grid_data
-    terms::Vector{Tuple}
+    terms::Vector{SparseTerm}
     points_to_unique_indices::Matrix{Int} # Mapping from terms to unique points
     terms_to_grid_points::Vector{Int} # Mapping from terms to grid points
     coeff_per_term::Vector{Int} # Combination coefficient per term
@@ -306,11 +310,11 @@ function sparsegridpoints(grid, terms_to_unique_points_per_dimension, unique_poi
 
     gridasptsindices = Matrix{Integer}(undef, length(grid), dims)
     for ii = eachindex(grid)
-        for jj = eachindex(grid[ii])
+        for jj = eachindex(grid[ii].data)
             if commonknots == true
-                gridasptsindices[ii, jj] = terms_to_unique_points_per_dimension[grid[ii][jj]]
+                gridasptsindices[ii, jj] = terms_to_unique_points_per_dimension[grid[ii].data[jj]]
             else
-                gridasptsindices[ii, jj] = terms_to_unique_points_per_dimension[jj][grid[ii][jj]]
+                gridasptsindices[ii, jj] = terms_to_unique_points_per_dimension[jj][grid[ii].data[jj]]
             end
         end
     end
@@ -374,7 +378,8 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
     end
     n = size(multi_index_set,1)
     # terms = Vector{SVector{n,Int}}(undef, 0)
-    terms = Vector{NTuple{n,Vector{Int}}}(undef, 0)
+    # terms = Vector{NTuple{n,Vector{Int}}}(undef, 0)
+    terms = Vector{SparseTerm}(undef, 0)
     coeff_per_term = Vector{Int}(undef, 0)
     for (miind, mi) in enumerate(eachcol(multi_index_set))
         if true #combination_coeff[miind] != 0
@@ -394,7 +399,8 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
             end
 
             for row in collect(Iterators.product((indexarray[i] for i in eachindex(indexarray))...))
-                push!(terms, NTuple{n, Vector{Int}}(Tuple(row)))
+                # push!(terms, NTuple{n, Vector{Int}}(Tuple(row)))
+                push!(terms, SparseTerm([SVector{2,Int}(r[1],r[2]) for r in row]))
                 push!(coeff_per_term, combination_coeff[miind])
             end
         end
@@ -477,7 +483,8 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         #for (i, row) = enumerate(eachrow(terms))
             #val = c[i]*prod([polyperlevel[row[1][j][1]][row[1][j][2]](newpt[1][j]) for j in eachindex(row[1])])
             # @inbounds  cweightedpolyprod[k,i] = coeff_per_term[i] * prod(poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1]))
-            row = @view terms[i,:]
+            # row = @view terms[i,:]
+            row = [terms[i].data]
             @inbounds begin
                 acc .= 1.0
                 for j in eachindex(row[1])
@@ -596,12 +603,12 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
 
     nonzero_rows = [any(!iszero(pairwisenorms[maprowtouniquept[i], :])) for i in 1:size(terms,1)]
     valstomultiply = ones(size(terms,1),size(terms,1))
-    n = length(terms[1][1])
+    n = length(terms[1].data)
 
     a = Vector{Int64}(undef,2)
     b = Vector{Int64}(undef,2)
 
-    for (i, rowi) = enumerate(eachrow(terms)), (j, rowj) = enumerate(eachrow(terms))
+    for (i, rowi) = enumerate(terms), (j, rowj) = enumerate(terms)
         @inbounds if nonzero_rows[i] == false
             continue
         end
@@ -613,8 +620,8 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
             end
             #@inbounds @fastmath valstomultiply[i,j] = prod(productintegrals[rowi[1][k][1], rowj[1][k][1], rowi[1][k][2], rowj[1][k][2]] for k in eachindex(rowi[1]))
             # valstomultiply[1] = 1.0
-            rowi1 = rowi[1]
-            rowj1 = rowj[1]
+            rowi1 = rowi.data
+            rowj1 = rowj.data
             @inbounds for k in eachindex(rowi1)
                 a .= rowi1[k]
                 b .= rowj1[k]
@@ -797,31 +804,25 @@ function check_unique_pts(pts)
     return nothing
 end
 
-function lagrange_evaluation!(y, pts::Vector{<:Real}, ii, targetpoints)
+function lagrange_evaluation!(y, pts, ii, targetpoints)
     # Check uniqueness of points
     n = length(pts)
-    pts = Float64.(pts)
     # Denominator
-    denom = one(eltype(pts))
-    @inbounds for j in 1:n
+    denom = 1.0
+    for j in 1:n
         if j != ii
             denom *= pts[ii] - pts[j]
         end
     end
     # Numerator
-    numer = Ref{Float64}(0.0)
-    difference = Ref{Float64}(0.0)
-    @inbounds for k in eachindex(targetpoints)
-        numer[] = 1.0
+    for k in eachindex(targetpoints)
+        numer = 1.0
         x = targetpoints[k]
-        @inbounds for j in 1:n
+        for j in 1:n
             if j != ii
-                difference[] = pts[j]
-                difference[] *= -1.0
-                difference[] += x
-                numer[] *= difference[]
+                numer *= x - pts[j]
             end
         end
-        y[k] = numer[] / denom
+        y[k] = numer / denom
     end
 end

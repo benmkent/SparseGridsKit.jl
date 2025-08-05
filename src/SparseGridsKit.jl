@@ -69,7 +69,14 @@ function create_sparsegrid(mi_set; rule=Doubling(), knots=CCPoints())
     verifyinputs!(mi_set)
     #verifyinputs(knots)
 
-    miset_matrix = hcat(mi_set.mi...)
+    n = length(mi_set.mi[1])  # dimension of multi-index
+    m = length(mi_set.mi)     # number of multi-indices
+
+    miset_matrix = Matrix{Int}(undef, n, m)
+    for j in 1:m
+        @inbounds miset_matrix[:, j] = mi_set.mi[j]
+    end
+
     sg = createsparsegrid(miset_matrix; rule=rule, knots=knots)
     return sg
 end
@@ -242,35 +249,21 @@ Computes the quadrature weights for a sparse grid (`sg`).
 # Returns
 - Updates the `quadrature_weights` field of the sparse grid with computed weights.
 """
-# function compute_quadrature_weights!(sg)
-#     # Compute quadrature weight for each term
-#     q = ones(length(sg.data.terms))
-#     weights = zeros(get_n_grid_points(sg))
-#     for (ii,t) in enumerate(sg.data.terms)
-#         for (jj,tii) in enumerate(t)
-#             q[ii] *= sg.data.weight_sequences_per_dimension[jj][tii[1]][tii[2]]
-#         end
-#         weights[sg.data.terms_to_grid_points[ii]] += q[ii] * sg.data.coeff_per_term[ii]
-#     end
-#     sg.quadrature_weights = weights
-# end
-
 function compute_quadrature_weights!(sg)
     weights = zeros(get_n_grid_points(sg))
 
     @inbounds for ii in 1:length(sg.data.terms)
         t = sg.data.terms[ii]
         qi = 1.0
-        for jj in 1:length(t)
+        for jj in eachindex(t.data)
             wi = sg.data.weight_sequences_per_dimension[jj]
-            qi *= wi[t[jj][1]][t[jj][2]]
+            qi *= wi[t.data[jj][1]][t.data[jj][2]]
         end
         weights[sg.data.terms_to_grid_points[ii]] += qi * sg.data.coeff_per_term[ii]
     end
 
     sg.quadrature_weights = weights
 end
-
 
 """
     integrate_L2_on_sparsegrid(sg, f_on_grid, precomputed_lagrange_integrals; product=dot, precomputed_pairwise_norms=nothing)

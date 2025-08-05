@@ -2,6 +2,7 @@ using SparseGridsKit
 # using GLMakie
 using DistributedSparseGrids
 using StaticArrays 
+using ProfileCanvas
 
 # GLMakie.activate!()
 nparams = 2
@@ -23,7 +24,8 @@ function sparse_grid(N::Int,pointprops; nlevel=6,RT=Float64,CT=Float64)
 	return asg
 end
 
-(sg, f_on_Z) = adaptive_sparsegrid(fun1, nparams, maxpts=10_000, proftol=1e-5)
+(sg, f_on_Z) = adaptive_sparsegrid(fun1, nparams, maxpts=10_000, proftol=1e-2)
+@profview (sg, f_on_Z) = adaptive_sparsegrid(fun1, nparams, maxpts=10_000, proftol=1e-5)
 integral_result = integrate_on_sparsegrid(sg, f_on_Z)
 
 asg = sparse_grid(2, @SVector [1,1])

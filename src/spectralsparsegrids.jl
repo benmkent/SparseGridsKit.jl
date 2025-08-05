@@ -282,7 +282,7 @@ function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
 
     SSG_total = nothing
     coeff_ij = Vector{Vector{Float64}}(undef, nparams)
-    for (i, row) = enumerate(eachrow(terms))
+    for (i, row) = enumerate(terms)
         if coeff_per_term[i] == 0
             continue
         end
@@ -290,7 +290,7 @@ function convert_to_spectral_approximation(sparsegrid::SparseGrid, fongrid)
             S = polytypes[j]
             p = points(S,length(point_sequences_per_dimension[j][end]))
             v = Vector{Float64}(undef, length(p))
-            lagrange_evaluation!(v, point_sequences_per_dimension[j][row[1][j][1]],row[1][j][2],p);  # values at the default grid
+            lagrange_evaluation!(v, point_sequences_per_dimension[j][row.data[j][1]],row.data[j][2],p);  # values at the default grid
             f = Fun(S,ApproxFun.transform(S,v));
             coeff_ij[j] = f.coefficients
         end

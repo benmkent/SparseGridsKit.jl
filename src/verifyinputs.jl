@@ -90,13 +90,19 @@ Checks points are within domain
 - `check`: Boolean
 """
 function verifyinputs(domain, points)
-    check = true
     for p in points
-        if all(p[ii] < domain[ii][1] || p[ii] > domain[ii][2] for ii in eachindex(domain))
-            @warn "Point "*string(p)*" is not within domain."
-            check = false
-            break
+        # Check if point p is outside the domain in **any** coordinate
+        out_of_domain = true
+        @inbounds for ii in eachindex(domain)
+            if domain[ii][1] <= p[ii] <= domain[ii][2]
+                out_of_domain = false
+                break
+            end
+        end
+        if out_of_domain
+            @warn "Point $p is not within domain."
+            return false
         end
     end
-    return check
+    return true
 end

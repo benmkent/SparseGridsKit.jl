@@ -2,13 +2,11 @@ name: Test
 
 on:
   push:
-    tags: '*'
     paths:
       - 'src/**'
       - 'test/**'
-      - 'docs/**'
   pull_request:
-
+  workflow_dispatch:
 jobs:
   build:
     permissions:
@@ -27,3 +25,4 @@ jobs:
         run: julia -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Run Julia package tests
         uses: julia-actions/julia-runtest@v1.11.1
+

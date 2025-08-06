@@ -24,6 +24,11 @@ plot(interpolation_result,
     xlims = (-2,2),
 )
 ```
+A challenge for some non-vector objects is intermediate scalar multiplications introduces additional allocations.
+```@example approxfun
+@time interpolate_on_sparsegrid(sg, f_on_grid, target_points)
+```
+
 Integration is also possible using the sparse grid formulation.
 ```@example approxfun
 expectedvalue = integrate_on_sparsegrid(sg,f_on_grid)

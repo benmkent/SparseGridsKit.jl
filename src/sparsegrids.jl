@@ -497,10 +497,21 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
     acc = Vector{Float64}(undef,ntarget)
     f_placeholder = Vector{Float64}(undef,ntarget)
     # cweightedpolyprod = zeros(length(feval),size(terms,1))
-    cweightedpolyprod_i = zeros(length(feval),1)
+    cweightedpolyprod_i = zeros(Float64,length(feval),1)
     temp_mul = Ref(copy(fongrid[1]))
     temp_mul[] = 0.0* fongrid[1]
     using_floats = typeof(fongrid[1]) <: Number
+
+    # Runtime check if `fongrid` supports indexing and mutation
+    process_elementwise = try
+        # Test if fongrid supports indexing
+        _ = fongrid[1]
+        # Test if feval[1] supports eachindex
+        eachindex(fongrid[1][1])
+        true
+    catch
+        false
+    end
 
     # Precompute lagrange interpolation once
     dims = sparsegrid.dims
@@ -563,18 +574,7 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
             #     end
             #     @inbounds feval[kk] .+= temp_mul[]
             # end
-            @inbounds begin
-                fsrc = fongrid[maprowtouniquept[i]]
-                scale = cweightedpolyprod_i  # Assume this is a Vector{Float64}
-
-                for kk in eachindex(feval)
-                    s = scale[kk]
-                    dest = feval[kk]
-                    for j in eachindex(fsrc)
-                        dest[j] += s * fsrc[j]
-                    end
-                end
-            end
+            fused_update!(feval, fongrid[maprowtouniquept[i]], cweightedpolyprod_i,process_elementwise)
             # else
             #     for kk = eachindex(feval)
             #         temp_mul[] = fongrid[maprowtouniquept[i]]
@@ -590,6 +590,24 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
     # mul!(feval, cweightedpolyprod, fongrid[maprowtouniquept])
 
     return feval
+end
+
+function fused_update!(feval,fsrc,cweightedpolyprod_i,process_elementwise)
+    scale = cweightedpolyprod_i
+    @inbounds for kk in eachindex(feval, scale)
+        y = feval[kk]
+        α = scale[kk]
+
+        if process_elementwise
+            # Non-allocating elementwise update
+            @inbounds @simd for j in eachindex(y, fsrc)
+                y[j] += α * fsrc[j]
+            end
+        else
+            # Fallback to allocating
+            feval[kk] = y + α * fsrc
+        end
+    end
 end
 
 function integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing)

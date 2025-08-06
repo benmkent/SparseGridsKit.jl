@@ -1,6 +1,5 @@
 # Knots
-## Knots functions
-The knot functions are of the form
+The knot functions take the form
 ```
 x,w = knots(n)
 ```
@@ -10,6 +9,9 @@ The outputs are:
 - and `w` the vector of quadrature weights.
 The quadrature weights are generally normalised to sum to one (i.e. representing a probability measure).
 
+These underpin the sparse grid construction.
+
+## Knot Functions Basics
 Often, one chooses to use Clenshaw--Curtis points which are available using the function [`CCPoints()`](@ref).
 ```@example cc
 using SparseGridsKit, Plots
@@ -20,8 +22,9 @@ end
 xlabel!("Clenshaw-Curtis Points")
 ```
 
-Knot functions can be mapped to other domains.
-Perhaps we wish to use Clenshaw-Curtis points on a parameter domain $\Gamma=[0,100]$.
+Knot functions generally default to the unit interval $[-1,1]$.
+They can also be mapped to other domains by passing an interval as an arguement.
+For example, if we wish to use Clenshaw-Curtis points on a parameter domain $\Gamma=[0,100]$ we can do the following.
 ```@example cc
 a = 0
 b = 100
@@ -29,20 +32,31 @@ p = plot(CCPoints([a,b]))
 xlabel!("Clenshaw-Curtis Points")
 ```
 
-## Level functions
-Additionally there are level functions mapping from a *level* $l$ to a number of knots $n$.
+## Level Functions
+Level functions allow us to define sequences of sets of knots with different growth rates.
+The level functions are mappings from a *level* $l$ to a number of knots $n$.
 For example, we often use the approximate *doubling rule*
 ```math
-n(l) = 2^{l-1} + 1 \quad \forall l > 1
+n(l) = 2^{l-1} + 1 \quad \forall l > 1, n(1) = 1.
 ```
-with $n(1) = 1$.
 ```@example doubling
 using SparseGridsKit
 Doubling()(1), Doubling()(2), Doubling()(3)
 ```
 
-Note that *sparsity* in the construction is only attained when using nested sets of points.
-For Clenshaw-Curtis points this is achieved using the doubling rule.
+Example level functions are plotted below.
+```@example doubling
+using Plots, LaTeXStrings
+plot(1:5, Linear().(1:5),label="Linear")
+plot(1:5, TwoStep().(1:5),label="TwoStep")
+plot!(1:5, Doubling().(1:5),label="Doubling")
+plot!(1:5, Tripling().(1:5),label="Tripling")
+xlabel!(L"Level $l$")
+ylabel!(L"$n(l)$")
+```
+
+Later, we will normally use nested sets of points to achieve *sparsity* in the sparse grid construction.
+For Clenshaw-Curtis points, nestedness is achieved using the doubling rule.
 ```@example doubling
 using SparseGridsKit, Plots
 p = plot()
@@ -53,10 +67,10 @@ xlabel!("Clenshaw-Curtis Points")
 ylabel!("Level")
 ```
 
-## More knot functions
+## More Knot Functions
 Functionality is not restricted to knot functions included this package.
 For example, one could use the quadrature points provided in the [`FastGaussQuadrature.jl`](https://github.com/JuliaApproximation/FastGaussQuadrature.jl) package.
-These can be wrapped in [`CustomPoints`](@ref).
+These can be wrapped as a [`CustomPoints`](@ref) to later be used to construct a sparse grid.
 ```@example
 using SparseGridsKit, FastGaussQuadrature, Plots
 
@@ -69,25 +83,25 @@ plot!(UniformPoints(); n=5)
 plot!(CustomGaussChebyshevPoints; n=5)
 plot!(CustomGaussLegendrePoints; n=5)
 ```
-Leja points are also supplied.
+
+Leja points are also avaibile.
 This currently either uses an discrete search based approach to iteratively construct points according to
 ```math
-z^{k+1} = \argmax_{z\in[-1,1]} v(z) \prod_{i=1}^{k} \abs(z-z^i)
+z^{k+1} = \textrm{argmax}_{z\in[-1,1]} v(z) \prod_{i=1}^{k} \textrm{abs}(z-z^i)
 ```
-where $v(z)$ is the weight function, or a precomputed set for a uniform weight function.
-<!-- Optimisation based points differ slightly to points generated using a discrete search. -->
-The default weight is $v(z)= \sqrt(\rho(z))$ for $\rho(z)=0.5$ and unsymmetrical points.
+where $v(z)$ is the weight function.
+The default weight is $v(z)= \sqrt(\rho(z))$ for $\rho(z)=0.5$ and nonsymmetric points.
 ```@example
 using SparseGridsKit, Plots
 
-p = plot()
+p = plot(legend=:bottom)
 symmetric = false
 v(z) = sqrt(0.5)
 plot!(LejaPoints(), label="default")
-plot!(LejaPoints([-1,1],symmetric,:classic,v), label="unsymmetrical")
+plot!(LejaPoints([-1,1],symmetric,:classic,v), label="nonsymmetric")
 symmetric = true
-plot!(LejaPoints([-1,1],symmetric,:classic), label="symmetrical")
-plot!(LejaPoints([-1,1],symmetric,:precomputed), label="precomputed")
+plot!(LejaPoints([-1,1],symmetric,:classic), label="symmetric")
+plot!(LejaPoints([-1,1],symmetric,:precomputed), label="precomputed,symmetric")
 ```
 
 ## Function Reference

@@ -1,7 +1,7 @@
 name = "SparseGridsKit"
 uuid = "979cd4e9-88b3-4541-89ed-3fc35161e54f"
 authors = ["Ben Kent <benkent@live.co.uk>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 ApproxFun = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
@@ -15,7 +15,6 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 ApproxFun = "^0.13"
@@ -35,7 +34,6 @@ RecipesBase = "^1"
 Serialization = "^1.11"
 SparseArrays = "^1.11"
 StaticArrays = "^1"
-StatsBase = "^0.34"
 Test = "^1"
 julia = "^1.9"
 

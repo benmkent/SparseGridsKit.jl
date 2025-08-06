@@ -12,17 +12,11 @@ p = plot(CCPoints([-3,3]))
 plot!(CCPoints([-3,3]); n=21)
 ```
 
-## Multi-Index Set
-For multi-index type `MISet` pairwise scatter plots for each dimension can be produced.
-```@example plots
-miset = create_smolyak_miset(3,3)
-p = misetplot(miset)
-```
-
 ## Sparse Grids
 Sparse grid points in a `SparseGrid` can be plotted.
 This has an optional arguement to select which indices are plotted which is useful in dimensions greater than 3.
 ```@example plots
+miset = create_smolyak_miset(3,3)
 sg = create_sparsegrid(miset)
 p = plot(sg; targetdims=[3,2,1])
 ```

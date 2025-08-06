@@ -17,11 +17,17 @@ f(x) = @. 3.0*x[1]^2 + 2.0*x[1] + 1.0
 The [`adaptive_sparsegrid`](@ref) function can be called with a function $f$ and the dimension of the function domain `nparams`.
 ```@example 1d
 (sg, f_on_Z) = adaptive_sparsegrid(f, nparams)
+SparseGridApproximation(sg, f_on_Z)
 ```
 The function `f` can be exactly represented by a three point interpolant, which is identified in the adaptive algorithm.
 ```@example 1d
+using LinearAlgebra
 test_points = range(-1,stop=1,length=100)
-all([f(x)] ≈ interpolate_on_sparsegrid(sg,f_on_Z,x) for x in test_points),  get_n_grid_points(sg) == 3
+error = norm([[f(x)] - interpolate_on_sparsegrid(sg,f_on_Z,x) for x in test_points])
+println("Error: $error")
+```
+```@example 1d
+get_n_grid_points(sg)
 ```
 Taking powers $k$ of the polynomial $f$ gives a polynomial $f^k$ of polynomial degree $2^k$. Consequently, this is represented exactly using $2^k+1$ interpolation points.
 The adaptive algorithm identifies this.
@@ -74,7 +80,7 @@ f_approx_on_test = interpolate_on_sparsegrid(sg,f_on_Z,test_points)
 norm([f(x) - f_approx_on_test[i] for (i,x) in enumerate(test_points)])
 ```
 
-## Functions
+## Function Reference
 ```@autodocs
 Modules = [SparseGridsKit]
 Pages   = ["adaptivesparsegrids.jl"]

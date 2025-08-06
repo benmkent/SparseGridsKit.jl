@@ -20,6 +20,8 @@ export Doubling, Linear, Tripling, TwoStep, CustomLevel, Level
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
+export MISetPlot
+
 export genz
 
 ## Use functionality defined in import file
@@ -242,7 +244,9 @@ function integrate_on_sparsegrid(sg, f_on_grid)
     return integral
 end
 
-""" compute_quadrature_weights(sg)
+""" 
+    compute_quadrature_weights!(sg)
+
 Computes the quadrature weights for a sparse grid (`sg`).
 # Arguments
 - `sg`: The sparse grid for which to compute the quadrature weights.

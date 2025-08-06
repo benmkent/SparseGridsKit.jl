@@ -3,17 +3,21 @@ Once a sparse grid is constructed, a polynomial approximation is formed by pairi
 
 If the multi-index set is admissible, and the sequences of sets of points are nested this approximation is an interpolating polynomial.
 
-## One-dimensional interpolation
+## One-dimensional Interpolation
 Consider a simple example approximating the function $f:[-1,1]\to\mathbb{R}$
 ```math
 f(x) = 3x^2 + 2x + 1
 ```
 Ths is expressed as the function `f`.
 ```@example interp1
-f(x) = [@. 3.0 * x[1]^2 + 2.0 * x[1] + 1.0]
+f(x) = @. 3.0 * x[1]^2 + 2.0 * x[1] + 1.0
 ```
-Notice that the function `f` returns a one element `Vector`.
-This is not essential, but is advisable as vectors and scalars are treated differently in `julia`.
+
+!!! note
+Notice that the function `f` returns a scalar.
+It is not essential, but it is advisable to use vector valued functions due to the mutability.
+In this simple example, the extra allocations due to using scalars will not be an issue.
+!!!
 
 We can construct a one point approximation (i.e. constant polynomial).
 The function `f` is evaluated on the grid points accessed via [`get_grid_points`](@ref).
@@ -27,10 +31,11 @@ f_on_grid = [f(x) for x in get_grid_points(sg)]
 The sparse grid `sg` is paired with the point evaluations to interpolate on to target points.
 Notice that whilst we are in one-dimension, `target_points` is still a `Vector` of `Vector`s
 ```@example interp1
-target_points = [[x] for x in -1.0:0.5:1.0]
+target_points = [[x] for x in -1.0:0.1:1.0]
 interpolation_result = interpolate_on_sparsegrid(sg, f_on_grid, target_points)
 ```
 The constant approximation is $f\approx 1$.
+
 It is clear a better approximation can be formed.
 This is attained with a higher degree polynomial approximation -- derived from a larger multi-index set.
 ```@example interp1
@@ -40,15 +45,22 @@ f_on_grid_new = [f(x) for x in get_grid_points(sg_new)]
 
 interpolation_result_new = interpolate_on_sparsegrid(sg_new, f_on_grid_new, target_points)
 
-norm([interpolation_result_new[i] - f(target_points[i]) for i in eachindex(target_points)]) < 1e-5
+error = norm([interpolation_result_new[i] - f(target_points[i]) for i in eachindex(target_points)])
+println("ℓ^2 Error: $error")
+```
+This is illustrated in the following plot.
+```@interp1
+plot(SparseGridApproximation(sg,f_on_grid); label="Initial Grid")
+plot!(SparseGridApproximation(sg_new,f_on_grid_new); label="Enriched Grid")
+plot!(f; label="f")
 ```
 
 The number of grid points can be checked using [`get_n_grid_points`](@ref) and is seen to equal three.
-It is therefore no surprise that the approximation error is at machine precision - we can exactly represent the function `f` as a three point interpolant.
+It is therefore no surprise that the approximation error is at machine precision - we can exactly represent the degree two polynomial `f` as a three point interpolant.
 ```@example interp1
-get_n_grid_points(sg_new) == 3
+get_n_grid_points(sg_new)
 ```
-## Multi-dimensional interpolation
+## Multi-dimensional Interpolation
 These ideas extend to vector valued functions with multi-dimensional domains.
 Consider a function
 ```math
@@ -84,7 +96,8 @@ The norm of the error vector is computed and is small, but certainly not at mach
 nmc = Integer(1e2);
 V = [2 * rand(n) .- 1 for ii = 1:nmc]
 f_on_v = [interpolate_on_sparsegrid(sg, f_on_grid, [v])[1] for v in V]
-norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
+error = norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
+println("ℓ^2 Error: $error")
 ```
 If we add multi-indices to the multi-index set we should have a better, higher degree polynomial approximation.
 The function $f$ is analytic so we expect the polynomial approximation to converge quickly.
@@ -94,7 +107,8 @@ mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 f_on_grid = [f(x) for x in get_grid_points(sg)]
 f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, V)
-norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
+error = norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
+println("ℓ^2 Error: $error")
 ```
 ```@example interp4
 n, k = 4, 7
@@ -102,7 +116,8 @@ mi_set = create_smolyak_miset(n, k)
 sg = create_sparsegrid(mi_set)
 f_on_grid = [f(x) for x in get_grid_points(sg)]
 f_on_v = interpolate_on_sparsegrid(sg, f_on_grid, V)
-norm([f_on_v[i] - f(V[i]) for i in eachindex(V)]) < 1e-5
+error = norm([f_on_v[i] - f(V[i]) for i in eachindex(V)])
+println("ℓ^2 Error: $error")
 ```
 Later, the function [`adaptive_sparsegrid`](@ref) will consider a greedy construction of the multi-index set to reduce the approximation error.
 

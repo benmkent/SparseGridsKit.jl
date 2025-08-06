@@ -42,8 +42,10 @@ plot!(  title="Sparse Grid Combined",
         xlabel="y_1",
         ylabel="y_2")
 ```
+
+# More complicated Sparse Grids
 More complex grids can be constructed.
-For example consider increasing the dimension $n$ and using more multi-indices in the multi-index set. 
+For example, consider increasing the dimension $n$ and using more multi-indices in the multi-index set. 
 ```@example sg
 n, k = 3, 3
 mi_set = create_smolyak_miset(n, k)
@@ -63,8 +65,8 @@ nsteps = 100
 end
 ```
 ## Mixed Knots Sparse Grids
-It is possible to mix the type of points in a grid.
-To demonstrate, consider linear points $$n\mapsto\{1,2,...,n\}$$ in the first dimension, Clenshaw--Curtis points on a domain $\Gamma_2=[0,100]$ in the second dimension and uniformly spaced points on the domain $[-1,1]$  in the third dimension.
+It is possible to mix the type of `Knots` used in to construct a sparse grid.
+To demonstrate, consider Clenshaw--Curtis points on a domain $\Gamma_1=[-1,1] in the first dimension, Clenshaw--Curtis points on a domain $\Gamma_2=[0,100]$ in the second dimension and uniformly spaced points on the domain $[-1,1]$ in the third dimension.
 ```@example mixed
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid

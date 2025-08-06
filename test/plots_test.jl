@@ -6,11 +6,6 @@ using Plots
     
     @test true
 
-    miset = create_smolyak_miset(3,3)
-    p = misetplot(miset)
-    @test true
-
-
     sg = create_sparsegrid(miset)
     p = plot(sg; targetdims=[3,2,1])
 

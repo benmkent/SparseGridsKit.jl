@@ -20,8 +20,6 @@ export Doubling, Linear, Tripling, TwoStep, CustomLevel, Level
 
 export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 
-export MISetPlot
-
 export genz
 
 ## Use functionality defined in import file

@@ -162,6 +162,7 @@ function compute_profit(sg_α, sg, f_α, f, cost; type=:deltaint)
         @warn "Invalid profit type " * string(type) * ". Using :deltaint"
         profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     end
+
     return profit
 end
 

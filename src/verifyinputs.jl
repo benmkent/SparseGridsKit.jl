@@ -94,7 +94,7 @@ function verifyinputs(domain, points)
         # Check if point p is outside the domain in **any** coordinate
         out_of_domain = true
         @inbounds for ii in eachindex(domain)
-            if domain[ii][1] <= p[ii] <= domain[ii][2]
+            if domain[ii][1] <= p[ii] && p[ii] <= domain[ii][2]
                 out_of_domain = false
                 break
             end

@@ -263,7 +263,7 @@ using MAT, Downloads, FastGaussQuadrature
         I = MISet(I)
         knots1           = GaussLegendrePoints([0,1]);
         knots2           = LejaPoints([-1,1],false,:classic, z->sqrt(0.5));
-        lev2knots(l)     = Linear()(l);
+        lev2knots        = Linear();
         S_given_multiidx = create_sparsegrid(I,knots=[knots1,knots2],rule=[lev2knots,lev2knots]);
 
 

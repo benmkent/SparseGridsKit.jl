@@ -23,11 +23,11 @@ export Fidelity, FidelityPoints, multifidelityfunctionwrapper
 export genz
 
 ## Use functionality defined in import file
-include("sparsegrids.jl")
 include("genz.jl")
 include("misets.jl")
 include("knots.jl")
 include("knots_structures.jl")
+include("sparsegrids.jl")
 include("adaptivesparsegrids.jl")
 include("spectralsparsegrids.jl")
 include("verifyinputs.jl")
@@ -136,7 +136,7 @@ end
 """
     get_mi_set(sg)
 
-Generates a downwards-closed set of multi-indices from a sparse grid (`sg`).
+Gets set of multi-indices from a sparse grid (`sg`).
 
 # Arguments
 - `sg`: A sparse grid object.
@@ -147,10 +147,10 @@ Generates a downwards-closed set of multi-indices from a sparse grid (`sg`).
 function get_mi_set(sg)
     mi = sg.multi_index_set
     mi_matrix = mi
-    @debug "Getting MI set, currently has "*string(size(mi_matrix),1)*" terms"
-    mi_matrix_dc = downwards_closed_set(mi_matrix)
-    @debug "Enforced downwards close, now  "*string(size(mi_matrix_dc,1))*" terms"
-    mi_set = MISet([Vector(v) for v in eachcol(mi_matrix_dc)])
+    # @debug "Getting MI set, currently has "*string(size(mi_matrix),1)*" terms"
+    # mi_matrix_dc = downwards_closed_set(mi_matrix)
+    # @debug "Enforced downwards close, now  "*string(size(mi_matrix_dc,1))*" terms"
+    mi_set = MISet([Vector(v) for v in eachcol(mi_matrix)])
     return mi_set
 end
 

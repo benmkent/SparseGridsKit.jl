@@ -280,7 +280,7 @@ Checks the admissibility of a single multi-index `mi` in a multi-index set `mise
 """
 function check_index_admissibility(miset::MISet, mi)
     admissibile = true
-    mi_missing = []
+    mi_missing = Vector{Vector{Int}}(undef,0)
     I = copy(get_mi(miset))
     mi = copy(mi)
     if isa(mi, Vector{Int})

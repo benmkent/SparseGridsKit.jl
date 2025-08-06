@@ -45,8 +45,8 @@ Computes the derivative of a SpectralSparseGridApproximation object.
 function derivative(ssg::SpectralSparseGridApproximation; sparsegrid=nothing)
     # Get corresponding sparse grid
     if isnothing(sparsegrid)
-        knots = Vector(undef, length(ssg.polytypes))
-        rules = Vector(undef, length(ssg.polytypes))
+        knots = Vector{Points}(undef, length(ssg.polytypes))
+        rules = Vector{Level}(undef, length(ssg.polytypes))
         # Decide on knots and rules
         for (ii,pt) in enumerate(ssg.polytypes)
             if isa(pt,Chebyshev)

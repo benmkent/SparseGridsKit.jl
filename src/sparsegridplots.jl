@@ -56,7 +56,7 @@ Recipe for plotting approximations based on sparse grids. For more than two dime
 
 """
 @recipe function f(sga::Union{SparseGridApproximation,SpectralSparseGridApproximation}; targetdims=[1,2])
-    midpoint = mean.(sga.domain)
+    midpoint = 0.5*sum.(sga.domain)
 
     n = 100
     if length(midpoint) == 1

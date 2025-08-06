@@ -14,17 +14,6 @@ Adds a new set of multi-indices (`mi_set_new`) to an existing multi-index set (`
 # Returns
 - A new `MISet` containing the combined and sorted multi-indices.
 """
-# function add_mi(mi_set::MISet, mi_set_new::MISet)
-#     mi = copy(get_mi(mi_set))
-#     mi_new = get_mi(mi_set_new)
-#     append!(mi, mi_new)
-#     col_matrix = hcat(mi...)
-#     col_matrix_unique = unique(eachcol(col_matrix))
-#     col_matrix_sorted = sortmi(hcat(col_matrix_unique...))
-#     mi_set_new = MISet([Vector(v) for v in eachcol(col_matrix_sorted)])
-#     return mi_set_new
-# end
-
 function add_mi(mi_set::MISet, mi_set_new::MISet)
     all_mi = get_mi(mi_set)
     new_mi = get_mi(mi_set_new)
@@ -49,29 +38,6 @@ Adds a single new multi-index (`mi_new`) to an existing multi-index set (`mi_set
 # Returns
 - A new `MISet` containing the updated and sorted multi-indices.
 """
-# function add_mi(mi_set::MISet, mi_new::Vector)
-#     mi = copy(get_mi(mi_set))
-#     append!(mi, [mi_new])
-#     col_matrix = hcat(mi...)
-#     col_matrix_unique = unique(eachcol(col_matrix))
-#     col_matrix_sorted = sortmi(hcat(col_matrix_unique...))
-#     mi_set_new = MISet([Vector(v) for v in eachcol(col_matrix_sorted)])
-#     return mi_set_new
-# end
-
-# function add_mi(mi_set::MISet, mi_new::Vector{Int})
-#     # Convert current set to a Set of tuples for fast uniqueness
-#     existing = Set{NTuple{length(mi_new), Int}}(Tuple.(get_mi(mi_set)))
-
-#     # Add new multi-index if not present
-#     push!(existing, Tuple(mi_new))
-
-#     # Convert back to sorted MISet (assuming sortmi sorts columns)
-#     # mat = sortmi(hcat(map(collect, existing)...))
-#     mat = sortmi(hcat((collect(c) for c in existing)...))
-
-#     return MISet([vec for vec in eachcol(mat)])
-# end
 function add_mi(mi_set::MISet, mi_new::Vector{Int})
     existing = Set{NTuple{length(mi_new), Int}}(Tuple.(get_mi(mi_set)))
     push!(existing, Tuple(mi_new))

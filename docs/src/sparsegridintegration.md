@@ -18,6 +18,7 @@ for a weight function $\rho(x)=0.5^2$.
 The constant approximation is $f(x)\approx[1,1]$.
 The approximate integral using the constant approximation is equal to $[1,1]$.
 ```@example int1
+using SparseGridsKit
 n,k = 2,0
 mi_set = create_smolyak_miset(n,k)
 

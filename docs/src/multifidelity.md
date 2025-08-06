@@ -8,7 +8,7 @@ using SparseGridsKit
 FidelityPoints()(3), Fidelity()(3)
 ```
 
-A simple multi-fidelity model considers a constant function $f(x)=y_1^2 + sin(y_2) + y_3$, subject to errors $10^-alpha$.
+A simple multi-fidelity model considers a constant function $f(x)=y_1^2 + sin(y_2) + y_3$, subject to errors $10^{-\alpha}$.
 Functions are specified a $f(\vec{\alpha},\vec{y})$ where the vector $\vec{\alpha}$ controls the fidelity and $\vec{y}$ is simply the parameter as usual.
 ```@example mf
 f(y) = y[1]^2 + sin(y[2]) + y[3]
@@ -18,7 +18,7 @@ nparams = 3
 f_fidelities(alpha,y) = f(y) + 10^(-alpha[1])
 ```
 
-The rule for fidelity is (`Fidelity`)(@ref).
+The rule that must be used for a fidelity is [`Fidelity`](@ref).
 This returns $1$ for all input levels as there is only one model per level.
 The knots are [`FidelityPoints`](@ref), which returns the input value plus a weight zero.
 The knot function is treated as a special case in the sparse grid construction.
@@ -27,9 +27,11 @@ maxfidelity = 5
 rule = [fill(Fidelity(),nfid)..., fill(Doubling(),nparams)...]
 knots = [fill(FidelityPoints(),nfid)..., fill(CCPoints(),nparams)...]
 ```
+The domain for `FidelityPoints` is by default from `1` to the maximum integer, resulting in the large number above.
 
 We wrap the function $f$ using [`multifidelityfunctionwrapper`](@ref).
 This allows the user to use the single fidelity sparse grid construction, with function calls separated as $z=[\vec{\alpha},\vec{y}]$.
+Note that `knots` is passed as a parameter: this is used to identify the splitting for the function.
 ```@example mf
 f_wrapped = multifidelityfunctionwrapper(f_fidelities,knots)
 
@@ -40,7 +42,7 @@ sg = create_sparsegrid(MI; knots=knots, rule=rule)
 @show f_eval = f_wrapped.(get_grid_points(sg))
 ```
 Finally, interpolation and integration are possible on the sparse grid.
-Interpolation currently requires dummy values to give a complete parameter vector $[\vec{alpha} \vec{y}]$.
+Interpolation currently requires dummy values to give a complete parameter vector $[\vec{\alpha}, \vec{y}]$.
 In the future this may be simplified.
 ```@example mf
 interpolate_on_sparsegrid(sg, f_eval, [[fill(1,nfid)..., fill(0.0,nparams)...]])

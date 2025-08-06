@@ -32,7 +32,6 @@ A challenge for some non-vector objects is intermediate scalar multiplications i
 Integration is also possible using the sparse grid formulation.
 ```@example approxfun
 expectedvalue = integrate_on_sparsegrid(sg,f_on_grid)
-#plot(expectedvalue)
 ```
 ### Two dimensional Elliptic PDE
 The `ApproxFun` package offers a fast way to solve a model elliptic PDE.
@@ -46,7 +45,7 @@ A parametric forcing function is defined with a parameter domain $\Gamma=[-1,1]^
 ```@example approxfun
 x,y = Fun(d)
 # Forcing is parametric
-f = z -> ProductFun((x,y)->exp.(-(1.01+z[1])*(x+0.3)^2-2(y-z[2])^2))  # use broadcasting as exp(f) not implemented in 2D
+f = z -> ProductFun((x,y)->exp.(-(1.01+z[1])*(x+0.3)^2-2(y-z[2])^2))
 ```
 The forced elliptic PDE
 ```math

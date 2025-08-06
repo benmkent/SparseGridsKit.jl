@@ -484,8 +484,22 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         zero_elem = zero(fongrid[1])
     end
     feval = Vector{typeof(zero_elem)}(undef, length(targetpoints))
-    for i in eachindex(feval)
-        feval[i] = copy(zero_elem)
+    copyable = try 
+        copy(zero_elem) 
+        true
+     catch 
+        false 
+    end
+    if copyable
+        for i in eachindex(feval)
+            feval[i] = copy(zero_elem)
+        end
+    else
+        # Assume produces a new object
+        @warn "Object cannot be copied, assuming scalar multiplication creates new object"
+        for i in eachindex(feval)
+            feval[i] = 0.0*zero_elem
+        end
     end
     terms = sparsegrid.data.terms
     coeff_per_term = sparsegrid.data.coeff_per_term
@@ -498,9 +512,6 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
     f_placeholder = Vector{Float64}(undef,ntarget)
     # cweightedpolyprod = zeros(length(feval),size(terms,1))
     cweightedpolyprod_i = zeros(Float64,length(feval),1)
-    temp_mul = Ref(copy(fongrid[1]))
-    temp_mul[] = 0.0* fongrid[1]
-    using_floats = typeof(fongrid[1]) <: Number
 
     # Runtime check if `fongrid` supports indexing and mutation
     process_elementwise = try
@@ -510,6 +521,7 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         eachindex(fongrid[1][1])
         true
     catch
+        @warn "Object cannot be indexed, this may introduce intermediate allocation"
         false
     end
 

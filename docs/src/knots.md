@@ -69,14 +69,13 @@ plot!(UniformPoints(); n=5)
 plot!(CustomGaussChebyshevPoints; n=5)
 plot!(CustomGaussLegendrePoints; n=5)
 ```
-SparseGridsKit
-Leja point generation is also supplied.
-This currently either uses an optimisation based approach to iteratively construct points according to
+Leja points are also supplied.
+This currently either uses an discrete search based approach to iteratively construct points according to
 ```math
 z^{k+1} = \argmax_{z\in[-1,1]} v(z) \prod_{i=1}^{k} \abs(z-z^i)
 ```
-where $v(z)$ is the weight function.
-Optimisation based points differ slightly to points generated using a discrete search.
+where $v(z)$ is the weight function, or a precomputed set for a uniform weight function.
+<!-- Optimisation based points differ slightly to points generated using a discrete search. -->
 The default weight is $v(z)= \sqrt(\rho(z))$ for $\rho(z)=0.5$ and unsymmetrical points.
 ```@example
 using SparseGridsKit, Plots
@@ -85,9 +84,10 @@ p = plot()
 symmetric = false
 v(z) = sqrt(0.5)
 plot!(LejaPoints(), label="default")
-plot!(LejaPoints([-1,1],symmetric,:optim,v), label="unsymmetrical")
+plot!(LejaPoints([-1,1],symmetric,:classic,v), label="unsymmetrical")
 symmetric = true
-plot!(LejaPoints([-1,1],symmetric), label="symmetrical")
+plot!(LejaPoints([-1,1],symmetric,:classic), label="symmetrical")
+plot!(LejaPoints([-1,1],symmetric,:precomputed), label="precomputed")
 ```
 
 ## Function Reference

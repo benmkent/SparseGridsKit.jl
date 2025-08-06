@@ -126,7 +126,8 @@ struct LejaPoints{T<:Real} <: Points
 end
 LejaPoints() = LejaPoints([-1.0, 1.0], false, :precomputed, z->sqrt(0.5))
 LejaPoints(domain) = LejaPoints(domain, false, :precomputed, z->sqrt(0.5))
-LejaPoints(domain,symmetric) = LejaPoints(domain, symmetric, :precomputed, z->sqrt(0.5))
+LejaPoints(domain,symmetric) = LejaPoints(domain, symmetric, :precomputed)
+LejaPoints(domain,symmetric, type) = LejaPoints(domain, symmetric, type, z->sqrt(0.5))
 
 """
     (p::LejaPoints)(n)

@@ -59,12 +59,12 @@ A maximum level number is selected and for each domain dimension all pairwise $L
 
 For example, the pairwise integrals are computed, and we can extract the pairwise inner products for the level $2$ and level $3$ polynomials.
 ```@example int1
-    using SparseGridsKit, LinearAlgebra
-    pcl = precompute_lagrange_integrals(7)
-    level1 = 2
-    level2 = 3
-    domaindim = 1
-    pcl[domaindim][level1,level2,:,:]
+using SparseGridsKit, LinearAlgebra
+pcl = precompute_lagrange_integrals(7)
+level1 = 2
+level2 = 3
+domaindim = 1
+pcl[domaindim][level1,level2,:,:]
 ```
 This precomputation step is generally not too expensive but uses a moderate amount of memory.
 ```@example int1
@@ -85,7 +85,7 @@ where $Z$ is the set of sparse grid points.
 
 For example, the function $f(x)=x$ has the weighted $L_{\rho}^2([-1,1])$ norm equal to 
 ```math
-\Vert x^2 \Vert_{L_{\rho}^2([-1,1])} = \sqrt{3}
+\Vert x^2 \Vert_{L_{\rho}^2([-1,1])} = \frac{1}{\sqrt{3}}
 ```
 for weight function $\rho=0.5$.
 ```@example int1
@@ -102,7 +102,7 @@ println("Quadrature: $l2_integral_result, Results: $result")
 ```
 Similarly, for $x^2$ we get
 ```math
-\Vert x^2 \Vert_{L_{\rho}^2([-1,1])}=\sqrt{5}.
+\Vert x^2 \Vert_{L_{\rho}^2([-1,1])}=\frac{1}{\sqrt{5}}.
 ``` 
 ```@example int1
 n,k = 1,3

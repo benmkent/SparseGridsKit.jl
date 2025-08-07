@@ -35,14 +35,20 @@ The adaptive algorithm identifies this.
 f2(x) = f(x).^2
 (sg, f2_on_Z) = adaptive_sparsegrid(f2, nparams)
 # Expect three point approx cubic (1 iteration to suffice)
-all([f2(x)] ≈ interpolate_on_sparsegrid(sg,f2_on_Z,x) for x in test_points), 
+error = norm([f2(x)] ≈ interpolate_on_sparsegrid(sg,f2_on_Z,x) for x in test_points), 
+println("Error: $error")
+```
+```@example 1d
 get_n_grid_points(sg) == 5
 ```
 ```@example 1d
 f3(x) = f(x).^3
 (sg, f3_on_Z) = adaptive_sparsegrid(f3, nparams)
 # Expect three point approx cubic (1 iteration to suffice)
-all([f3(x)] ≈ interpolate_on_sparsegrid(sg,f3_on_Z,x) for x in test_points)
+error = norm([f3(x)] ≈ interpolate_on_sparsegrid(sg,f3_on_Z,x) for x in test_points)
+println("Error: $error")
+```
+```@example 1d
 get_n_grid_points(sg)
 ```
 ## Multi-dimensional example

@@ -379,7 +379,7 @@ function inverse_level_map(levelfunction, maxlevel)
     return inverse_map
 end
 """
-    truncated_kron(vectors; tol=1e-10)
+    truncated_kron(vectors; tol=eps())
 
 Compute the Kronecker product of a list of vectors with truncation.
 

@@ -15,9 +15,9 @@ This is not a thorough mathematical description of sparse grid approximation, bu
 
 The package is still under development and by no means complete.
 
-## Contributing
+## Contribution Guidelines
 To report bugs, seek support or submit request features, please use the [GitHub issue tracker](https://github.com/benmkent/SparseGridsKit.jl/issues).
-Please feel free to contribute and submit pull requests to the main branch.
+Please feel free to contribute and submit pull requests.
 
 ## Example
 Please see the [documentation](https://benmkent.github.io/SparseGridsKit.jl/stable/) for extensive examples.

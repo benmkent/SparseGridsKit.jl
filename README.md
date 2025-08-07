@@ -15,8 +15,10 @@ The construction is based upon the sparse operators introduced by Smolyak [Smoly
 Key papers defining the model formulation include [Barthelmann2000](@cite), [Gerstner1998](@cite) and [Gerstner2003](@cite).
 This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) [Piazzola2024](@cite).
 
+## Contribution Guidelines
 The package is still under development and by no means complete.
-Issues, forks and pull requests are welcome!
+To report bugs, seek support or submit request features, please use the [GitHub issue tracker](https://github.com/benmkent/SparseGridsKit.jl/issues).
+Please feel free to contribute and submit pull requests.
 
 # Example
 In the simplest case one often wants to create a sparse grid using a sequence of nested sets Clenshaw--Curtis points and a Smolyak type multi-index set.

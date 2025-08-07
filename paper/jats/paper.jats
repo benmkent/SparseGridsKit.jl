@@ -73,20 +73,21 @@ a Creative Commons Attribution 4.0 International License (CC BY
 <body>
 <sec id="summary">
   <title>Summary</title>
-  <p>Approximation of functions with high dimensional domains is
-  important for modern scientific and engineering problems. An example
-  of this is constructing surrogate models for quantities of interest
-  for high dimensional parametrised PDE problems. These surrogate models
-  are constructed to give computationally cheap yet accurate
+  <p>Approximating functions with high-dimensional domains is crucial in
+  modern scientific and engineering problems. An example of this is
+  constructing surrogate models for quantities of interest in
+  high-dimensional, parametrized PDE problems. These surrogate models
+  are constructed to provide computationally inexpensive yet accurate
   approximations that can be used in applications such as uncertainty
-  quantification, optimisation, parameter estimation
+  quantification, optimization, and parameter estimation
   (<xref alt="Ghanem et al., 2017" rid="ref-UQHandbook2017" ref-type="bibr">Ghanem
-  et al., 2017</xref>). Surrogates may be constructed with global
-  polynomial approximation on the parameter space and a common approach
-  is the use of <italic>sparse grid</italic> approximation techniques.
-  In particular, sparse grid polynomial interpolation techniques allow a
-  practitioner to approximate solutions to parametric problems in a
-  non-intrusive way using existing numerical solvers.</p>
+  et al., 2017</xref>). For suitably smooth functions, accurate
+  surrogates can be constructed using global polynomial approximation
+  techniques over the parameter domain, and a common approach is the use
+  of sparse grid polynomial approximation. In particular, sparse grid
+  polynomial interpolation techniques enable practitioners to
+  approximate solutions to parametric problems in a non-intrusive manner
+  using existing numerical solvers.</p>
   <p><monospace>SparseGridsKit.jl</monospace> provides a Julia toolbox
   to manually and adaptively construct sparse grid polynomial
   approximations
@@ -96,62 +97,117 @@ a Creative Commons Attribution 4.0 International License (CC BY
   approximation via the multi-index stochastic collocation algorithm is
   also possible
   (<xref alt="Haji-Ali et al., 2016" rid="ref-HajiAli2016" ref-type="bibr">Haji-Ali
-  et al., 2016</xref>)
-  (<xref alt="John D. Jakeman et al., 2019" rid="ref-Jakeman2019" ref-type="bibr">John
-  D. Jakeman et al., 2019</xref>)
-  (<xref alt="Piazzola et al., 2022" rid="ref-Piazzola2022" ref-type="bibr">Piazzola
+  et al., 2016</xref>;
+  <xref alt="John D. Jakeman et al., 2019" rid="ref-Jakeman2019" ref-type="bibr">John
+  D. Jakeman et al., 2019</xref>;
+  <xref alt="Piazzola et al., 2022" rid="ref-Piazzola2022" ref-type="bibr">Piazzola
   et al., 2022</xref>). Approximations can be represented either in a
-  basis of Lagrange interpolation polynomials or in a basis of
-  spectral-type polynomials.</p>
+  basis of global Lagrange interpolation polynomials or in a basis of
+  domain appropriate spectral-type global polynomials (e.g. Legendre,
+  Chebyshev, Hermite…).</p>
 </sec>
 <sec id="statement-of-need">
   <title>Statement of need</title>
-  <p>Sparse grid approximation is a well developed methodology and is
-  featured in many survey articles and textbook chapters, e.g.
+  <p>Sparse grid approximation is a well-developed methodology and is
+  featured in many survey articles and textbook chapters, e.g.,
   (<xref alt="Bungartz &amp; Griebel, 2004" rid="ref-Bungartz2004" ref-type="bibr">Bungartz
-  &amp; Griebel,
-  2004</xref>),(<xref alt="Le Maître &amp; Knio, 2010" rid="ref-LeMaitre2010" ref-type="bibr">Le
-  Maître &amp; Knio,
-  2010</xref>),(<xref alt="Schwab &amp; Gittelson, 2011" rid="ref-Schwab2011" ref-type="bibr">Schwab
-  &amp; Gittelson,
-  2011</xref>),(<xref alt="Cohen &amp; DeVore, 2015" rid="ref-Cohen2015" ref-type="bibr">Cohen
-  &amp; DeVore,
-  2015</xref>),(<xref alt="Sullivan, 2015" rid="ref-Sullivan2015" ref-type="bibr">Sullivan,
+  &amp; Griebel, 2004</xref>;
+  <xref alt="Cohen &amp; DeVore, 2015" rid="ref-Cohen2015" ref-type="bibr">Cohen
+  &amp; DeVore, 2015</xref>;
+  <xref alt="Le Maître &amp; Knio, 2010" rid="ref-LeMaitre2010" ref-type="bibr">Le
+  Maître &amp; Knio, 2010</xref>;
+  <xref alt="Schwab &amp; Gittelson, 2011" rid="ref-Schwab2011" ref-type="bibr">Schwab
+  &amp; Gittelson, 2011</xref>;
+  <xref alt="Sullivan, 2015" rid="ref-Sullivan2015" ref-type="bibr">Sullivan,
   2015</xref>). The need for sparse grid surrogate modelling is
   demonstrated by its use in many applications, from simpler elliptic
-  and parabolic PDEs to complex practical engineering problems
-  e.g. (<xref alt="Piazzola et al., 2021" rid="ref-Piazzola2021" ref-type="bibr">Piazzola
-  et al.,
-  2021</xref>),(<xref alt="Piazzola et al., 2022" rid="ref-Piazzola2022" ref-type="bibr">Piazzola
-  et al.,
-  2022</xref>),(<xref alt="Li et al., 2024" rid="ref-Li2024" ref-type="bibr">Li
-  et al., 2024</xref>). The <monospace>SparseGridsKit.jl</monospace>
-  implementation offers a rich set of features to enable this.</p>
+  and parabolic PDEs to complex practical engineering problems, e.g.,
+   (<xref alt="Li et al., 2024" rid="ref-Li2024" ref-type="bibr">Li et
+  al., 2024</xref>;
+  <xref alt="Piazzola et al., 2021" rid="ref-Piazzola2021" ref-type="bibr">Piazzola
+  et al., 2021</xref>,
+  <xref alt="2022" rid="ref-Piazzola2022" ref-type="bibr">2022</xref>).
+  The <monospace>SparseGridsKit.jl</monospace> implementation offers a
+  rich set of features to enable this.</p>
   <p>Specifically, <monospace>SparseGridsKit.jl</monospace> is a Julia
-  implementation of sparse grid approximation methods. This offers</p>
+  implementation of adaptive sparse grid global polynomial approximation
+  methods. Development was motivated by the desire for approximation
+  code that closely resembles the mathematical literature to aid
+  algorithm development and analysis.</p>
+  <p>The functionality includes:</p>
   <list list-type="bullet">
     <list-item>
-      <p>native Julia implementation of adaptive sparse grid
-      approximation functionality,</p>
+      <p>One-dimensional knots and quadrature rules.</p>
     </list-item>
     <list-item>
-      <p>dynamical typing, allowing surrogate models to map input
-      parameters to any Julia type offering vector space operations.</p>
+      <p>Multi-index set construction and manipulation.</p>
+    </list-item>
+    <list-item>
+      <p>Combination technique sparse grid approximations, and
+      functionality for interpolation, integration and derivatives of
+      the surrogate model.</p>
+    </list-item>
+    <list-item>
+      <p>Adaptive sparse grid approximation construction based on the
+      ubiquitous Gerstner-Griebel dimensional adaptive algorithm
+      (<xref alt="Gerstner &amp; Griebel, 2003" rid="ref-Gerstner2003" ref-type="bibr">Gerstner
+      &amp; Griebel, 2003</xref>). This implementation uses profit
+      indicators as described in
+      (<xref alt="Nobile et al., 2016" rid="ref-Nobile2016" ref-type="bibr">Nobile
+      et al., 2016</xref>).</p>
+    </list-item>
+    <list-item>
+      <p>Adaptive multi-fidelity approximation via the Multi-Index
+      Stochastic Collocation (MISC) algorithm
+      (<xref alt="Haji-Ali et al., 2016" rid="ref-HajiAli2016" ref-type="bibr">Haji-Ali
+      et al., 2016</xref>;
+      <xref alt="John D. Jakeman et al., 2019" rid="ref-Jakeman2019" ref-type="bibr">John
+      D. Jakeman et al., 2019</xref>;
+      <xref alt="Piazzola et al., 2022" rid="ref-Piazzola2022" ref-type="bibr">Piazzola
+      et al., 2022</xref>).</p>
+    </list-item>
+    <list-item>
+      <p>Conversion to and from Polynomial Chaos / spectral polynomial
+      series representation.</p>
+    </list-item>
+    <list-item>
+      <p>Limited support for surrogate model differentiation via
+      automatic differentiation.</p>
     </list-item>
   </list>
-  <p>Existing sparse grid approximation packages in Julia include
-  <ext-link ext-link-type="uri" xlink:href="https://github.com/floswald/Tasmanian.jl"><monospace>Tasmanian.jl</monospace></ext-link>,
-  wrapping the
-  <ext-link ext-link-type="uri" xlink:href="https://github.com/ORNL/Tasmanian">Tasmanian
-  library</ext-link>,
-  <ext-link ext-link-type="uri" xlink:href="https://github.com/jacobadenbaum/AdaptiveSparseGrids.jl"><monospace>AdaptiveSparseGrids.jl</monospace></ext-link>
-  and
-  <ext-link ext-link-type="uri" xlink:href="https://github.com/baxmittens/DistributedSparseGrids.jl"><monospace>DistributedSparseGrids.jl</monospace></ext-link>.
-  <monospace>SparseGridsKit.jl</monospace> offers a more complete set of
-  functionality, with close resemblance to the popular
-  <monospace>Sparse Grids MATLAB Kit</monospace>
-  (<xref alt="Piazzola &amp; Tamellini, 2024" rid="ref-Piazzola2024" ref-type="bibr">Piazzola
-  &amp; Tamellini, 2024</xref>).</p>
+  <p>The functionality described above is tested and documented with
+  examples included in the repository.</p>
+  <p>Other sparse grid approximation packages in Julia include:</p>
+  <list list-type="bullet">
+    <list-item>
+      <p><ext-link ext-link-type="uri" xlink:href="https://github.com/baxmittens/DistributedSparseGrids.jl"><monospace>DistributedSparseGrids.jl</monospace></ext-link>
+      (<xref alt="Bittens &amp; Gates, 2023" rid="ref-Bittens2023" ref-type="bibr">Bittens
+      &amp; Gates, 2023</xref>): a Julia package providing adaptive
+      sparse grid approximation using a local hierarchical basis and
+      distributed computing functionality.</p>
+    </list-item>
+    <list-item>
+      <p><ext-link ext-link-type="uri" xlink:href="https://github.com/floswald/Tasmanian.jl"><monospace>Tasmanian.jl</monospace></ext-link>:
+      a Julia interface to the C++
+      <ext-link ext-link-type="uri" xlink:href="https://github.com/ORNL/Tasmanian">Tasmanian
+      library</ext-link>.</p>
+    </list-item>
+    <list-item>
+      <p><ext-link ext-link-type="uri" xlink:href="https://github.com/jacobadenbaum/AdaptiveSparseGrids.jl"><monospace>AdaptiveSparseGrids.jl</monospace></ext-link>:
+      a Julia package offering sparse grid approximation using a local
+      hierarchical basis.</p>
+    </list-item>
+  </list>
+  <p>As described above, <monospace>SparseGridsKit.jl</monospace>
+  instead offers functionality based upon global polynomial
+  approximation targeting problems in which the function is assumed to
+  be suitably smooth. The adaptive approximation algorithm is also split
+  cleanly into <monospace>SOLVE-ESTIMATE-MARK-REFINE</monospace> steps
+  to aid adaptive algorithm development. For non-smooth functions,
+  global polynomial approximation is a poor choice and
+  <monospace>DistributedSparseGrids.jl</monospace> or
+  <monospace>AdaptiveSparseGrids.jl</monospace> may offer a better
+  approximation strategy.</p>
   <p>Other popular software packages implementing sparse grid
   approximation include:</p>
   <list list-type="bullet">
@@ -188,65 +244,104 @@ a Creative Commons Attribution 4.0 International License (CC BY
     </list-item>
     <list-item>
       <p><monospace>UQTk</monospace>: A collection of C++/Python
-      uncertianty quantification tools including sparse grid quadrature
-      (<xref alt="Debusschere et al., 2015" rid="ref-Debusschere2015" ref-type="bibr">Debusschere
-      et al., 2015</xref>).</p>
+      uncertainty quantification tools including sparse grid quadrature
+      (<xref alt="Debusschere et al., 2017" rid="ref-DebusschereUQTkU003A2017" ref-type="bibr">Debusschere
+      et al., 2017</xref>).</p>
     </list-item>
     <list-item>
       <p><monospace>Tasmanian</monospace>,<monospace>SG++</monospace>,:
       C++ sparse grid approximation implementations with wrappers for
       many popular software languages
-      (<xref alt="Stoyanov, 2015" rid="ref-stoyanov2015tasmanian" ref-type="bibr">Stoyanov,
-      2015</xref>)
       (<xref alt="Pflüger, 2010" rid="ref-pflueger10spatially" ref-type="bibr">Pflüger,
-      2010</xref>).</p>
+      2010</xref>;
+      <xref alt="Stoyanov, 2015" rid="ref-stoyanov2015tasmanian" ref-type="bibr">Stoyanov,
+      2015</xref>).</p>
     </list-item>
   </list>
-  <p><monospace>SparseGridsKit.jl</monospace> offers specific Julia
-  toolkit with minimal complexity for fast algorithm development and
-  prototyping.</p>
+  <p><monospace>SparseGridsKit.jl</monospace> specifically offers a
+  Julia toolkit sharing the ethos of the
+  <monospace>Sparse Grids MATLAB Kit</monospace>: to be user-friendly
+  and aid fast algorithm prototyping. Notably,
+  <monospace>SparseGridsKit.jl</monospace> also provides an
+  implementation of the multi-index stochastic collocation algorithm
+  which is currently only available in
+  <monospace>PyApprox</monospace>.</p>
 </sec>
-<sec id="sparsegridskit.jl-features">
-  <title><monospace>SparseGridsKit.jl</monospace> Features</title>
-  <p>The main features are outlined below:</p>
-  <list list-type="bullet">
-    <list-item>
-      <p>One dimensional knots and quadrature rules.</p>
-    </list-item>
-    <list-item>
-      <p>Multi-index set construction and manipulation.</p>
-    </list-item>
-    <list-item>
-      <p>Combination technique sparse grid approximations including
-      evaluation and quadrature routines.</p>
-    </list-item>
-    <list-item>
-      <p>Adaptive sparse grid approximation construction based on the
-      ubiquitous Gerstner-Griebel dimensional adaptive algorithm
-      (<xref alt="Gerstner &amp; Griebel, 2003" rid="ref-Gerstner2003" ref-type="bibr">Gerstner
-      &amp; Griebel, 2003</xref>).</p>
-    </list-item>
-    <list-item>
-      <p>Adaptive multi-fidelity approximation via the Multi-Index
-      Stochastic Collocation (MISC) algorithm
-      (<xref alt="Haji-Ali et al., 2016" rid="ref-HajiAli2016" ref-type="bibr">Haji-Ali
-      et al., 2016</xref>)
-      (<xref alt="John D. Jakeman et al., 2019" rid="ref-Jakeman2019" ref-type="bibr">John
-      D. Jakeman et al., 2019</xref>)
-      (<xref alt="Piazzola et al., 2022" rid="ref-Piazzola2022" ref-type="bibr">Piazzola
-      et al., 2022</xref>).</p>
-    </list-item>
-    <list-item>
-      <p>Conversion to and from Polynomial Chaos / spectral polynomial
-      series representation.</p>
-    </list-item>
-    <list-item>
-      <p>Limited support for surrogate model differentiation via
-      automatic differentiation.</p>
-    </list-item>
-  </list>
-  <p>The functionality described above is tested and documented with
-  examples included in the repository.</p>
+<sec id="example-adaptive-sparse-grid-approximation">
+  <title>Example Adaptive Sparse Grid Approximation</title>
+  <p>To briefly demonstrate the package, consider the <italic>Gaussian
+  Peak</italic> test function from the Genz test suite
+  (<xref alt="Genz, 1984" rid="ref-genz" ref-type="bibr">Genz,
+  1984</xref>), <disp-formula><alternatives>
+  <tex-math><![CDATA[f:[-1,1]^2\to \mathbb{R}, \quad f(\vec{y}) = \exp\left(-\sum_{i=1}^2 (c_i^2  (y_i - W)^2)\right).]]></tex-math>
+  <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mi>f</mml:mi><mml:mo>:</mml:mo><mml:msup><mml:mrow><mml:mo stretchy="true" form="prefix">[</mml:mo><mml:mi>−</mml:mi><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="true" form="postfix">]</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msup><mml:mo>→</mml:mo><mml:mi>ℝ</mml:mi><mml:mo>,</mml:mo><mml:mspace width="1.0em"></mml:mspace><mml:mi>f</mml:mi><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mover><mml:mi>y</mml:mi><mml:mo accent="true">→</mml:mo></mml:mover><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mo>exp</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>−</mml:mi><mml:munderover><mml:mo>∑</mml:mo><mml:mrow><mml:mi>i</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow><mml:mn>2</mml:mn></mml:munderover><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msubsup><mml:mi>c</mml:mi><mml:mi>i</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:msup><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msub><mml:mi>y</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>−</mml:mo><mml:mi>W</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msup><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mi>.</mml:mi></mml:mrow></mml:math></alternatives></disp-formula>
+  The problem is set up as follows:</p>
+  <code language="julia">using SparseGridsKit, Plots, LaTeXStrings
+n = 2
+C = 1.0
+W = 0.0
+T = &quot;quarticdecay&quot;
+N = &quot;gaussianpeak&quot;
+f = genz(n, C, W, T, N)</code>
+  <p>where <monospace>&quot;quarticdecay&quot;</monospace> defines
+  coefficients <inline-formula><alternatives>
+  <tex-math><![CDATA[c_i = C (i + 1)^{-4}]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:msub><mml:mi>c</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:mi>C</mml:mi><mml:msup><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>i</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mrow><mml:mi>−</mml:mi><mml:mn>4</mml:mn></mml:mrow></mml:msup></mml:mrow></mml:math></alternatives></inline-formula>
+  and the constructed <monospace>f</monospace> is a function. An
+  adaptive approximation is constructed as follows using the default
+  configuration and a user specified profit tolerance
+  <monospace>proftol</monospace>.</p>
+  <code language="julia">(sg, f_on_Z) = adaptive_sparsegrid(f, n; proftol=1e-10)</code>
+  <p>The adaptively constructed multi-index set and sparse grid are
+  shown in <xref alt="[miset]" rid="miset">[miset]</xref>. These reflect
+  the anisotropic nature of the function <inline-formula><alternatives>
+  <tex-math><![CDATA[f]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>f</mml:mi></mml:math></alternatives></inline-formula>
+  due to the decaying coefficients <inline-formula><alternatives>
+  <tex-math><![CDATA[c_i]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:msub><mml:mi>c</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:math></alternatives></inline-formula>.</p>
+  <code language="julia">miset = get_mi_set(sg)
+x     = getindex.(get_mi(miset), 1)
+y     = getindex.(get_mi(miset), 2)
+plot(
+  scatter(x,y, xlabel=L&quot;\beta_1&quot;, ylabel=L&quot;\beta_2&quot;, legend=:none,
+            title=&quot;Multi-Index Set&quot;, aspect_ratio=:equal),
+  plot(sg; legend=:none, xlabel=L&quot;y_1&quot;, ylabel=L&quot;y_2&quot;, aspect_ratio=:equal)
+)</code>
+  <fig>
+    <caption><p>Multi-index set and sparse grid for adaptive
+    approximation of Gaussain
+    Peak<styled-content id="miset"></styled-content></p></caption>
+    <graphic mimetype="image" mime-subtype="svg+xml" xlink:href="miset_grid.svg" />
+  </fig>
+  <p>The resulting adaptive approximation is shown below in
+  <xref alt="[u]" rid="u">[u]</xref>.</p>
+  <code language="julia">plot(SparseGridApproximation(sg,f_on_Z); seriestype=:surface,
+      title=&quot;&quot;, xlabel=L&quot;y_1&quot;, ylabel=L&quot;y_2&quot;, zlabel=L&quot;u(\vec{y})&quot;)</code>
+  <fig>
+    <caption><p>Adaptive approximation of the Gaussain Peak function
+    <inline-formula><alternatives>
+    <tex-math><![CDATA[f]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>f</mml:mi></mml:math></alternatives></inline-formula><styled-content id="u"></styled-content></p></caption>
+    <graphic mimetype="image" mime-subtype="svg+xml" xlink:href="u.svg" />
+  </fig>
+  <p>Interpolation and integration of the resulting approximation is
+  straightforward.</p>
+  <code language="julia">f_0       = interpolate_on_sparsegrid(sg, f_on_Z, [[0,0]])
+integral  = integrate_on_sparsegrid(sg,f_on_Z)
+println(&quot;f([0,0]) = $f_0, Integral(f) = $integral&quot;)</code>
+  <preformat>f([0,0]) = [1.0], Integral(f) = 0.8343194685053069</preformat>
+  <p>The sparse grid and the evaluations can then be wrapped up as a
+  <monospace>SparseGridApproximation</monospace> or a
+  <monospace>SpectralSparseGrid</monospace>. These can both be evaluated
+  as functions.</p>
+  <code language="julia">f_sga         = SparseGridApproximation(sg,f_on_Z)
+f_spectral    = convert_to_spectral_approximation(sg, f_on_Z)
+f_sga_0       = f_sga([0,0])
+f_spectral_0  = f_spectral([0,0])
+println(&quot;f_sga([0,0]) = $f_sga_0, f_spectral(f) = $f_spectral_0&quot;)</code>
+  <preformat>f_sga([0,0])  = 1.0, f_spectral(f) = 1.0</preformat>
+  <p>For further examples please consult the package documentation.</p>
 </sec>
 <sec id="acknowledgements">
   <title>Acknowledgements</title>
@@ -494,7 +589,7 @@ a Creative Commons Attribution 4.0 International License (CC BY
         <name><surname>Winokur</surname><given-names>J. G.</given-names></name>
       </person-group>
       <article-title>Dakota 6.21.0 documentation. Technical report SAND2024-15492O.</article-title>
-      <publisher-name>Sandia National Laboratories, Albuquerque, NM</publisher-name>
+      <publisher-name>Sandia National Laboratories, Albuquerque, NM, November 2024</publisher-name>
       <year iso-8601-date="2024-11">2024</year><month>11</month>
       <uri>http://snl-dakota.github.io</uri>
     </element-citation>
@@ -599,7 +694,7 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <uri>http://www5.in.tum.de/pub/pflueger10spatially.pdf</uri>
     </element-citation>
   </ref>
-  <ref id="ref-Debusschere2015">
+  <ref id="ref-DebusschereUQTkU003A2017">
     <element-citation publication-type="chapter">
       <person-group person-group-type="author">
         <name><surname>Debusschere</surname><given-names>Bert</given-names></name>
@@ -610,12 +705,12 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <article-title>Uncertainty quantification toolkit (UQTk)</article-title>
       <source>Handbook of uncertainty quantification</source>
       <publisher-name>Springer International Publishing</publisher-name>
-      <year iso-8601-date="2015">2015</year>
-      <isbn>9783319112596</isbn>
-      <uri>http://dx.doi.org/10.1007/978-3-319-11259-6_56-1</uri>
-      <pub-id pub-id-type="doi">10.1007/978-3-319-11259-6_56-1</pub-id>
-      <fpage>1</fpage>
-      <lpage>21</lpage>
+      <year iso-8601-date="2017">2017</year>
+      <isbn>9783319123851</isbn>
+      <uri>http://dx.doi.org/10.1007/978-3-319-12385-1_56</uri>
+      <pub-id pub-id-type="doi">10.1007/978-3-319-12385-1_56</pub-id>
+      <fpage>1807</fpage>
+      <lpage>1827</lpage>
     </element-citation>
   </ref>
   <ref id="ref-julia">
@@ -636,6 +731,60 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <pub-id pub-id-type="doi">10.1137/141000671</pub-id>
       <fpage>65</fpage>
       <lpage>98</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Bittens2023">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Bittens</surname><given-names>Maximilian</given-names></name>
+        <name><surname>Gates</surname><given-names>Robert L.</given-names></name>
+      </person-group>
+      <article-title>DistributedSparseGrids.jl: A julia library implementing an adaptive sparse grid collocation method</article-title>
+      <source>Journal of Open Source Software</source>
+      <publisher-name>The Open Journal</publisher-name>
+      <year iso-8601-date="2023-03">2023</year><month>03</month>
+      <volume>8</volume>
+      <issue>83</issue>
+      <issn>2475-9066</issn>
+      <uri>http://dx.doi.org/10.21105/joss.05003</uri>
+      <pub-id pub-id-type="doi">10.21105/joss.05003</pub-id>
+      <fpage>5003</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Nobile2016">
+    <element-citation publication-type="chapter">
+      <person-group person-group-type="author">
+        <name><surname>Nobile</surname><given-names>Fabio</given-names></name>
+        <name><surname>Tamellini</surname><given-names>Lorenzo</given-names></name>
+        <name><surname>Tesei</surname><given-names>Francesco</given-names></name>
+        <name><surname>Tempone</surname><given-names>Raúl</given-names></name>
+      </person-group>
+      <article-title>An adaptive sparse grid algorithm for elliptic PDEs with lognormal diffusion coefficient</article-title>
+      <source>Sparse grids and applications - stuttgart 2014</source>
+      <publisher-name>Springer International Publishing</publisher-name>
+      <year iso-8601-date="2016">2016</year>
+      <isbn>9783319282626</isbn>
+      <issn>2197-7100</issn>
+      <uri>http://dx.doi.org/10.1007/978-3-319-28262-6_8</uri>
+      <pub-id pub-id-type="doi">10.1007/978-3-319-28262-6_8</pub-id>
+      <fpage>191</fpage>
+      <lpage>220</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-genz">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>Genz</surname><given-names>Alan C.</given-names></name>
+      </person-group>
+      <article-title>Testing multidimensional integration routines</article-title>
+      <person-group person-group-type="editor">
+        <name><surname>B. Ford</surname><given-names>J. C. Rault</given-names></name>
+        <name><surname>Thomasset</surname><given-names>F.</given-names></name>
+      </person-group>
+      <year iso-8601-date="1984">1984</year>
+      <fpage>81</fpage>
+      <lpage>94</lpage>
     </element-citation>
   </ref>
 </ref-list>

@@ -182,7 +182,7 @@ function sparsegridproductintegrals(point_sequences_per_dimension, maxmi, knots,
 end
 
 function mapfromto(sgfrom, sgto)
-    (fromptids, ~, ~) = sparsegridpoints(sgfrom.data.terms, sgto.data.terms_to_unique_points_per_dimension, sgto.data.unique_points_per_dimension, sgto.dims)
+    (fromptids, _, _) = sparsegridpoints(sgfrom.data.terms, sgto.data.terms_to_unique_points_per_dimension, sgto.data.unique_points_per_dimension, sgto.dims)
 
     terms_to_grid_points = Vector(undef, size(fromptids, 1))
     for ii in 1:size(fromptids, 1)
@@ -791,64 +791,68 @@ end
 
 fastvectorgenerator(k, n) = Iterators.product(repeat([1:(k+1)], n)...)
 
-function createsmolyakmiset(n, k)
-    iteratorI = fastvectorgenerator(k, n)
-    accepted = Vector{NTuple{n,Int64}}()
-    l = n + k
-    for vector in iteratorI
-        if sum(vector) <= l
-            push!(accepted, vector)
-        end
+function createsmolyakmiset(dim::Int, level::Int)
+    multi_index_list = Vector{Vector{Int}}()
+    current_index = Vector{Int}(undef, dim)
+
+    total_order_min = dim
+    total_order_max = dim + level
+
+    for total_order in total_order_min:total_order_max
+        generate_compositions!(multi_index_list, current_index, total_order, dim, 1)
     end
 
-    I = hcat(collect.(accepted)...)
-    I = sortmi(I)
-    return I
+    return sortmi(hcat(multi_index_list...))
 end
 
-# function createsmolyakmiset(n,k)
-#     vector = ones(n)
-#     finished = false
-#     accepted = Vector{Vector{Int}}()
-#     l = n + k
-#     mi_norm = n
-#     while !finished
-#         if mi_norm <= l
-#             push!(accepted, vector)
-#         end
+function generate_compositions!(
+    output_list::Vector{Vector{Int}},
+    composition_buffer::Vector{Int},
+    remaining_sum::Int,
+    total_parts::Int,
+    current_position::Int,
+)
+    if current_position == total_parts
+        composition_buffer[current_position] = remaining_sum
+        push!(output_list, copy(composition_buffer))
+        return
+    end
 
-#         vector[end] +=1
-#         mi_norm = mi_norm + 1
-#         if mi_norm >= l
-#             for ii = n:-1:2
-#                 if vector[ii] > l
-#                     vector[ii] = 1
-#                     vector[ii-1] += 1
-#                     mi_norm = mi_norm - l + 1
-#                 end
-#             end
-#         end
-#         if vector[1] > l
-#             finished = true
-#         end
-#     end
-#     # return accepted = sortmi(hcat(collect.(accepted)...))
-#     return accepted = hcat(accepted...)
-# end
+    max_value = remaining_sum - (total_parts - current_position)
+    for value in 1:max_value
+        composition_buffer[current_position] = value
+        generate_compositions!(
+            output_list,
+            composition_buffer,
+            remaining_sum - value,
+            total_parts,
+            current_position + 1,
+        )
+    end
+end
 
-function createtensormiset(n, k)
-    iteratorI = fastvectorgenerator(k, n)
-    accepted = Vector{NTuple{n,Int64}}()
-    l = n + k
-    for vector in iteratorI
-        if maximum(vector) <= l
-            push!(accepted, vector)
+function createtensormiset(dim::Int, level::Int)
+    total_points = (level + 1)^dim
+    output = Matrix{Int}(undef, dim, total_points)
+    current_index = fill(1, dim)
+
+    for col in 1:total_points
+        @inbounds for d in 1:dim
+            output[d, col] = current_index[d]
+        end
+
+        # Increment multi-index like a counter
+        for d in dim:-1:1
+            current_index[d] += 1
+            if current_index[d] <= level + 1
+                break
+            else
+                current_index[d] = 1
+            end
         end
     end
 
-    I = hcat(collect.(accepted)...)
-    I = sortmi(I)
-    return I
+    return sortmi(output)
 end
 
 function is_leq(α::Vector, β::Vector)

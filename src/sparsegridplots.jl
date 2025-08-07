@@ -29,19 +29,22 @@ end
 @recipe function f(sg::SparseGrid; targetdims=[1,2,3])
     points = get_grid_points(sg)
     points_matrix = hcat(points...)'
-    x,y,z = nothing, nothing, nothing
 
-    seriestype  :=  :scatter3d
     title --> "Sparse Grid"
     xlabel --> "Parameter "*string(targetdims[1])
     x = points_matrix[:,targetdims[1]]
-    y = zeros(size(x))
-    if sg.dims > 1
+    if sg.dims == 1
+        seriestype  :=  :scatter
+        x
+    elseif  sg.dims == 2
+        seriestype  :=  :scatter
         ylabel --> "Parameter "*string(targetdims[2])
         y = points_matrix[:,targetdims[2]]
         x,y
-    end
-    if sg.dims > 2
+    elseif sg.dims > 2
+        seriestype  :=  :scatter3d
+        ylabel --> "Parameter "*string(targetdims[2])
+        y = points_matrix[:,targetdims[2]]
         zlabel --> "Parameter "*string(targetdims[3])
         z = points_matrix[:,targetdims[3]]
         x,y,z

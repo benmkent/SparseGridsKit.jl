@@ -21,9 +21,11 @@ The multi-index set can be viewed a vector of `Vector{Integer}` representing eac
 get_mi(mi_set)
 ```
 ```@example misets
-scatter(get_mi(mi_set), title="Tensor Product")
-xlabel!(L"β_1")
-xlabel!(L"β_2")
+x = getindex.(get_mi(mi_set), 1)
+y = getindex.(get_mi(mi_set), 2)
+scatter(x,y, xlabel=L"\beta_1", ylabel=L"\beta_2", 
+            legend=:none,
+            title="Multi-Index Set", aspect_ratio=:equal)
 ```
 The exponential growth in complexity with domain dimension $n$ is problematic as soon as $n$ becomes moderately large.
 
@@ -45,9 +47,11 @@ This gives a different, smaller multi-index set than the tensor product multi-in
 get_mi(mi_set)
 ```
 ```@example misets
-scatter(get_mi(mi_set), title="Smolyak")
-xlabel!(L"β_1")
-xlabel!(L"β_2")
+x = getindex.(get_mi(mi_set), 1)
+y = getindex.(get_mi(mi_set), 2)
+scatter(x,y, xlabel=L"\beta_1", ylabel=L"\beta_2", 
+            legend=:none,
+            title="Smolyak Multi-Index Set", aspect_ratio=:equal)
 ```
 
 ## Manipulating Multi-Index Sets
@@ -56,24 +60,33 @@ Continuing using the above Smolyak example, we add the multi-index $[1, 3]$ with
 ```@example misets
 mi_set_new = MISet([[1,3]]) 
 combined_mi_set = add_mi(mi_set, mi_set_new)
-scatter(get_mi(combined_mi_set), title="Multi-Index Addition")
-xlabel!(L"β_1")
-xlabel!(L"β_2")
+
+x = getindex.(get_mi(combined_mi_set), 1)
+y = getindex.(get_mi(combined_mi_set), 2)
+scatter(x,y, xlabel=L"\beta_1", ylabel=L"\beta_2", 
+            legend=:none,
+            title="Multi-Index Addition", aspect_ratio=:equal)
 ```
 
 In Gerstner--Griebel style adaptive algorithms, the margin and reduced margin are generally required.
 These are easily computed using the [`get_margin`](@ref) and [`get_reduced_margin`](@ref) functions.
 ```@example misets
 margin_set = get_margin(combined_mi_set)
-scatter(get_mi(margin_set), title="Margin")
-xlabel!(L"β_1")
-xlabel!(L"β_2")
+
+x = getindex.(get_mi(margin_set), 1)
+y = getindex.(get_mi(margin_set), 2)
+scatter(x,y, xlabel=L"\beta_1", ylabel=L"\beta_2", 
+            legend=:none,
+            title="Margin Multi-Index", aspect_ratio=:equal)
 ```
 ```@example misets
 reduced_margin_set = get_reduced_margin(combined_mi_set)
-scatter(get_mi(reduced_margin_set), title="Reduced Margin")
-xlabel!(L"β_1")
-xlabel!(L"β_2")
+
+x = getindex.(get_mi(reduced_margin_set), 1)
+y = getindex.(get_mi(reduced_margin_set), 2)
+scatter(x,y, xlabel=L"\beta_1", ylabel=L"\beta_2", 
+            legend=:none,
+            title="Reduced Margin Multi-Index", aspect_ratio=:equal)
 ```
 Notice how the multi-index $[2,3]$ is in the margin but not the reduced margin.
 Its backwards neighbour $[2,2]$ is missing from `combined_mi_set`.

@@ -1,5 +1,6 @@
 # SparseGridsKit.jl
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
+Its aim is to provide adaptive approximation code closely resembling the mathematical literature to aid algorithm development and analysis.
 
 To add the package use the following command:
 ```

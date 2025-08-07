@@ -5,7 +5,6 @@ To add the package use the following command:
 ```
 ] add https://github.com/benmkent/SparseGridsKit.jl
 ```
-
 The construction is based upon the sparse operators introduced by Smolyak [Smolyak1963](@cite).
 Key papers defining the model formulation include [Barthelmann2000](@cite), [Gerstner1998](@cite) and [Gerstner2003](@cite).
 This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) [Piazzola2024](@cite).
@@ -15,9 +14,14 @@ This is not a thorough mathematical description of sparse grid approximation, bu
 
 The package is still under development and by no means complete.
 
+## Contributing
+To report bugs, seek support or submit request features, please use the [GitHub issue tracker](https://github.com/benmkent/SparseGridsKit.jl/issues).
+Please feel free to contribute and submit pull requests to the main branch.
 
+## Example
+Please see the [documentation](https://benmkent.github.io/SparseGridsKit.jl/stable/) for extensive examples.
 
-An example sparse grid construction is illustrated below. 
+An example sparse grid construction is illustrated below.
 ```@example mixed
 using SparseGridsKit, Plots, LaTeXStrings
 # Test create_sparsegrid
@@ -38,3 +42,4 @@ nsteps = 100
                 )
 end
 ```
+Paired with function evaluations `f_on_Z = [f(z) for z in get_grid_points(sg)]` at the sparse grid points `Z = get_grid_points(sg)`, this defines a sparse grid approximation.

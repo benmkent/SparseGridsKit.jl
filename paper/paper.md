@@ -107,7 +107,7 @@ plot(
 )
 ```
 
-![Multi-index set and sparse grid for adaptive approximation of Gaussain Peak\label{miset}](miset_grid.svg){width=1200px}
+![Multi-index set and sparse grid for adaptive approximation of Gaussian Peak\label{miset}](miset_grid.svg){width=1200px}
 
 The resulting adaptive approximation is shown below in \autoref{u}.
 ```julia

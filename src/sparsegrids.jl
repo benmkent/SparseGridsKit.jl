@@ -5,14 +5,21 @@ using Polynomials
 import Base.:+
 import Base.:-
 
-# mutable struct SparseTerm
-#     data::Vector{SVector{2, Int}}
-# end
+"""
+    SparseTerm{N}
 
+Structure representing a sparse grid `term` with `N` dimensions.
+
+"""
 struct SparseTerm{N}
-    data::NTuple{N, SVector{2,Int}}
+    data::NTuple{N, SVector{2,Int}} # Tuple containing `N` static vectors of two integers each.
 end
 
+"""
+    sparse_grid_data{N}
+
+Underlying data for a sparse grid of dimension `N`.
+"""
 mutable struct sparse_grid_data{N}
     terms::Vector{SparseTerm{N}}
     points_to_unique_indices::Vector{NTuple{N,Int}} # Mapping from terms to unique points
@@ -24,6 +31,11 @@ mutable struct sparse_grid_data{N}
     weight_sequences_per_dimension::Vector{Vector{Vector{Float64}}}
 end
 
+"""
+    SparseGrid
+
+Sparse grid structure.
+"""
 mutable struct SparseGrid
     dims::Int # Number of dimensions
     domain::Vector{Vector{Float64}} # Grid domain
@@ -36,27 +48,52 @@ mutable struct SparseGrid
     data::sparse_grid_data # Structure for underlying construction data
 end
 
+"""
+    SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, knots, rules, data)
+
+Constructs a `SparseGrid` object with quadrature weights.
+"""
 function SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, knots, rules, data)
     sg = SparseGrid(dims, domain, multi_index_set, combination_coeff, grid_points, [], knots, rules, data)
     compute_quadrature_weights!(sg)
     return sg
 end
 
+"""
+    SparseGridApproximation
+
+Function approximation consisting of sparse grid and function values on the grid.
+"""
 mutable struct SparseGridApproximation
     sg::SparseGrid
     fongrid::Vector
     domain::Vector
 end
 
+"""
+    SparseGridApproximation
+
+Constructs a SparseGridApproximation.
+"""
 function SparseGridApproximation(sg, fongrid)
     SparseGridApproximation(sg,fongrid,sg.domain)
 end
 
+"""
+    (sga::SparseGridApproximation)(x)
+
+Evaluate SparseGridApproximation at point `x`.
+"""
 function (sga::SparseGridApproximation)(x)
     @assert length(x) == sga.sg.dims
     return interpolate_on_sparsegrid(sga.sg, sga.fongrid, [x])[1]
 end
 
+"""
+    Base.:+(sg1::SparseGrid, sg2::SparseGrid)
+
+Add two `SparseGrid` objects by adding their common combination coefficients and merging their multi-index sets.
+"""
 function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
     dims = sg1.dims
     @assert dims == sg2.dims
@@ -84,11 +121,6 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
         end
     end
 
-    # Clean zero c points
-    #zeroindices = sg.combination_coeff .!= 0
-    #combination_coeff = sg.combination_coeff[zeroindices]
-    #multi_index_set = sg.multi_index_set[:, zeroindices]
-
     (multi_index_set,combination_coeff) = sortmi(sg.multi_index_set, sg.combination_coeff)
 
     (terms, coeff_per_term, combination_coeff, multi_index_set) = sparsegridterms(multi_index_set, sg.data.point_sequences_per_dimension, combination_coeff=sg.combination_coeff)
@@ -101,6 +133,12 @@ function Base.:+(sg1::SparseGrid, sg2::SparseGrid)
     return sparsegrid
 end
 
+
+"""
+    -(sg1::SparseGrid, sg2::SparseGrid)
+
+Subtracts two `SparseGrid` objects by negating `sg2` and adding to `sg1`.
+"""
 function Base.:-(sg1::SparseGrid, sg2::SparseGrid)
     sg2minus = copy(sg2)
     sg2minus.data.coeff_per_term = -sg2minus.data.coeff_per_term
@@ -114,6 +152,20 @@ function Base.:copy(sg::SparseGrid)
     return sgcopy
 end
 
+"""
+    sparsegridprecompute(maxmi, knots=CCPoints(), rule=Doubling())
+
+Precomputes weighted L^2 product integrals for each pair of Lagrange interpolation polynomials.
+
+# Arguments
+- `maxmi`: maxmium  level to consider
+- `knots`: knot sequence for generating Lagrange polynomials
+- `rule`: level-to-knots rule for generating Lagrange polynomials
+
+# return
+- `productintegrals`: Vector fo each dimension holding pcl[ii,jj,kk,ll] equal to weighted integral of
+                      polynomial kk for level ii against polynomial ll for level jj.
+"""
 function sparsegridprecompute(maxmi, knots=CCPoints(), rule=Doubling())
     if isa(knots, Points)
         nparams=1
@@ -131,6 +183,11 @@ function sparsegridprecompute(maxmi, knots=CCPoints(), rule=Doubling())
     return (; productintegrals)
 end
 
+"""
+    sparsegridproductintegrals(point_sequences_per_dimension, maxmi, knots, rule)
+
+Computes integrals of pairwise polynomials.
+"""
 function sparsegridproductintegrals(point_sequences_per_dimension, maxmi, knots, rule)
     @debug "Computing product integrals"
 
@@ -142,45 +199,37 @@ function sparsegridproductintegrals(point_sequences_per_dimension, maxmi, knots,
     # Allocate arrays
     productintegrals = zeros(Float64, maxmi, maxmi, length(point_sequences_per_dimension[end]), length(point_sequences_per_dimension[end]))
 
-    #x, w = gausslegendre(2 * rule(maxmi))
     x,w = knots(2*rule(maxmi))
     wp1x = similar(x)
 
     pevalx = zeros(Float64, maxmi, length(point_sequences_per_dimension[end]), length(x))
     for ii = 1:maxmi
-        # for jj = 1:length(point_sequences_per_dimension[ii])
         for jj = 1:length(point_sequences_per_dimension[ii])
-            # pevalx[ii, jj, :] .= polyperlevel[ii][jj].(x)
             write_location = @view pevalx[ii, jj, :]
             pts_input = point_sequences_per_dimension[ii]
             lagrange_evaluation!(write_location, pts_input, jj, x)
         end
     end
 
-    #productintegralsmatrix = Matrix{Float64}(undef, length(polyperlevel[end]), length(polyperlevel[end]))
     for ii = 1:maxmi
         # Compute integrals
-        #productintegralslevel = []
-        #pii = view(polyperlevel,ii);
         for ll = 1:maxmi
-            #pll = view(polyperlevel,ll);s
             @inbounds for p1 in eachindex(point_sequences_per_dimension[ii])
-                #p1x .= pii[1][p1].(x)
-                #p1x .= w.* p1x
                 wp1x .= w .* pevalx[ii, p1, :]
                 @inbounds for p2 in eachindex(point_sequences_per_dimension[ll])
-                    #productintegralsmatrix[p1, p2] = sum(w .* polyperlevel[ii][p1].(x) .* polyperlevel[ll][p2].(x))
                     @inbounds productintegrals[ii, ll, p1, p2] = dot(wp1x, pevalx[ll, p2, :]) #p1x .* pll[1][p2].(x)
-                    #display([ii,ll,p1,p2,sum(w .* polyperlevel[ii][p1].(x) .* polyperlevel[ll][p2].(x))])
                 end
             end
-            #push!(productintegralslevel, productintegralsmatrix[1:length(polyperlevel[ii]), 1:length(polyperlevel[ll])])
         end
-        #push!(productintegrals, productintegralslevel)
     end
     return productintegrals
 end
 
+"""
+    mapfromto(sgfrom, sgto)
+
+Identifies the map for points in grid sgfrom into the grid sgto 
+"""
 function mapfromto(sgfrom, sgto)
     (fromptids, _, _) = sparsegridpoints(sgfrom.data.terms, sgto.data.terms_to_unique_points_per_dimension, sgto.data.unique_points_per_dimension, sgto.dims)
 
@@ -192,7 +241,11 @@ function mapfromto(sgfrom, sgto)
     return terms_to_grid_points
 end
 
-
+"""
+    margin(multi_index_set)
+Computes the margin  for a matrix representation of multi-index set.
+Each column represents a MI.
+"""
 function margin(multi_index_set)
     ndim = size(multi_index_set, 1)
     margin = zeros(Int32, ndim, 0)
@@ -210,8 +263,13 @@ function margin(multi_index_set)
     return sortmi(margin[:, uniqueindices])
 end
 
-function sortmi(multi_index_set, combination_coeff)
+"""
+    sortmi(multi_index_set, combination_coeff)
 
+Lexographically sorts a matrix multi index set, and applys the same sorting to combination_coeff.
+Each column represents a MI.
+"""
+function sortmi(multi_index_set, combination_coeff)
     sorted = sortmi([multi_index_set;transpose(combination_coeff)])
     multi_index_set_sorted = sorted[1:end-1,:]
     combination_coeff_sorted = copy(combination_coeff)
@@ -219,6 +277,12 @@ function sortmi(multi_index_set, combination_coeff)
     return (multi_index_set_sorted, combination_coeff_sorted)
 end
 
+"""
+    sortmi(multi_index_set, combination_coeff)
+    
+Lexographically sorts the multi index set.
+Each column represents a MI.
+"""
 function sortmi(multi_index_set)
     if ndims(multi_index_set) == 1
         sorted = sort(multi_index_set)
@@ -228,6 +292,12 @@ function sortmi(multi_index_set)
     return sorted
 end
 
+"""
+    reducedmargin(multi_index_set)
+
+Computes the reduced margin for a matrix representation of multi-index set.
+Each column represents a MI.
+"""
 function reducedmargin(multi_index_set)
     mgn = margin(multi_index_set)
     ndim = size(mgn, 1)
@@ -238,16 +308,12 @@ function reducedmargin(multi_index_set)
 
         for ei in eachcol(I_ndim)
             miminus = mi .- ei
-            
-            # test = any(v -> v == miminus, eachcol(multi_index_set)) || any(miminus .== 0)
             test = in(miminus, eachcol(multi_index_set)) || any(==(0), miminus)
-
             if test == false
                 in_rm = false;
                 break
             end
         end
-
         if in_rm == true
             rm = hcat(rm, mi)
         end
@@ -255,6 +321,19 @@ function reducedmargin(multi_index_set)
     return sortmi(rm)
 end
 
+"""
+    createsparsegrid(multi_index_set; rule=Doubling(), knots=CCPoints())
+
+Constructs a SparseGrid for a multi-index set with specified  knots and rules.
+
+# Arguments
+- `multi_index_set`: matrix with MI as columns
+- `rule`: Level-to-knots rule
+- `knots`: Knots type
+
+# Returns
+- `sparsegrid`: Constructed sparse grid
+"""
 function createsparsegrid(multi_index_set; rule=Doubling(), knots=CCPoints())
     multi_index_set = sortmi(multi_index_set)
     maxmi = maximum(multi_index_set)
@@ -305,11 +384,22 @@ function createsparsegrid(multi_index_set; rule=Doubling(), knots=CCPoints())
     return sparsegrid
 end
 
-# function sparsegridpoints(grid, terms_to_unique_points_per_dimension::Vector, unique_points_per_dimension, dims)
-#     points_data = sparsegridpoints(grid, terms_to_unique_points_per_dimension, unique_points_per_dimension, dims, false)
-#     return points_data
-# end
+"""
+    sparsegridpoints(grid, terms_to_unique_points_per_dimension::Vector{Dict{Vector{Int}, Int}}, unique_points_per_dimension, dims)
 
+Generate sparse grid and associated data.
+
+# Arguments
+`grid`: SparseGridTerm vector
+`terms_to_unique_points_per_dimension`: Dictionary mapping term to unique 1D grid
+`unique_points_per_dimension`: Vector of unique 1d points
+`dims`: Dimensionality of sparse grid.
+
+# Returns
+- `points_to_unique_indices`: Unique sparse grid in unique 1d point ID representation (i.e. grid represented as N^dims).
+- `grid_points`: Unique grid in parameter representation (i.e. grid represneted in parameter domain Gamma)
+- `terms_to_grid_points`: Map terms to unique grid indices
+"""
 function sparsegridpoints(grid, terms_to_unique_points_per_dimension::Vector{Dict{Vector{Int}, Int}}, unique_points_per_dimension, dims)
     # Get the discrete representation of grid as unqiue indices in each dimension
     gridasptsindices = Matrix{Int}(undef, length(grid), dims)
@@ -333,7 +423,6 @@ function sparsegridpoints(grid, terms_to_unique_points_per_dimension::Vector{Dic
     end
 
     # # Convert back to matrix
-    # points_to_unique_indices = reduce(vcat, [collect(t)' for t in points_to_unique_indices])
     # Lookup the index for each row in gridasptsindices
     terms_to_grid_points = Vector{Int}(undef, size(gridasptsindices,1))
     for ii in 1:size(gridasptsindices,1)
@@ -352,13 +441,16 @@ function sparsegridpoints(grid, terms_to_unique_points_per_dimension::Vector{Dic
     return (points_to_unique_indices, grid_points, terms_to_grid_points)
 end
 
+"""
+    sparsegridterms(multi_index_set, point_sequences_per_dimension; combination_coeff=nothing)
+
+Builds the sparse grid terms in level and point indices, and computes corresponding combination technique coeffs.
+"""
 function sparsegridterms(multi_index_set, point_sequences_per_dimension; combination_coeff=nothing)
     if isnothing(combination_coeff)
         combination_coeff = computesparsegridc(multi_index_set)
     end
     n = size(multi_index_set,1)
-    # terms = Vector{SVector{n,Int}}(undef, 0)
-    # terms = Vector{NTuple{n,Vector{Int}}}(undef, 0)
     nterms_batch = 1000
     terms = Vector{SparseTerm{n}}(undef,nterms_batch)
     coeff_per_term = Vector{Int}(undef,nterms_batch)
@@ -368,20 +460,6 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
 
     for (miind, mi) in enumerate(eachcol(multi_index_set))
         if true #combination_coeff[miind] != 0
-            # indexarray = Vector{Vector{Vector{Int}}}(undef, 0)
-            # for (ind,i) in enumerate(mi)
-            #     indexarrayi = Vector{Vector{Int}}(undef, 0)
-            #     if isa(point_sequences_per_dimension[1][1],Number)
-            #         for j = eachindex(point_sequences_per_dimension[i])
-            #             push!(indexarrayi, [i, j])
-            #         end
-            #     else
-            #         for j = eachindex(point_sequences_per_dimension[ind][i])
-            #             push!(indexarrayi, [i, j])
-            #         end
-            #     end
-            #     push!(indexarray, collect(indexarrayi))
-            # end
             indexarray = Vector{Vector{Tuple{Int, Int}}}(undef, 0)  # outer vector holds vectors of tuples
             for (ind,i) in enumerate(mi)
                 indexarrayi = Vector{Tuple{Int, Int}}()  # vector of tuples, no fixed size needed here
@@ -399,16 +477,6 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
 
             # for row in collect(Iterators.product((indexarray[i] for i in eachindex(indexarray))...))
             for row in Iterators.product((indexarray[i] for i in eachindex(indexarray))...)
-                # push!(terms, NTuple{n, Vector{Int}}(Tuple(row)))
-                # row_svec = {SVector{2,Int}}(undef, n)
-                # for (i,r) in enumerate(row)
-                #     row_svec[i] = SVector{2,Int}(r[1],r[2])
-                # end
-                # push!(terms, SparseTerm{n}(row_svec))
-                # push!(terms, SparseTerm([SVector{2,Int}(r[1],r[2]) for r in row]))
-                # push!(terms, SparseTerm{n}(ntuple(i -> SVector{2,Int}(row[i][1], row[i][2]), n)))
-                # nt = ntuple(i -> SVector{2,Int}(row[i][1], row[i][2]), n)
-                # t = SparseTerm{n}(nt)
                 t = build_sparse_term(Val(n), row) 
                 terms[count] = t
                 # push!(coeff_per_term, combination_coeff[miind])
@@ -425,33 +493,35 @@ function sparsegridterms(multi_index_set, point_sequences_per_dimension; combina
     # Now trim terms and coeff_per_count
     resize!(terms, count - 1)
     resize!(coeff_per_term, count - 1)
-    # Clean up multi_index_set and combination_coeff
-    #zeroindices = combination_coeff .!= 0
-    #multi_index_set = multi_index_set[:, zeroindices]
-    #combination_coeff = combination_coeff[zeroindices]
-   
-
     return (terms, coeff_per_term, combination_coeff, multi_index_set)
 end
 
+"""
+    build_sparse_term(::Val{n}, row)
+
+Constructor for SparseTerm.
+    Optimised code.
+"""
 @generated function build_sparse_term(::Val{n}, row) where n
     # Unroll tuple construction for performance
     return :(SparseTerm{$n}(tuple($(map(i -> :(SVector{2,Int}(row[$i][1], row[$i][2])), 1:n)...))))
 end
 
+"""
+   sparsegridonedimdata(maxmi, knots, rule, domain)
+
+For set of knots and level-to-knots rule, builds point and weight sequences.
+"""
 @noinline function sparsegridonedimdata(maxmi, knots, rule, domain)
     unique_points_per_dimension = Vector{Float64}(undef, 0)
     point_sequences_per_dimension = Vector{Vector{Float64}}(undef, maxmi)
     weight_sequences_per_dimension = Vector{Vector{Float64}}(undef, maxmi)
-    #poly = Vector{Vector{Polynomial{Float64,:x}}}(undef, maxmi)
     terms_to_unique_points_per_dimension = Dict{Vector{Int},Int}()
-
-    # Based on knots define appropriate ApproxFun space for underlying polynomials
-    # space = spaceselector(domain)
 
     for ii = 1:maxmi
         # Detect special case of fidelity
         if isa(knots, FidelityPoints)
+            # This must be treated differently, with no lev-2-knots rule.
             point_sequences_per_dimension[ii], weight_sequences_per_dimension[ii] = knots(ii)
         else
             point_sequences_per_dimension[ii], weight_sequences_per_dimension[ii] = knots(rule(ii))
@@ -462,7 +532,6 @@ end
             if length(unique_points_per_dimension) == 0
                 ind = nothing
             else
-                # ind = findfirst(isapprox(p, unique_points_per_dimension[i]) for i in eachindex(unique_points_per_dimension))
                 ind = findfirst(x -> isapprox(p, x), unique_points_per_dimension)
             end
 
@@ -477,7 +546,21 @@ end
     return (unique_points_per_dimension, point_sequences_per_dimension, terms_to_unique_points_per_dimension, weight_sequences_per_dimension)
 end
 
-function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing)  
+"""
+    interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing)
+
+Interpolates the evaluations fongrid with sparsegrid onto targetpoints
+
+# Arguments
+- `sparsegrid`: SparseGrid structure
+- `fongrid`: Vector of function evaluations at get_grid_points(sparsegrid)
+- `targetpoints`: Vector of targetpoints
+
+# Returns
+- `feval`: Vector of interpolation to targetpoints
+"""
+function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=nothing) 
+    # Set up return vector
     if isempty(fongrid)
         zero_elem = zero(evaltype)
     else
@@ -525,7 +608,7 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         false
     end
 
-    # Precompute lagrange interpolation once
+    # Precompute lagrange interpolation once to unique points
     dims = sparsegrid.dims
     maxmi = maximum(sparsegrid.multi_index_set,dims=2)
     lagrange_evaluation_precompute = Vector{Vector{Vector{Vector{Float64}}}}(undef,dims)
@@ -545,65 +628,33 @@ function interpolateonsparsegrid(sparsegrid, fongrid, targetpoints; evaltype=not
         end
     end
 
-    #for k = 1:length(feval)
-        for i in eachindex(terms)
-        #targetpt = targetpoints[k]
-        #for (i, row) = enumerate(eachrow(terms))
-            #val = c[i]*prod([polyperlevel[row[1][j][1]][row[1][j][2]](newpt[1][j]) for j in eachindex(row[1])])
-            # @inbounds  cweightedpolyprod[k,i] = coeff_per_term[i] * prod(poly[j][row[1][j][1]][row[1][j][2]](targetpt[j]) for j in eachindex(row[1]))
-            # row = @view terms[i,:]
-            row = terms[i].data
-            @inbounds begin
-                acc .= 1.0
-                for j in eachindex(row)
-                    # f = poly[j][row[1][j][1]][row[1][j][2]]
-                    # f_placeholder = f.([targetpoints[k][j] for k = 1:ntarget])
-                    # targetpoints_j = [targetpoints[k][j] for k = 1:ntarget]
-                    @inbounds targetpoints_j = @view targetpoints_matrix[:,j]
-                    r1 = row[j][1]
-                    r2 = row[j][2]
-                    pts = sparsegrid.data.point_sequences_per_dimension[j][r1]
-                    
-                    # lagrange_evaluation!(f_placeholder,pts,r2, targetpoints_j)
-                    # display(norm(f_placeholder - lagrange_evaluation_precompute[j][r1][r2]))
-                    f_placeholder = lagrange_evaluation_precompute[j][r1][r2]
-                    acc .*= f_placeholder
-                end
-                # cweightedpolyprod[:,i] = coeff_per_term[i] * acc
-                mul!(cweightedpolyprod_i,coeff_per_term[i],acc)
+    # Iterate through terms updating the evaluataions at target points
+    for i in eachindex(terms)
+        row = terms[i].data
+        @inbounds begin
+            acc .= 1.0
+            # Extract appropriate evaluations and accumulate
+            for j in eachindex(row)
+                @inbounds targetpoints_j = @view targetpoints_matrix[:,j]
+                r1 = row[j][1]
+                r2 = row[j][2]
+                f_placeholder = lagrange_evaluation_precompute[j][r1][r2]
+                acc .*= f_placeholder
             end
-            # feval += cweightedpolyprod[:,i] * fongrid[maprowtouniquept[i]]
-            # if using_floats
-                # for kk = eachindex(feval)
-                #     temp_mul[] = fongrid[maprowtouniquept[i]]
-                #     temp_mul[] = temp_mul[] * cweightedpolyprod_i[kk]
-                #     @inbounds feval[kk] = feval[kk] + temp_mul[]
-                # end
-            # for kk = eachindex(feval)
-            #     @inbounds copyto!(temp_mul[], fongrid[maprowtouniquept[i]])
-            #     @inbounds for j in eachindex(temp_mul[])
-            #         temp_mul[][j] *= cweightedpolyprod_i[kk]
-            #     end
-            #     @inbounds feval[kk] .+= temp_mul[]
-            # end
-            fused_update!(feval, fongrid[maprowtouniquept[i]], cweightedpolyprod_i,process_elementwise)
-            # else
-            #     for kk = eachindex(feval)
-            #         temp_mul[] = fongrid[maprowtouniquept[i]]
-            #         temp_mul[] *= cweightedpolyprod_i[kk]
-            #         @inbounds feval[kk] += temp_mul[]
-            #     end
-            # end
-                # feval += cweightedpolyprod_i .* fongrid[maprowtouniquept[i]]
+            mul!(cweightedpolyprod_i,coeff_per_term[i],acc)
         end
-    #end
-    # @inbounds @fastmath feval = [sum(cweightedpolyprod[k,i] * fongrid[maprowtouniquept[i]] for i in 1:size(terms,1)) for k=1:length(feval)]
-
-    # mul!(feval, cweightedpolyprod, fongrid[maprowtouniquept])
-
+        # Update evaluations with term
+        fused_update!(feval, fongrid[maprowtouniquept[i]], cweightedpolyprod_i,process_elementwise)
+    end
     return feval
 end
 
+"""
+    fused_update!(feval,fsrc,cweightedpolyprod_i,process_elementwise)
+
+Update feval based upon a function evaluation and appropriate scaling for term and targetpoints
+This aims to avoid allocation if possible (when process_elementwise==true)
+"""
 function fused_update!(feval,fsrc,cweightedpolyprod_i,process_elementwise)
     scale = cweightedpolyprod_i
     @inbounds for kk in eachindex(feval, scale)
@@ -622,6 +673,14 @@ function fused_update!(feval,fsrc,cweightedpolyprod_i,process_elementwise)
     end
 end
 
+"""
+    integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing)
+
+NOTE: This has been replaced by precomputed quadrature weights.
+Computes integral of approximation defined via sparsegrid and fongrid.
+
+Requires precomputed integrals of pairwise products of interpolation polynomials.
+"""
 function integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing)
     if isempty(fongrid)
         if isnothing(evaltype)
@@ -654,26 +713,31 @@ function integrateonsparsegrid(sparsegrid, fongrid, precompute; evaltype=nothing
     return feval
 end
 
+"""
+    computepairwisenorms(fongrid; product=nothing)
+
+Computes the product(x,y) for pairs of function evaluations.
+Default product is x.*y.
+
+Can be used for example with a mass matrix product = (x,y) -> sqrt(x' * Q * y)
+"""
 function computepairwisenorms(fongrid; product=nothing)
     if isnothing(product)
         product = (x,y) -> x.*y
     end
     ngrid = length(fongrid)
-    #pairwisenorms = Matrix(undef,ngrid, ngrid)
     pairwisenorms = Matrix{typeof(product(fongrid[1], fongrid[1]))}(undef, (ngrid, ngrid))
     for i1 = 1:ngrid, i2 = 1:ngrid
-        #for 
-            #pairwisenorms[i1, i2] = transpose(fongrid[i1]) * weight * fongrid[i2]
             pairwisenorms[i1, i2] = product(fongrid[i1], fongrid[i2])
-        #end
     end
-    # pairwisenorms .= pairwisenorms .+ conj(permutedims(pairwisenorms, [2, 1]))# .- Diagonal(diag(pairwisenorms))
-    # for ii = 1:ngrid
-    #     pairwisenorms[ii, ii] = 0.5 .* pairwisenorms[ii, ii]
-    # end
     return pairwisenorms
 end
 
+"""
+    L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwisenorms=nothing, returnpairwisenorms=false)
+
+Computes weighted L^2 integral based upon precomputed pairwise products of interpolation polynomials and pairwise products.
+"""
 function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwisenorms=nothing, returnpairwisenorms=false)
     if isnothing(pairwisenorms)
         @debug "Must compute pairwise norms - may be possible to precompute for efficiency"
@@ -705,25 +769,18 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
         @inbounds if nonzero_rows[i] == false
             continue
         end
-        #for (j, rowj) = enumerate(eachrow(terms))
-            #@inbounds if iszero(pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]])
-            #    display(nonzero_rows[j])
-            @inbounds if nonzero_rows[j] == false
-                continue
-            end
-            #@inbounds @fastmath valstomultiply[i,j] = prod(productintegrals[rowi[1][k][1], rowj[1][k][1], rowi[1][k][2], rowj[1][k][2]] for k in eachindex(rowi[1]))
-            # valstomultiply[1] = 1.0
-            rowi1 = rowi.data
-            rowj1 = rowj.data
-            @inbounds for k in eachindex(rowi1)
-                a .= rowi1[k]
-                b .= rowj1[k]
-                @fastmath valstomultiply[i,j] *= productintegrals[k][a[1],b[1],a[2],b[2]]
-            end
-            @inbounds feval .= feval .+ coeff_per_term[i] * coeff_per_term[j] * valstomultiply[i,j] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]]
-        #end
+        @inbounds if nonzero_rows[j] == false
+            continue
+        end
+        rowi1 = rowi.data
+        rowj1 = rowj.data
+        @inbounds for k in eachindex(rowi1)
+            a .= rowi1[k]
+            b .= rowj1[k]
+            @fastmath valstomultiply[i,j] *= productintegrals[k][a[1],b[1],a[2],b[2]]
+        end
+        @inbounds feval .= feval .+ coeff_per_term[i] * coeff_per_term[j] * valstomultiply[i,j] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]]
     end
-    #@inbounds feval .= sum(sum(coeff_per_term[i] * coeff_per_term[j] * valstomultiply[i,j] * pairwisenorms[maprowtouniquept[i], maprowtouniquept[j]] for j=1:size(terms,1)) for i = 1:size(terms,1))
 
     feval = sqrt.(abs.(feval)) # abs prevents very small negative numbers (≈ 0) giving error
 
@@ -734,6 +791,12 @@ function L2onsparsegrid(sparsegrid, fongrid, precompute; product=nothing, pairwi
     end
 end
 
+"""
+    computesparsegridc_old(I)
+
+Computes combination technique coefficients for multi-index matrix I
+This is a slower algorithm but does not depend on admissibility of I
+"""
 function computesparsegridc_old(I)
     jjs = generatebinaryvectors(size(I, 1))
     combination_coeff = Vector{Integer}(undef, size(I, 2))
@@ -750,6 +813,12 @@ function computesparsegridc_old(I)
     return combination_coeff
 end
 
+"""
+    computesparsegridc(I)
+
+Computes combination technique coefficients for multi-index matrix I.
+Branches depending on admissibility.
+"""
 function computesparsegridc(I)
     (adm, mi_missing) = check_admissibility(MISet([vec(collect(c)) for c in eachcol(I)]))
     if adm
@@ -760,6 +829,23 @@ function computesparsegridc(I)
     end
 end
 
+"""
+    computesparsegridc(I)
+
+Computes combination technique coefficients for an admissible multi-index matrix I.
+
+Based upon the Sparse Grids Matlab Kit code.
+https://sites.google.com/view/sparse-grids-kit
+@article{piazzola.tamellini:SGK,
+ author = {Piazzola, C. and Tamellini, L.},
+ title  = {{Algorithm 1040: The Sparse Grids Matlab Kit - a Matlab implementation of sparse grids for high-dimensional function approximation and uncertainty quantification}},
+ journal= {ACM Transactions on Mathematical Software},
+ year   = {2024},
+ volume = {50},
+ number = {1},
+ doi = {10.1145/3630023}
+}
+"""
 function computesparsegridc_admissible(I)
     # Based upon SGMK
     nn = size(I, 2)
@@ -780,6 +866,10 @@ function computesparsegridc_admissible(I)
     return coeff
 end
 
+"""
+    generatebinaryvectors(n)
+    Generates all vectors in {0,1}^n
+"""
 function generatebinaryvectors(n)
     vectors = Matrix{Integer}(undef, n, 0)
     for i in 0:2^n-1
@@ -789,8 +879,12 @@ function generatebinaryvectors(n)
     return vectors
 end
 
-fastvectorgenerator(k, n) = Iterators.product(repeat([1:(k+1)], n)...)
+"""
+    createsmolyakmiset(dim::Int, level::Int)
 
+Creates Smolyak-type multi-index set in dim dimensions.
+That is, || α ||_1 <= dim + level
+"""
 function createsmolyakmiset(dim::Int, level::Int)
     multi_index_list = Vector{Vector{Int}}()
     current_index = Vector{Int}(undef, dim)
@@ -798,6 +892,7 @@ function createsmolyakmiset(dim::Int, level::Int)
     total_order_min = dim
     total_order_max = dim + level
 
+    # Loop through permissible || α ||_1
     for total_order in total_order_min:total_order_max
         generate_compositions!(multi_index_list, current_index, total_order, dim, 1)
     end
@@ -805,32 +900,50 @@ function createsmolyakmiset(dim::Int, level::Int)
     return sortmi(hcat(multi_index_list...))
 end
 
+"""
+    generate_compositions!(
+    results::Vector{Vector{Int}},
+    current::Vector{Int},
+    remaining::Int,
+    parts::Int,
+    idx::Int)
+
+Generates compositions of remaining in the indices idx to end
+
+Used to recursively generate the Smolyak MI set
+"""
 function generate_compositions!(
-    output_list::Vector{Vector{Int}},
-    composition_buffer::Vector{Int},
-    remaining_sum::Int,
-    total_parts::Int,
-    current_position::Int,
+    results::Vector{Vector{Int}},
+    current::Vector{Int},
+    remaining::Int,
+    parts::Int,
+    idx::Int,
 )
-    if current_position == total_parts
-        composition_buffer[current_position] = remaining_sum
-        push!(output_list, copy(composition_buffer))
+    # If we are at the last slot, fill it with the remainder and record the composition
+    if idx == parts
+        current[idx] = remaining
+        push!(results, copy(current))
         return
     end
-
-    max_value = remaining_sum - (total_parts - current_position)
-    for value in 1:max_value
-        composition_buffer[current_position] = value
+    # We must leave at least 1 for each remaining slot
+    limit = remaining - (parts - idx)
+    for val in 1:limit
+        current[idx] = val
         generate_compositions!(
-            output_list,
-            composition_buffer,
-            remaining_sum - value,
-            total_parts,
-            current_position + 1,
+            results,
+            current,
+            remaining - val,
+            parts,
+            idx + 1,
         )
     end
 end
 
+"""
+    createtensormiset(dim::Int, level::Int)
+
+Creates tensor product multi-index set
+"""
 function createtensormiset(dim::Int, level::Int)
     total_points = (level + 1)^dim
     output = Matrix{Int}(undef, dim, total_points)
@@ -855,11 +968,20 @@ function createtensormiset(dim::Int, level::Int)
     return sortmi(output)
 end
 
+"""
+    is_leq(α::Vector, β::Vector)
+Componentwise leq for vectors
+"""
 function is_leq(α::Vector, β::Vector)
     # Check if β ≤ α element-wise
     return all(β[i] ≤ α[i] for i in 1:length(α))
 end
 
+"""
+    downwards_closed_set(input_matrix::Matrix{Int})
+
+Tests admissibility for matrix format multi-index set
+"""
 function downwards_closed_set(input_matrix::Matrix{Int})
     num_indices, num_columns = size(input_matrix)
 
@@ -869,44 +991,24 @@ function downwards_closed_set(input_matrix::Matrix{Int})
 
     for col_idx in 1:num_columns
         α = view(input_matrix, :, col_idx)
-
-        # Generate all β ≤ α (componentwise)
-        for β in Iterators.product((0:α[i] for i in 1:num_indices)...)
-            β_tuple = β  # already an NTuple
-
-            # Only keep β if β ≤ α (can omit if product bounds are strict)
-            # if is_leq(α, β_tuple)   # Optional: may not be needed
+        # Generate all β ≤ α
+        for β_tuple in Iterators.product((0:α[i] for i in 1:num_indices)...)
             if !in(β_tuple, seen)
                 push!(result, β_tuple)
                 push!(seen, β_tuple)
             end
-            # end
         end
     end
 
     # Convert result to a matrix
-    output_matrix = hcat(result...)  # this is d × n
+    output_matrix = hcat(result...)
     return sortmi(output_matrix)
 end
 
-function spaceselector(domain)
-    if length(domain) != 2
-        Base.throw_checksize_error("Domain must be 2 values")
-    end
-    xmin = domain[1]
-    xmax = domain[2]
-    domain = xmin..xmax
-
-    if isinf(domain.left) && isinf(domain.right)
-        space = Hermite()
-    elseif iszero(domain.left) && isinf(domain.right)
-        space = Laguerre()
-    else
-        space = Chebyshev(domain)
-    end
-    return space
-end
-
+"""
+    check_unique_pts(pts)
+Ensures pts is a unique sequence
+"""
 function check_unique_pts(pts)
     @inbounds for i in 1:length(pts)-1
         pi = pts[i]
@@ -919,6 +1021,11 @@ function check_unique_pts(pts)
     return nothing
 end
 
+"""
+    lagrange_evaluation!(y, pts, ii::Int, targetpoints)
+
+Evaluates Lagrange polynomial defined by pts for pts(ii) at targetpoints
+"""
 @inline function lagrange_evaluation!(y, pts, ii::Int, targetpoints)
     @inbounds begin
         denom = 1.0

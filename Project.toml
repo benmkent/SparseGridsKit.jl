@@ -1,7 +1,7 @@
 name = "SparseGridsKit"
 uuid = "979cd4e9-88b3-4541-89ed-3fc35161e54f"
 authors = ["Ben Kent <benkent@live.co.uk>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 ApproxFun = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"

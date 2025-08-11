@@ -5,10 +5,6 @@ on:
     branches:
       - main # update to match your development branch (master, main, dev, trunk, ...)
     tags: '*'
-    paths:
-      - 'src/**'
-      - 'test/**'
-      - 'docs/**'
   pull_request:
 
 jobs:

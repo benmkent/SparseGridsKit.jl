@@ -4,7 +4,7 @@ Its aim is to provide adaptive approximation code closely resembling the mathema
 
 To add the package use the following command:
 ```
-] add https://github.com/benmkent/SparseGridsKit.jl
+] add SparseGridsKit
 ```
 The construction is based upon the sparse operators introduced by Smolyak [Smolyak1963](@cite).
 Key papers defining the model formulation include [Barthelmann2000](@cite), [Gerstner1998](@cite) and [Gerstner2003](@cite).

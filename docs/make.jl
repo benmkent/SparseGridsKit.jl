@@ -30,4 +30,9 @@ makedocs(
 
 deploydocs(
     repo = "github.com/benmkent/SparseGridsKit.jl.git",
+    versions = [
+        "stable" => "v^",
+        "v#.#",
+        "dev" => "main",
+    ],
 )

@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0   # Need full history + all tags
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1.10'  # or your preferred Julia
+          version: '1.9'  # or your preferred Julia
       - name: Install dependencies
         run: |
           julia --project=docs -e '

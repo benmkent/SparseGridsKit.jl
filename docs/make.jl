@@ -25,14 +25,9 @@ makedocs(
         # ...
         assets=String["assets/citations.css"],
     ),
-    plugins=[bib]
+    plugins=[bib],
 )
 
 deploydocs(
     repo = "github.com/benmkent/SparseGridsKit.jl.git",
-    versions = [
-        "stable" => "v^",
-        "v#.#",
-        "dev" => "main",
-    ],
 )

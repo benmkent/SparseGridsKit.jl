@@ -250,7 +250,7 @@ function lejapoints_precomputed(n; symmetric=true)
         xw = deserialize(joinpath(@__DIR__,  "..", "data", "leja_100.jls"))
     end
 
-    leja = sort!(xw[1][1:n])
+    leja = sort!(Float64.(xw[1][1:n]))
 
     # Compute weights
     p = Vector{Fun}(undef,1)

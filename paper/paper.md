@@ -115,7 +115,7 @@ plot(SparseGridApproximation(sg,f_on_Z); seriestype=:surface,
       title="", xlabel=L"y_1", ylabel=L"y_2", zlabel=L"u(\vec{y})")
 ```
 
-![Adaptive approximation of the Gaussain Peak function $f$\label{u}](u.svg){width=1200px}
+![Adaptive approximation of the Gaussian Peak function $f$\label{u}](u.svg){width=1200px}
 
 Interpolation and integration of the resulting approximation is straightforward.
 ```julia

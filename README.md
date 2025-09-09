@@ -12,7 +12,7 @@ To add the package use the following command:
 ] add SparseGridsKit
 ```
 The construction is based upon the sparse operators introduced by Smolyak (Smolyak, 1963).
-Key papers defining the model formulation include (Barthelmann,  2000), (Gerstner, 1998) and (Gerstner, 2003).
+Key papers defining the approximation formulation include (Barthelmann,  2000), (Gerstner, 1998) and (Gerstner, 2003).
 This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) (Piazzola, 2024).
 
 This documentation is example driven, with full documentation for each subset of functions given at the end of the relevant example.

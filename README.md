@@ -6,17 +6,25 @@
 [![status](https://joss.theoj.org/papers/8ab4a1de2244bc23cf01e30469ecb89a/status.svg)](https://joss.theoj.org/papers/8ab4a1de2244bc23cf01e30469ecb89a)
 
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
-It can be added to your environment through
-```julia
-] add https://github.com/benmkent/SparseGridsKit.jl
-```
 
-The construction is based upon the sparse operators introduced by Smolyak [Smolyak1963](@cite).
-Key papers defining the model formulation include [Barthelmann2000](@cite), [Gerstner1998](@cite) and [Gerstner2003](@cite).
-This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) [Piazzola2024](@cite).
+To add the package use the following command:
+```
+] add SparseGridsKit
+```
+The construction is based upon the sparse operators introduced by Smolyak (Smolyak, 1963).
+Key papers defining the model formulation include (Barthelmann,  2000), (Gerstner, 1998) and (Gerstner, 2003).
+This construction of the approximation is inspired by the [Sparse Grids MATLAB Kit](https://sites.google.com/view/sparse-grids-kit) (Piazzola, 2024).
+
+This documentation is example driven, with full documentation for each subset of functions given at the end of the relevant example.
+This is not a thorough mathematical description of sparse grid approximation, but a practical guide to using the software.
+
+The package is still under development and by no means complete.
+
+## Statement of Need
+This Julia implementation closely follows the mathematical description in the adaptive sparse grid approximation literature.
+This package aims to aid fast algorithm development and analysis, with an emphasis on applications in uncertainty quantification.
 
 ## Contribution Guidelines
-The package is still under development and by no means complete.
 To report bugs, seek support or submit request features, please use the [GitHub issue tracker](https://github.com/benmkent/SparseGridsKit.jl/issues).
 Please feel free to contribute and submit pull requests.
 
@@ -45,3 +53,10 @@ nsteps = 100
 end
 ```
 ![Example Sparse Grid](ExampleGrid.gif)
+
+# Bibliography
+  - Smolyak, S. (1963). Quadrature and interpolation formulae on tensor products of certain function classes. Soviet Math. Dokl., 4(5), 240–243.
+  - Volker Barthelmann, Erich Novak, & Klaus Ritter (2000). High dimensional polynomial interpolation on sparse grids. Advances in Computational Mathematics, 12(4), 273–288.
+  - Gerstner, T., & Griebel, M. (1998). Numerical integration using sparse grids. Numerical algorithms, 18(3), 209–232.
+  - Gerstner, T., & Griebel, M. (2003). Dimension–Adaptive Tensor–Product Quadrature. Computing, 71(1), 65–87.
+  - Piazzola, C., & Tamellini, L. (2024). Algorithm 1040: The Sparse Grids MATLAB Kit - a MATLAB implementation of sparse grids for high-dimensional function approximation and uncertainty quantification. ACM Transactions on Mathematical Software, 50(1), 1–22.

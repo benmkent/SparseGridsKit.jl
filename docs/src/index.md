@@ -1,6 +1,5 @@
 # SparseGridsKit.jl
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
-Its aim is to provide adaptive approximation code closely resembling the mathematical literature to aid algorithm development and analysis.
 
 To add the package use the following command:
 ```
@@ -14,6 +13,10 @@ This documentation is example driven, with full documentation for each subset of
 This is not a thorough mathematical description of sparse grid approximation, but a practical guide to using the software.
 
 The package is still under development and by no means complete.
+
+## Statement of Need
+This Julia implementation closely follows the mathematical description in the adaptive sparse grid approximation literature.
+This package aims to aid fast algorithm development and analysis, with an emphasis on applications in uncertainty quantification.
 
 ## Contribution Guidelines
 To report bugs, seek support or submit request features, please use the [GitHub issue tracker](https://github.com/benmkent/SparseGridsKit.jl/issues).

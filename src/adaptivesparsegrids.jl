@@ -1,3 +1,4 @@
+using LinearAlgebra
 """
     adaptive_sparsegrid(f, nparams; maxpts = 100, proftol = 1e-4, rule=Doubling(), knots=CCPoints(), θ=1e-4, type=:deltaint)
 
@@ -149,18 +150,18 @@ Computes the "profit" of a sparse grid supplemented by a multi-index α
 """
 function compute_profit(sg_α, sg, f_α, f, cost; type=:deltaint)
     if type == :deltaint
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
+        profit =  norm(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     elseif type == :deltaintcost
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))/cost
+        profit =  norm(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))/cost
     elseif type == :Linf
         f_interp = interpolate_on_sparsegrid(sg, f, get_grid_points(sg_α))
-        profit = maximum(abs.(f_α - f_interp))
+        profit = maximum(norm.(f_α - f_interp))
     elseif type == :Linfcost
         f_interp = interpolate_on_sparsegrid(sg, f, get_grid_points(sg_α))
-        profit = maximum(abs.(f_α - f_interp))/cost
+        profit = maximum(norm.(f_α - f_interp))/cost
     else
         @warn "Invalid profit type " * string(type) * ". Using :deltaint"
-        profit =  abs(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
+        profit =  norm(integrate_on_sparsegrid(sg_α, f_α) - integrate_on_sparsegrid(sg, f))
     end
 
     return profit

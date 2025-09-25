@@ -3,7 +3,7 @@
 [![Test](https://github.com/benmkent/SparseGridsKit.jl/actions/workflows/test.yaml/badge.svg)](https://github.com/benmkent/SparseGridsKit.jl/actions/workflows/test.yaml)
 [![codecov](https://codecov.io/github/benmkent/SparseGridsKit.jl/graph/badge.svg?token=URGWM64U21)](https://codecov.io/github/benmkent/SparseGridsKit.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-[![status](https://joss.theoj.org/papers/8ab4a1de2244bc23cf01e30469ecb89a/status.svg)](https://joss.theoj.org/papers/8ab4a1de2244bc23cf01e30469ecb89a)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.08300/status.svg)](https://doi.org/10.21105/joss.08300)
 
 A simple implementation of sparse grid polynomial interpolation and corresponding interpolation.
 

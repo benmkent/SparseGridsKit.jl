@@ -1,0 +1,28 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Kent
+  given-names: Benjamin M.
+  orcid: "https://orcid.org/0000-0003-4968-7993"
+doi: 10.5281/zenodo.17183587
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Kent
+    given-names: Benjamin M.
+    orcid: "https://orcid.org/0000-0003-4968-7993"
+  date-published: 2025-09-25
+  doi: 10.21105/joss.08300
+  issn: 2475-9066
+  issue: 113
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 8300
+  title: "SparseGridsKit.jl: Adaptive single- and multi-fidelity sparse
+    grid approximation in Julia"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.08300"
+  volume: 10
+title: "SparseGridsKit.jl: Adaptive single- and multi-fidelity sparse
+  grid approximation in Julia"

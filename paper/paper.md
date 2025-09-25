@@ -12,7 +12,7 @@ authors:
     orcid: 0000-0003-4968-7993
     # equal-contrib: true
     affiliation: "1" # (Multiple affiliations must be quoted)
-    corresponding: true # (This is how to denote the corresponding author)
+    # corresponding: true # (This is how to denote the corresponding author)
 affiliations:
  - name: CNR-IMATI, Pavia, Italy
    index: 1
@@ -30,7 +30,7 @@ In particular, sparse grid polynomial interpolation techniques enable practition
 `SparseGridsKit.jl` provides a Julia [@julia] toolbox to manually and adaptively construct sparse grid polynomial approximations.
 Interpolation and quadrature routines allow evaluation and integration of the surrogate models.
 Multi-fidelity approximation via the multi-index stochastic collocation algorithm is also possible [@HajiAli2016; @Jakeman2019; @Piazzola2022].
-Approximations can be represented either in a basis of global Lagrange interpolation polynomials or in a basis of domain appropriate spectral-type global polynomials (e.g.\ Legendre, Chebyshev, Hermite, etc.).
+Approximations can be represented either in a basis of global Lagrange interpolation polynomials or in a basis of domain appropriate spectral-type global polynomials (e.g., Legendre, Chebyshev, Hermite, etc.)
 
 # Statement of need
 Sparse grid approximation is a well-developed methodology and is featured in many survey articles and textbook chapters [@Bungartz2004; @LeMaitre2010; @Schwab2011; @Cohen2015; @Sullivan2015].
@@ -38,26 +38,26 @@ The need for sparse grid surrogate modelling is demonstrated by its use in many 
 The `SparseGridsKit.jl` implementation offers a rich set of features to enable this.
 
 Specifically, `SparseGridsKit.jl` is a Julia implementation of adaptive sparse grid global polynomial approximation methods.
-Development was motivated by the desire for approximation code that closely resembles the mathematical literature to aid algorithm development and analysis.
+Its development was motivated by the desire for approximation code that closely resembles the mathematical literature to aid algorithm development and analysis.
 
 The functionality includes:
 
-- One-dimensional knots and quadrature rules.
-- Multi-index set construction and manipulation.
-- Combination technique sparse grid approximations, and functionality for interpolation, integration and derivatives of the surrogate model.
-- Adaptive sparse grid approximation construction based on the ubiquitous Gerstner-Griebel dimensional adaptive algorithm [@Gerstner2003].
-This implementation uses profit indicators as described in @Nobile2016.
-- Adaptive multi-fidelity approximation via the Multi-Index Stochastic Collocation (MISC) algorithm [@HajiAli2016; @Jakeman2019; @Piazzola2022].
-- Conversion to and from Polynomial Chaos / spectral polynomial series representation.
-- Limited support for surrogate model differentiation via automatic differentiation.
+- One-dimensional knots and quadrature rules
+- Multi-index set construction and manipulation
+- Combination technique sparse grid approximations, and functionality for interpolation, integration, and derivatives of the surrogate model
+- Adaptive sparse grid approximation construction based on the ubiquitous Gerstner-Griebel dimensional adaptive algorithm [@Gerstner2003];
+this implementation uses profit indicators as described in @Nobile2016
+- Adaptive multi-fidelity approximation via the Multi-Index Stochastic Collocation (MISC) algorithm [@HajiAli2016; @Jakeman2019; @Piazzola2022]
+- Conversion to and from Polynomial Chaos / spectral polynomial series representation
+- Limited support for surrogate model differentiation via automatic differentiation
 
 The functionality described above is tested and documented with examples included in the repository.
 
 Other sparse grid approximation packages in Julia include:
 
- - [`DistributedSparseGrids.jl`](https://github.com/baxmittens/DistributedSparseGrids.jl) [@Bittens2023]: A Julia package providing adaptive sparse grid approximation using a local hierarchical basis and distributed computing functionality.
- - [`Tasmanian.jl`](https://github.com/floswald/Tasmanian.jl): A Julia interface to the C++ [Tasmanian library](https://github.com/ORNL/Tasmanian).
- - [`AdaptiveSparseGrids.jl`](https://github.com/jacobadenbaum/AdaptiveSparseGrids.jl): A Julia package offering sparse grid approximation using a local hierarchical basis.
+ - [`DistributedSparseGrids.jl`](https://github.com/baxmittens/DistributedSparseGrids.jl) [@Bittens2023]: A Julia package providing adaptive sparse grid approximation using a local hierarchical basis and distributed computing functionality
+ - [`Tasmanian.jl`](https://github.com/floswald/Tasmanian.jl): A Julia interface to the C++ [Tasmanian library](https://github.com/ORNL/Tasmanian)
+ - [`AdaptiveSparseGrids.jl`](https://github.com/jacobadenbaum/AdaptiveSparseGrids.jl): A Julia package offering sparse grid approximation using a local hierarchical basis
 
  As described above, `SparseGridsKit.jl` instead offers functionality based upon global polynomial approximation targeting problems in which the function is assumed to be suitably smooth.
  The adaptive approximation algorithm is also split cleanly into `SOLVE-ESTIMATE-MARK-REFINE` steps to aid adaptive algorithm development.
@@ -65,15 +65,15 @@ Other sparse grid approximation packages in Julia include:
 
 Other popular software packages implementing sparse grid approximation include:
 
-- `Sparse Grids MATLAB Kit`: A MATLAB package on which the `SparseGridsKit.jl` is loosely based [@Piazzola2024].
-- `spinterp`: A MATLAB toolbox for sparse grid interpolation [@spinterp] (no longer maintained).
-- `UQLab`: A broad MATLAB uncertainty quantification toolkit [@Marelli2014].
-- `PyApprox`: A Python package for high-dimensional approximation [@PyApprox].
-- `Dakota`: A C++ library for optimisation and surrogate modelling [@Dakota].
-- `UQTk`: A collection of C++/Python uncertainty quantification tools including sparse grid quadrature [@DebusschereUQTk:2017].
-- `Tasmanian`,`SG++`: C++ sparse grid approximation implementations with wrappers for many popular software languages [@stoyanov2015tasmanian; @pflueger10spatially].
+- `Sparse Grids MATLAB Kit`: A MATLAB package on which the `SparseGridsKit.jl` is loosely based [@Piazzola2024]
+- `spinterp`: A MATLAB toolbox for sparse grid interpolation [@spinterp] (no longer maintained)
+- `UQLab`: A broad MATLAB uncertainty quantification toolkit [@Marelli2014]
+- `PyApprox`: A Python package for high-dimensional approximation [@PyApprox]
+- `Dakota`: A C++ library for optimisation and surrogate modelling [@Dakota]
+- `UQTk`: A collection of C++/Python uncertainty quantification tools including sparse grid quadrature [@DebusschereUQTk:2017]
+- `Tasmanian`,`SG++`: C++ sparse grid approximation implementations with wrappers for many popular software languages [@stoyanov2015tasmanian; @pflueger10spatially]
 
-`SparseGridsKit.jl` specifically offers a Julia toolkit sharing the ethos of the `Sparse Grids MATLAB Kit`: to be user-friendly and aid fast algorithm prototyping.
+`SparseGridsKit.jl` specifically offers a Julia toolkit sharing the ethos of the `Sparse Grids MATLAB Kit` to be user-friendly and aid fast algorithm prototyping.
 Notably, `SparseGridsKit.jl` also provides an implementation of the multi-index stochastic collocation algorithm which is currently only available in `PyApprox`.
 
 # Example Adaptive Sparse Grid Approximation
